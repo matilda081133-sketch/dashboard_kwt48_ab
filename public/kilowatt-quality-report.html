@@ -1088,8 +1088,9 @@
           session_t2: 24.1,
           session_t3: 30.3,
           goals_breakdown: [
-            { name: 'Отправка контактных данных', count: 48, total: 77 },
-            { name: 'Клик по номеру телефона', count: 29, total: 77 }
+            { name: 'Отправил контакты (осн. страница) [504021243]', count: 38, total: 77 },
+            { name: 'Автоцель: отправил контакты [505531986]', count: 28, total: 77 },
+            { name: 'Отправка формы с квиза [542671358]', count: 11, total: 77 }
           ],
           chart: {
             labels: ['21 мая', '22 мая', '23 мая', '24 мая', '25 мая', '26 мая', '27 мая', '28 мая'],
@@ -1119,8 +1120,9 @@
           session_t2: 43.5,
           session_t3: 39.4,
           goals_breakdown: [
-            { name: 'Отправка контактных данных', count: 563, total: 923 },
-            { name: 'Клик по номеру телефона', count: 360, total: 923 }
+            { name: 'Отправил контакты (осн. страница) [504021243]', count: 480, total: 923 },
+            { name: 'Автоцель: отправил контакты [505531986]', count: 320, total: 923 },
+            { name: 'Отправка формы с квиза [542671358]', count: 123, total: 923 }
           ],
           chart: {
             labels: ['Неделя 1', 'Неделя 2', 'Неделя 3', 'Неделя 4'],
@@ -1152,8 +1154,9 @@
           session_t2: 38.6,
           session_t3: 47.2,
           goals_breakdown: [
-            { name: 'Отправка контактных данных', count: 98, total: 160 },
-            { name: 'Клик по номеру телефона', count: 62, total: 160 }
+            { name: 'Автоцель: отправил контакты [560510600]', count: 98, total: 160 },
+            { name: 'Перешел в чат бота [560586538]', count: 42, total: 160 },
+            { name: 'Нажал на позвонить [560586648]', count: 20, total: 160 }
           ],
           chart: {
             labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
@@ -1183,8 +1186,9 @@
           session_t2: 39.1,
           session_t3: 46.1,
           goals_breakdown: [
-            { name: 'Отправка контактных данных', count: 402, total: 650 },
-            { name: 'Клик по номеру телефона', count: 248, total: 650 }
+            { name: 'Автоцель: отправил контакты [560510600]', count: 402, total: 650 },
+            { name: 'Перешел в чат бота [560586538]', count: 168, total: 650 },
+            { name: 'Нажал на позвонить [560586648]', count: 80, total: 650 }
           ],
           chart: {
             labels: ['Неделя 1', 'Неделя 2', 'Неделя 3', 'Неделя 4'],
@@ -1394,39 +1398,42 @@
           let goalsBreakdown = [];
           
           if (activeLP === 'tilda') {
-            const formGoalId = '505531986'; // "Автоцель: отправил контактные данные"
-            const quizGoalId = '542671358'; // "отправка формы с квиза"
+            const goal1 = '504021243'; // "Отправил контактные данные (основная страница)"
+            const goal2 = '505531986'; // "Автоцель: отправил контактные данные"
+            const goal3 = '542671358'; // "Отправка формы с квиза"
             
-            const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${formGoalId}reaches,ym:s:goal${quizGoalId}reaches&date1=${date1}&date2=${date2}`;
+            const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${goal1}reaches,ym:s:goal${goal2}reaches,ym:s:goal${goal3}reaches&date1=${date1}&date2=${date2}`;
             const goalsRes = await fetch(goalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
             const goalsStats = await goalsRes.json();
             
-            formReaches = (goalsStats.totals && goalsStats.totals[0]) ? Math.round(goalsStats.totals[0]) : 0;
-            quizReaches = (goalsStats.totals && goalsStats.totals[1]) ? Math.round(goalsStats.totals[1]) : 0;
-            totalGoals = formReaches + quizReaches;
+            const reaches1 = (goalsStats.totals && goalsStats.totals[0]) ? Math.round(goalsStats.totals[0]) : 0;
+            const reaches2 = (goalsStats.totals && goalsStats.totals[1]) ? Math.round(goalsStats.totals[1]) : 0;
+            const reaches3 = (goalsStats.totals && goalsStats.totals[2]) ? Math.round(goalsStats.totals[2]) : 0;
+            totalGoals = reaches1 + reaches2 + reaches3;
             
             goalsBreakdown = [
-              { name: 'Автоцель: отправил контактные данные', count: formReaches, total: totalGoals || 1 },
-              { name: 'Отправка формы с квиза', count: quizReaches, total: totalGoals || 1 }
+              { name: 'Отправил контакты (осн. страница) [504021243]', count: reaches1, total: totalGoals || 1 },
+              { name: 'Автоцель: отправил контакты [505531986]', count: reaches2, total: totalGoals || 1 },
+              { name: 'Отправка формы с квиза [542671358]', count: reaches3, total: totalGoals || 1 }
             ];
           } else {
             const formGoalId = '560510600';  // "Автоцель: отправил контактные данные"
-            const phoneGoalId = '560586648'; // "нажал на позвонить"
             const botGoalId = '560586538';   // "перешел в чат бота"
+            const phoneGoalId = '560586648'; // "нажал на позвонить"
             
-            const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${formGoalId}reaches,ym:s:goal${phoneGoalId}reaches,ym:s:goal${botGoalId}reaches&date1=${date1}&date2=${date2}`;
+            const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${formGoalId}reaches,ym:s:goal${botGoalId}reaches,ym:s:goal${phoneGoalId}reaches&date1=${date1}&date2=${date2}`;
             const goalsRes = await fetch(goalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
             const goalsStats = await goalsRes.json();
             
-            formReaches = (goalsStats.totals && goalsStats.totals[0]) ? Math.round(goalsStats.totals[0]) : 0;
-            phoneReaches = (goalsStats.totals && goalsStats.totals[1]) ? Math.round(goalsStats.totals[1]) : 0;
-            quizReaches = (goalsStats.totals && goalsStats.totals[2]) ? Math.round(goalsStats.totals[2]) : 0;
-            totalGoals = formReaches + phoneReaches + quizReaches;
+            const reaches1 = (goalsStats.totals && goalsStats.totals[0]) ? Math.round(goalsStats.totals[0]) : 0;
+            const reaches2 = (goalsStats.totals && goalsStats.totals[1]) ? Math.round(goalsStats.totals[1]) : 0;
+            const reaches3 = (goalsStats.totals && goalsStats.totals[2]) ? Math.round(goalsStats.totals[2]) : 0;
+            totalGoals = reaches1 + reaches2 + reaches3;
             
             goalsBreakdown = [
-              { name: 'Автоцель: отправил контактные данные', count: formReaches, total: totalGoals || 1 },
-              { name: 'Нажал на позвонить', count: phoneReaches, total: totalGoals || 1 },
-              { name: 'Перешел в чат бота', count: quizReaches, total: totalGoals || 1 }
+              { name: 'Автоцель: отправил контакты [560510600]', count: reaches1, total: totalGoals || 1 },
+              { name: 'Перешел в чат бота [560586538]', count: reaches2, total: totalGoals || 1 },
+              { name: 'Нажал на позвонить [560586648]', count: reaches3, total: totalGoals || 1 }
             ];
           }
           
