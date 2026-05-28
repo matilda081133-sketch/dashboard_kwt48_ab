@@ -1475,95 +1475,9 @@
           }
           
           // ----------------------------------------------------
-          // DYNAMIC URL-BASED VARIOQUB ANALYTICS AUTO-SYNC
+          // DYNAMIC URL-BASED VARIOQUB ANALYTICS AUTO-SYNC REMOVED
+          // (A/B tests are correctly loaded from real_ab_data.json and not overwritten with current calendar period)
           // ----------------------------------------------------
-          try {
-            console.log("Syncing active Varioqub tests using URL-based routing segments from Metrika...");
-            
-            // Loop through default tests and query Metrika API filtered by page paths
-            for (let t of abTests) {
-              if (t.lp === activeLP) {
-                // Extract URL paths for variants A and B
-                const pathA = t.varA.includes('—') ? t.varA.split('—')[1].trim() : '';
-                const pathB = t.varB.includes('—') ? t.varB.split('—')[1].trim() : '';
-                
-                 // Helper to query Metrika filtered by specific page
-                 async function queryPageStats(pagePath, isVariantB, pathBTarget) {
-                   let filterStr = '';
-                   if (isVariantB) {
-                     filterStr = `ym:s:startURL=~'.*${pagePath}.*'`;
-                   } else {
-                     // For control Variant A, we negative match the Variant B's path to prevent overlap
-                     filterStr = `ym:s:startURL!~'.*${pathBTarget}.*'`;
-                   }
-                   
-                   // Query page visits and time
-                   const pageUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:visits,ym:s:avgVisitDuration&filters=${encodeURIComponent(filterStr)}&date1=${date1}&date2=${date2}`;
-                   const r = await fetch(pageUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
-                   const pStats = await r.json();
-                   
-                   const pVisits = (pStats.totals && pStats.totals[0]) ? Math.round(pStats.totals[0]) : 0;
-                   const pDuration = (pStats.totals && pStats.totals[1]) ? Math.round(pStats.totals[1]) : 0;
-                   
-                   // Query goal reaches on this page specifically
-                   const goalMetric = activeLP === 'tilda' ? `ym:s:goal505531986reaches` : `ym:s:goal560510600reaches`;
-                   const pageGoalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=${goalMetric}&filters=${encodeURIComponent(filterStr)}&date1=${date1}&date2=${date2}`;
-                   const rg = await fetch(pageGoalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
-                   const pgStats = await rg.json();
-                   
-                   const reaches = (pgStats.totals && pgStats.totals[0]) ? Math.round(pgStats.totals[0]) : 0;
-                   
-                   return {
-                     visits: pVisits,
-                     duration: pDuration,
-                     reaches: reaches
-                   };
-                 }
-                 
-                 const statsA = await queryPageStats(pathA, false, pathB);
-                 const statsB = await queryPageStats(pathB, true, pathB);
-                
-                // Map real values to test
-                t.visitsA = statsA.visits;
-                t.visitsB = statsB.visits;
-                t.timeA = statsA.duration;
-                t.timeB = statsB.duration;
-                t.goalsA = statsA.reaches;
-                t.goalsB = statsB.reaches;
-                
-                // Recalculate stats dynamically based on real numbers
-                t.convA = parseFloat(((t.goalsA / t.visitsA) * 100).toFixed(2));
-                t.convB = parseFloat(((t.goalsB / t.visitsB) * 100).toFixed(2));
-                
-                const pA = t.goalsA / t.visitsA;
-                const pB = t.goalsB / t.visitsB;
-                
-                t.ciA = parseFloat((2 * Math.sqrt((pA * (1 - pA)) / t.visitsA) * 100).toFixed(2));
-                t.ciB = parseFloat((2 * Math.sqrt((pB * (1 - pB)) / t.visitsB) * 100).toFixed(2));
-                
-                const se = Math.sqrt((pA * (1 - pA)) / t.visitsA + (pB * (1 - pB)) / t.visitsB);
-                const zVal = se > 0 ? Math.abs(pA - pB) / se : 0;
-                
-                t.pvalue = 1.0;
-                if (zVal > 0) {
-                  t.pvalue = parseFloat((2 * (1 - normalCDF(zVal))).toFixed(3));
-                }
-                
-                const isSig = t.pvalue < 0.05;
-                if (isSig) {
-                  if (pB > pA) {
-                    t.interpretation = `Вариант B (${t.varB.split('—')[0].trim()}) показывает статистически подтвержденный прирост конверсии.`;
-                  } else {
-                    t.interpretation = `Вариант А (${t.varA.split('—')[0].trim()}) работает лучше. Изменение отклоняется.`;
-                  }
-                } else {
-                  t.interpretation = `Статистически значимой разницы не обнаружено (p-value = ${t.pvalue}).`;
-                }
-              }
-            }
-          } catch (vqError) {
-            console.error("Varioqub URL-based live integration sync failed:", vqError.message);
-          }
 
           // Feed parsed Live API data to UI
           data = {
