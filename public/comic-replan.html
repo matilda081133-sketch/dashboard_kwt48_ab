@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>СЛУЖБА СПАСЕНИЯ ОТ БТИ — Согласование перепланировок в комиксах</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Rubik:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-paper: #faf6f0; /* Retro comic book paper color */
+      --text: #1a1a1a;
+      --border-width: 3px;
+      --comic-yellow: #ffd200; /* Vibrant classic pop-art yellow */
+      --comic-orange: #ff5e00; /* Comic alert orange */
+      --comic-blue: #00d2ff; /* Comic hero cyan */
+      --comic-purple: #b983ff;
+      --font-display: 'Montserrat', sans-serif;
+      --font-body: 'Rubik', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-paper);
+      background-image: 
+        radial-gradient(rgba(26, 26, 26, 0.05) 1.5px, transparent 1.5px);
+      background-size: 20px 20px;
+      color: var(--text);
+      font-family: var(--font-body);
+      padding: 3rem 2rem;
+      line-height: 1.4;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--comic-blue);
+      color: var(--text);
+      border: var(--border-width) solid var(--text);
+      padding: 10px 20px;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 4px 4px 0px var(--text);
+      transition: all 0.1s ease;
+    }
+    .btn-back:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px var(--text);
+      background: var(--comic-yellow);
+    }
+
+    .main-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Comic Book Header Banner */
+    .comic-header {
+      background: var(--comic-yellow);
+      border: var(--border-width) solid var(--text);
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+      box-shadow: 8px 8px 0px var(--text);
+      margin-bottom: 3.5rem;
+      transform: rotate(-1deg);
+    }
+
+    .comic-logo {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      -webkit-text-stroke: 1.5px var(--text);
+      text-shadow: 4px 4px 0px var(--text);
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .comic-subtitle {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: var(--comic-orange);
+      color: white;
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      border: var(--border-width) solid var(--text);
+      box-shadow: 3px 3px 0px var(--text);
+      transform: rotate(1deg);
+    }
+
+    /* Giant Comic Strip Grid */
+    .comic-strip {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.5rem;
+      margin-bottom: 3.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .comic-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Individual Comic Panel */
+    .panel {
+      background: white;
+      border: var(--border-width) solid var(--text);
+      box-shadow: 8px 8px 0px var(--text);
+      padding: 2.5rem;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .panel:hover {
+      transform: scale(1.02) rotate(0.5deg);
+      box-shadow: 12px 12px 0px var(--text);
+    }
+
+    /* Panel Number Badge */
+    .panel-num {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: var(--text);
+      color: white;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 900;
+      padding: 6px 14px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .panel h2 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .panel p {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Custom Comic Speech Bubble */
+    .bubble {
+      background: #eff6ff;
+      border: var(--border-width) solid var(--text);
+      border-radius: 20px;
+      padding: 1.25rem;
+      position: relative;
+      margin-top: 1rem;
+      box-shadow: 4px 4px 0px var(--text);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 30px;
+      border-width: 15px 15px 0;
+      border-style: solid;
+      border-color: #eff6ff transparent;
+      display: block;
+      width: 0;
+      z-index: 1;
+    }
+
+    .bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -19px;
+      left: 28px;
+      border-width: 17px 17px 0;
+      border-style: solid;
+      border-color: var(--text) transparent;
+      display: block;
+      width: 0;
+      z-index: 0;
+    }
+
+    /* Pop Art Action Button */
+    .btn-pow {
+      background: var(--comic-orange);
+      color: white;
+      border: var(--border-width) solid var(--text);
+      padding: 1.25rem 2rem;
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 6px 6px 0px var(--text);
+      transition: all 0.1s ease;
+      width: 100%;
+      text-decoration: none;
+      margin-top: 1.5rem;
+    }
+
+    .btn-pow:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 4px 4px 0px var(--text);
+      background: var(--comic-purple);
+    }
+
+    /* Comic Strip Footer/Banner */
+    .comic-footer {
+      background: var(--comic-purple);
+      border: var(--border-width) solid var(--text);
+      padding: 2.5rem;
+      box-shadow: 8px 8px 0px var(--text);
+      transform: rotate(0.5deg);
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .comic-footer {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .footer-action-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: white;
+      -webkit-text-stroke: 1px var(--text);
+      text-shadow: 3px 3px 0px var(--text);
+      line-height: 1.1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <div class="main-container">
+    <!-- Pop Art Header -->
+    <header class="comic-header">
+      <h1 class="comic-logo">СЛУЖБА СПАСЕНИЯ</h1>
+      <div class="comic-subtitle">Узаконивание перепланировок квартир в Москве</div>
+    </header>
+
+    <!-- 4 Panel Comic Strip Story -->
+    <section class="comic-strip">
+      <!-- Panel 1: The Disaster -->
+      <div class="panel" style="transform: rotate(-0.5deg)">
+        <div class="panel-num">ЭПИЗОД 1</div>
+        <div>
+          <h2 style="color: var(--comic-orange)">Снёс стену и... попал?!</h2>
+          <p>
+            Вы просто хотели сделать просторную кухню-гостиную. Взяли кувалду, снесли злосчастную перегородку...
+          </p>
+        </div>
+        
+        <div class="bubble" style="background: #fee2e2;">
+          💥 БУМ! А завтра приходит инспектор БТИ и выписывает предписание: «Вернуть всё как было за свой счет!»
+        </div>
+      </div>
+
+      <!-- Panel 2: The Hero Arrival -->
+      <div class="panel" style="transform: rotate(0.8deg)">
+        <div class="panel-num">ЭПИЗОД 2</div>
+        <div>
+          <h2 style="color: var(--comic-blue)">Но тут появляемся мы!</h2>
+          <p>
+            Мы не носим плащи, но у нас есть СРО допуск и прямая связь с Мосжилинспекцией. Спасаем от судов, штрафов и бюрократического кошмара.
+          </p>
+        </div>
+        
+        <div class="bubble" style="background: #e0f2fe;">
+          🛡️ СПАСЕНИЕ БЛИЗКО! Мы берем на себя все чертежи, БТИ и Росреестр под ключ!
+        </div>
+      </div>
+
+      <!-- Panel 3: The Process -->
+      <div class="panel" style="transform: rotate(-0.7deg)">
+        <div class="panel-num">ЭПИЗОД 3</div>
+        <div>
+          <h2 style="color: var(--comic-purple)">Простой план победы!</h2>
+          <p>
+            Вам не нужно стоять в очередях. Наша суперсила — стоять в них вместо вас.
+          </p>
+        </div>
+        
+        <div class="bubble" style="background: #faf5ff;">
+          ☕ ПОКА ВЫ ПЬЕТЕ КОФЕ: наши инженеры составляют проект СРО, утверждают его и приносят вам готовые документы.
+        </div>
+      </div>
+
+      <!-- Panel 4: Legal & Safe -->
+      <div class="panel" style="transform: rotate(0.5deg)">
+        <div class="panel-num">ЭПИЗОД 4</div>
+        <div>
+          <h2 style="color: var(--comic-yellow); -webkit-text-stroke: 1px #000;">Чистая победа!</h2>
+          <p>
+            Ваша планировка полностью легальна. Стоимость квартиры выросла, банк одобряет ипотеку, соседи завидуют.
+          </p>
+        </div>
+        
+        <div class="bubble" style="background: #fef9c3;">
+          🏆 МИССИЯ ВЫПОЛНЕНА! Официальный штамп Росреестра получен. Полный триумф!
+        </div>
+      </div>
+    </section>
+
+    <!-- Comic Strip Call to Action Footer -->
+    <footer class="comic-footer">
+      <div>
+        <div class="footer-action-title">Монстр бюрократии наступает?</div>
+        <p style="color: white; margin-top: 1rem; font-weight: 700; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+          Нажмите кнопку «КА-БУМ!», чтобы вызвать команду согласователей прямо сейчас!
+        </p>
+      </div>
+      <div>
+        <a href="#" class="btn-pow" onclick="alert('Вызов отправлен! Команда спасения выезжает с лазерными обмерами!')">КА-БУМ! СВЯЗАТЬСЯ →</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

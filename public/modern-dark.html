@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN PREMIUM — Согласование перепланировок премиум-класса</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08090d;
+      --card-bg: rgba(21, 23, 30, 0.7);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #0052ff; /* Vibrant Electric Blue */
+      --primary-glow: rgba(0, 82, 255, 0.4);
+      --border: rgba(255, 255, 255, 0.08);
+      --font: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Elegant blurry gradient blobs in background */
+    .blob-1 {
+      position: absolute;
+      top: -200px;
+      left: -100px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0, 82, 255, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(100px);
+      z-index: 1;
+    }
+
+    .blob-2 {
+      position: absolute;
+      top: 300px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(100px);
+      z-index: 1;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      backdrop-filter: blur(20px);
+      z-index: 1000;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-back:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 20px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+
+    .hero-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 7rem 2rem 5rem;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 5rem;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    @media (max-width: 968px) {
+      .hero-section {
+        grid-template-columns: 1fr;
+        padding-top: 6rem;
+        gap: 3rem;
+      }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(0, 82, 255, 0.1);
+      border: 1px solid rgba(0, 82, 255, 0.2);
+      color: #60a5fa;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background-color: #3b82f6;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #3b82f6;
+    }
+
+    h1 {
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.lead {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+      max-width: 560px;
+    }
+
+    /* Premium interactive glass card */
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 2.5rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* High-fidelity interactive cost calculator */
+    .calc-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .calc-row {
+      margin-bottom: 1.75rem;
+    }
+
+    .calc-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .calc-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+    }
+
+    .calc-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    .calc-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .calc-result {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: white;
+    }
+
+    .btn-glow {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 1.1rem 2.2rem;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0, 82, 255, 0.25);
+    }
+
+    .btn-glow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px var(--primary-glow);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+      max-width: 1200px;
+      width: 100%;
+      align-self: center;
+      position: relative;
+      z-index: 10;
+      padding: 0 2rem 5rem;
+    }
+
+    @media (max-width: 768px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .feat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.75rem;
+      backdrop-filter: blur(20px);
+    }
+
+    .feat-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .feat-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="blob-1"></div>
+  <div class="blob-2"></div>
+
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <div class="hero-section">
+    <!-- Left Column -->
+    <div>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        ЛИЦЕНЗИРОВАННОЕ БЮРО ПЕРЕПЛАНИРОВОК
+      </div>
+      <h1>Согласование без хлопот.</h1>
+      <p class="lead">
+        Проектируем, согласовываем и легализуем перепланировки жилых и коммерческих помещений в Москве с гарантией юридической чистоты. Полный цикл согласования под ключ.
+      </p>
+
+      <button class="btn-glow">
+        Получить консультацию
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+    </div>
+
+    <!-- Right Column (Calculator Card) -->
+    <div class="glass-card">
+      <div class="calc-title">
+        <span>Калькулятор стоимости</span>
+        <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary);">ИНТЕРАКТИВНЫЙ РАСЧЕТ</span>
+      </div>
+
+      <div class="calc-row">
+        <div class="calc-label">
+          <span>Площадь помещения</span>
+          <span id="areaVal">50 м²</span>
+        </div>
+        <input type="range" class="calc-slider" id="areaSlider" min="20" max="250" value="50" oninput="updateCalc()">
+      </div>
+
+      <div class="calc-row">
+        <div class="calc-label">
+          <span>Тип согласования</span>
+          <span id="typeLabel">Узаконивание (по факту)</span>
+        </div>
+        <input type="range" class="calc-slider" id="typeSlider" min="1" max="2" value="2" oninput="updateCalc()">
+      </div>
+
+      <div class="calc-result">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Примерный бюджет</div>
+          <div class="result-value" id="resultPrice">75 000 ₽</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Срок решения</div>
+          <div style="font-size: 1.1rem; font-weight: 700; color: white;" id="resultTime">25-30 дней</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="features-grid">
+    <div class="feat-card">
+      <h3>🛡️ 100% Результат</h3>
+      <p>Юридическая и финансовая ответственность за результат согласования прописана в договоре.</p>
+    </div>
+    <div class="feat-card">
+      <h3>⚡ Скорость</h3>
+      <p>Оптимизированный процесс подачи документов без вашего личного участия за счет интеграции с ведомствами.</p>
+    </div>
+    <div class="feat-card">
+      <h3>📦 Под ключ</h3>
+      <p>От первичного обмера и составления проекта СРО до внесения изменений в ЕГРН.</p>
+    </div>
+  </div>
+
+  <script>
+    function updateCalc() {
+      const area = parseInt(document.getElementById('areaSlider').value);
+      const type = parseInt(document.getElementById('typeSlider').value);
+      
+      document.getElementById('areaVal').innerText = area + ' м²';
+      
+      let basePrice = 30000;
+      let timeStr = '20-25 дней';
+      
+      if (type === 1) {
+        document.getElementById('typeLabel').innerText = 'Планируемая перепланировка';
+        basePrice = basePrice + (area * 500);
+        timeStr = '20-25 дней';
+      } else {
+        document.getElementById('typeLabel').innerText = 'Узаконивание (по факту)';
+        basePrice = basePrice + (area * 800) + 15000;
+        timeStr = '25-30 дней';
+      }
+      
+      // Formatting price
+      const formattedPrice = new Intl.NumberFormat('ru-RU').format(basePrice) + ' ₽';
+      document.getElementById('resultPrice').innerText = formattedPrice;
+      document.getElementById('resultTime').innerText = timeStr;
+    }
+  </script>
+</body>
+</html>

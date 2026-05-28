@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN.CANVAS — Интерактивный бесконечный холст</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card-bg: rgba(18, 20, 28, 0.85);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --font: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      backdrop-filter: blur(20px);
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Side navigation controller */
+    .navigation-panel {
+      position: fixed;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .nav-node {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      color: var(--text-muted);
+    }
+
+    .nav-node:hover {
+      color: white;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .nav-node.active {
+      color: white;
+      font-weight: 700;
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .node-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--text-muted);
+      border-radius: 50%;
+    }
+
+    .nav-node.active .node-dot {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .node-label {
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+    }
+
+    /* Infinite Zoomable Canvas Viewport */
+    .viewport {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .canvas-board {
+      width: 3000px;
+      height: 2000px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -1000px;
+      margin-left: -1500px;
+      background-color: var(--bg);
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform-origin: center;
+      transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1;
+    }
+
+    /* Decorative glowing grid elements */
+    .coordinate-label {
+      position: absolute;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.15);
+    }
+
+    /* Main Sections Placed across the canvas */
+    .canvas-section {
+      position: absolute;
+      width: 500px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 2.5rem;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .canvas-section:hover {
+      border-color: var(--accent);
+    }
+
+    .section-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .canvas-section h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .canvas-section p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Giant Blueprint Overlay in Background */
+    .giant-blueprint-bg {
+      position: absolute;
+      top: 200px;
+      left: 300px;
+      width: 2400px;
+      height: 1600px;
+      border: 1px dashed rgba(255,255,255,0.03);
+      pointer-events: none;
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .giant-blueprint-bg svg {
+      width: 70%;
+      height: 70%;
+      opacity: 0.05;
+      stroke: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <!-- Floating Navigation Controls -->
+  <div class="navigation-panel">
+    <div class="nav-node active" onclick="zoomTo('home', this)">
+      <div class="node-dot"></div>
+      <span class="node-label">01 // Главная</span>
+    </div>
+    <div class="nav-node" onclick="zoomTo('kitchen', this)">
+      <div class="node-dot"></div>
+      <span class="node-label">02 // Кухня</span>
+    </div>
+    <div class="nav-node" onclick="zoomTo('bearing', this)">
+      <div class="node-dot"></div>
+      <span class="node-label">03 // Несущие конструкции</span>
+    </div>
+    <div class="nav-node" onclick="zoomTo('legal', this)">
+      <div class="node-dot"></div>
+      <span class="node-label">04 // Документы СРО</span>
+    </div>
+  </div>
+
+  <!-- Zoom Viewport -->
+  <div class="viewport">
+    <div class="canvas-board" id="canvasBoard">
+      <!-- Coordinate indicators -->
+      <div class="coordinate-label" style="top: 20px; left: 20px;">X: 0000 // Y: 0000</div>
+      <div class="coordinate-label" style="top: 10px; left: 1500px;">N 55° 45' 21"</div>
+      
+      <!-- Giant architectural drawing background -->
+      <div class="giant-blueprint-bg">
+        <svg viewBox="0 0 600 350">
+          <rect x="30" y="30" width="540" height="290" fill="none" stroke-width="4" />
+          <line x1="280" y1="30" x2="280" y2="320" stroke-width="4" />
+          <line x1="280" y1="180" x2="570" y2="180" stroke-width="2" />
+        </svg>
+      </div>
+
+      <!-- Node 1: Home Section -->
+      <div class="canvas-section" style="top: 800px; left: 1250px;">
+        <span class="section-num">LOC: 0.0 // STATE: HERO</span>
+        <h2>Революционное согласование.</h2>
+        <p>
+          Мы полностью избавились от скучных шаблонов. Добро пожаловать на бесконечный интерактивный холст перепланировок. Исследуйте правила Жилинспекции прямо на координатной сетке.
+        </p>
+        <button style="background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer;" onclick="zoomTo('kitchen')">НАЧАТЬ ЭКСКУРСИЮ →</button>
+      </div>
+
+      <!-- Node 2: Kitchen Section -->
+      <div class="canvas-section" style="top: 300px; left: 400px;">
+        <span class="section-num">LOC: -800.-500 // STATE: KITCHEN</span>
+        <h2>Правило «Мокрых зон».</h2>
+        <p>
+          Перенос кухонной плиты и раковины жестко регулируется СНиП. Вы не имеете права размещать кухню над спальней или гостиной ваших соседей снизу. Но мы знаем <strong>4 легальных способа</strong> обойти это ограничение через создание кухни-ниши.
+        </p>
+      </div>
+
+      <!-- Node 3: Bearing Structures -->
+      <div class="canvas-section" style="top: 1200px; left: 500px;">
+        <span class="section-num">LOC: -700.400 // STATE: STRUCTURAL</span>
+        <h2>Несущие стены БТИ.</h2>
+        <p>
+          Снос несущих опор грозит обрушением здания. Но выход есть — мы разрабатываем индивидуальные проекты <strong>усиления проемов сложными металлоконструкциями</strong> с получением технического заключения от автора проекта дома.
+        </p>
+      </div>
+
+      <!-- Node 4: Legal & SRO -->
+      <div class="canvas-section" style="top: 700px; left: 2200px;">
+        <span class="section-num">LOC: 950.-100 // STATE: LEGAL_SRO</span>
+        <h2>Допуск СРО и Закон.</h2>
+        <p>
+          Вся проектная документация разрабатывается квалифицированными инженерами с официальным допуском СРО. Мы берем на себя полную материальную и юридическую ответственность за успешное внесение изменений в ЕГРН.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // State machine mapping to Canvas coordinates and zoom scale
+    const states = {
+      home: { x: 0, y: 0, scale: 1 },
+      kitchen: { x: 950, y: 550, scale: 1.5 },
+      bearing: { x: 850, y: -350, scale: 1.5 },
+      legal: { x: -850, y: 150, scale: 1.5 }
+    };
+
+    function zoomTo(stateName, element) {
+      const state = states[stateName];
+      const board = document.getElementById('canvasBoard');
+      
+      // Update canvas scale and translate offsets
+      board.style.transform = `scale(${state.scale}) translate(${state.x}px, ${state.y}px)`;
+
+      // Update active navigation node state
+      if (element) {
+        document.querySelectorAll('.nav-node').forEach(node => node.classList.remove('active'));
+        element.classList.add('active');
+      } else {
+        // If triggered programmatically, update corresponding node
+        const nodes = document.querySelectorAll('.nav-node');
+        nodes.forEach(node => {
+          node.classList.remove('active');
+          if (node.innerText.toLowerCase().includes(stateName.toLowerCase())) {
+            node.classList.add('active');
+          }
+        });
+      }
+    }
+
+    // Set initial position
+    window.onload = () => {
+      zoomTo('home');
+    };
+  </script>
+</body>
+</html>

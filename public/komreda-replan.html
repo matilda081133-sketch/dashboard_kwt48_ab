@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN — Агентство согласования перепланировок</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #fafafa;
+      --text: #000000;
+      --text-muted: #666666;
+      --primary: #ff2eff; /* Vibrant Neon Magenta */
+      --primary-light: #ffe4ff; /* Light Pastel Pink for badges */
+      --border: #111111;
+      --border-light: #f0f0f0;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--primary-light);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    /* Tilda-like top border line */
+    .top-progress {
+      height: 3px;
+      background-color: var(--primary);
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 999;
+    }
+
+    /* Header Nav */
+    header {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+      margin-top: 3px;
+    }
+
+    .logo {
+      font-family: var(--font-sans);
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+    }
+
+    .logo span {
+      color: var(--primary);
+      margin-left: 2px;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    @media (max-width: 768px) {
+      .nav-menu {
+        display: none;
+      }
+    }
+
+    .nav-menu a {
+      color: var(--text);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: opacity 0.2s ease;
+    }
+
+    .nav-menu a:hover {
+      opacity: 0.65;
+    }
+
+    .btn-discuss {
+      background: var(--primary-light);
+      color: var(--text);
+      border: none;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-discuss:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 4rem;
+      align-items: center;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    @media (max-width: 968px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 4rem 2rem;
+        gap: 3rem;
+      }
+    }
+
+    .hero-info h1 {
+      font-family: var(--font-sans);
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+    }
+
+    .hero-info h1 em {
+      font-style: normal;
+      color: var(--primary);
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-hero {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    .btn-hero:hover {
+      background: var(--text);
+      transform: translateY(-1px);
+    }
+
+    /* Right column graphics */
+    .hero-graphics {
+      border: 1px solid var(--border);
+      background: var(--bg-alt);
+      border-radius: 20px;
+      aspect-ratio: 1.1;
+      padding: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .plan-graphic {
+      width: 100%;
+      height: auto;
+    }
+
+    /* Section Header style */
+    .section-title-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 3rem;
+    }
+
+    .section-title-wrap span {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title-wrap h2 {
+      font-family: var(--font-sans);
+      font-size: 2.8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      margin-top: 0.5rem;
+    }
+
+    /* Grid layout for services */
+    .services-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1px; /* border grid effect */
+      background-color: var(--border-light);
+    }
+
+    .service-card {
+      background-color: var(--bg);
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      min-height: 280px;
+    }
+
+    .service-card:hover {
+      background-color: var(--bg-alt);
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .card-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 20px;
+    }
+
+    .card-type {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .service-card h3 {
+      font-family: var(--font-sans);
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.15;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .service-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Form Section (Exactly like Komreda's clean form structure) */
+    .section-contact {
+      background-color: var(--bg-alt);
+      border-top: 1px solid var(--border-light);
+      padding: 6rem 2rem;
+    }
+
+    .contact-container {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .contact-container h2 {
+      font-family: var(--font-sans);
+      font-size: 2.8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+
+    .contact-container p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 3rem;
+    }
+
+    .form-group {
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    .form-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--border-light);
+      padding: 1rem 0;
+      font-size: 1.1rem;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    .form-submit {
+      background: var(--primary-light);
+      color: var(--text);
+      border: none;
+      padding: 16px 40px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      margin-top: 1.5rem;
+    }
+
+    .form-submit:hover {
+      background: var(--primary);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-progress"></div>
+
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <!-- Header Nav -->
+  <header>
+    <a href="/" class="logo">REPLAN<span>.</span></a>
+    <ul class="nav-menu">
+      <li><a href="#services">Услуги</a></li>
+      <li><a href="#about">О нас</a></li>
+      <li><a href="#request">Контакты</a></li>
+    </ul>
+    <a href="#request" class="btn-discuss">Обсудить задачу</a>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-info">
+      <h1>Служба <em>согласования</em> перепланировок.</h1>
+      <p class="hero-desc">
+        Разрабатываем проекты перепланировок любой сложности в Москве. Берём всю бумажную волокиту на себя. Гарантируем 100% результат внесения в реестры БТИ и Росреестра.
+      </p>
+      <a href="#request" class="btn-hero">Получить проект бесплатно</a>
+    </div>
+
+    <!-- Minimalist Line Floorplan Graphic -->
+    <div class="hero-graphics">
+      <svg class="plan-graphic" viewBox="0 0 500 350">
+        <!-- Thin architectural layout boundaries -->
+        <rect x="20" y="20" width="460" height="310" fill="none" stroke="var(--border)" stroke-width="2" />
+        <line x1="230" y1="20" x2="230" y2="330" stroke="var(--border)" stroke-width="2" />
+        <line x1="230" y1="180" x2="480" y2="180" stroke="var(--border)" stroke-width="2" />
+        
+        <!-- Glowing Magenta Accents (Demolished wall representation) -->
+        <line x1="120" y1="20" x2="120" y2="220" stroke="var(--primary)" stroke-width="4" stroke-dasharray="6, 6" />
+        
+        <!-- Tags styling -->
+        <circle cx="120" cy="120" r="6" fill="var(--primary)" />
+        <text x="35" y="160" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="var(--primary)">KITCHEN</text>
+        <text x="260" y="100" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="var(--text-muted)">LIVING ROOM</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Services Section Header -->
+  <div class="section-title-wrap" id="services">
+    <span>ЧЕМ ЗАНИМАЕМСЯ // SERVICES</span>
+    <h2>Что мы делаем</h2>
+  </div>
+
+  <!-- Services Grid (Komreda exact card border grid style) -->
+  <section class="services-grid">
+    <!-- Card 1 -->
+    <div class="service-card">
+      <div class="card-meta">
+        <span class="card-num">01</span>
+        <span class="card-type">ПРОЕКТИРОВАНИЕ</span>
+      </div>
+      <div>
+        <h3>Проекты СРО</h3>
+        <p>Разрабатываем официальные проекты перепланировок и технические заключения от сертифицированных членов СРО для Жилинспекции.</p>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="service-card">
+      <div class="card-meta">
+        <span class="card-num">02</span>
+        <span class="card-type">СОГЛАСОВАНИЕ</span>
+      </div>
+      <div>
+        <h3>БТИ & МЖИ</h3>
+        <p>Берем на себя полное согласование планируемой перепланировки в Мосжилинспекции и получение официального акта выполненных работ.</p>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="service-card">
+      <div class="card-meta">
+        <span class="card-num">03</span>
+        <span class="card-type">ЛЕГАЛИЗАЦИЯ</span>
+      </div>
+      <div>
+        <h3>Узаконивание</h3>
+        <p>Узакониваем уже выполненные перепланировки по факту. Минимизируем риски штрафов, судов и предписаний Жилинспекции.</p>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="service-card">
+      <div class="card-meta">
+        <span class="card-num">04</span>
+        <span class="card-type">РЕГИСТРАЦИЯ</span>
+      </div>
+      <div>
+        <h3>ЕГРН Росреестр</h3>
+        <p>Вызываем кадастрового инженера, составляем новый технический план и вносим обновленные планировочные данные в базу Росреестра.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Form Section -->
+  <section class="section-contact" id="request">
+    <div class="contact-container">
+      <h2>Обсудить вашу задачу</h2>
+      <p>Расскажите нам о вашей квартире и о том, что вы хотите сделать. Мы свяжемся с вами в течение 10 минут с готовым решением.</p>
+
+      <form onsubmit="event.preventDefault(); alert('Спасибо! Наш эксперт свяжется с вами в течение 10 минут.')">
+        <div class="form-group">
+          <input type="text" class="form-input" placeholder="Как вас зовут?" required>
+        </div>
+        <div class="form-group">
+          <input type="tel" class="form-input" placeholder="Номер телефона для связи" required>
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-input" placeholder="Какой у вас ЖК или адрес?" required>
+        </div>
+        <button type="submit" class="form-submit">ОБСУДИТЬ ЗАДАЧУ</button>
+      </form>
+    </div>
+  </section>
+
+</body>
+</html>

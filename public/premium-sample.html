@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN STUDIO — Премиальное согласование перепланировок</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fdfcfb; /* Bone White / Luxury Warm Sand */
+      --text: #1a1c1e; /* Deep Charcoal */
+      --text-muted: #62686e;
+      --accent: #a88e63; /* Warm Champagne Gold */
+      --accent-light: #f5f0e6;
+      --border: rgba(26, 28, 30, 0.08);
+      --font-serif: 'Cormorant Garamond', serif;
+      --font-sans: 'Montserrat', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-back:hover {
+      background: var(--text);
+      color: var(--bg);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    /* Header Nav */
+    header {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 3rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 6rem;
+      align-items: center;
+    }
+
+    @media (max-width: 1024px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 4rem 2rem;
+        gap: 3rem;
+      }
+    }
+
+    .hero-info {
+      max-width: 620px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--accent-light);
+      color: #7d653f;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2rem;
+    }
+
+    .hero-badge span {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent);
+      border-radius: 50%;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 4.8rem;
+      font-weight: 300;
+      line-height: 1.05;
+      color: var(--text);
+      margin-bottom: 2rem;
+      letter-spacing: -0.01em;
+    }
+
+    h1 em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      line-height: 1.7;
+      margin-bottom: 3.5rem;
+    }
+
+    .btn-premium {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--text);
+      color: white;
+      border: 1px solid var(--text);
+      padding: 1.2rem 2.8rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-premium:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(168, 142, 99, 0.3);
+    }
+
+    /* Elegant Floorplan Rendering Box */
+    .visual-box {
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      background: white;
+      aspect-ratio: 1.1;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.02);
+      position: relative;
+    }
+
+    .visual-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      background: radial-gradient(circle at top right, rgba(168, 142, 99, 0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Luxury SVG Floor Plan with interactive overlay */
+    .luxury-svg {
+      width: 100%;
+      height: auto;
+      max-height: 380px;
+    }
+
+    .svg-part {
+      fill: none;
+      stroke: var(--text);
+      stroke-width: 2.5;
+      transition: all 0.3s ease;
+    }
+
+    .svg-part.accent-wall {
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-dasharray: 4, 4;
+    }
+
+    .svg-label {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-style: italic;
+      fill: var(--accent);
+    }
+
+    /* Section: Trust & Stats */
+    .section-stats {
+      background: #faf9f6;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 5rem 2rem;
+    }
+
+    .stats-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4rem;
+    }
+
+    @media (max-width: 768px) {
+      .stats-container {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+    }
+
+    .stat-card {
+      text-align: left;
+    }
+
+    .stat-num {
+      font-family: var(--font-serif);
+      font-size: 3.5rem;
+      font-weight: 300;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat-num span {
+      font-size: 1.5rem;
+    }
+
+    .stat-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .stat-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Section: Cases */
+    .section-cases {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 8rem 2rem;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 5rem;
+    }
+
+    .section-header h2 {
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      font-weight: 300;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .cases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 3rem;
+    }
+
+    .case-card {
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: white;
+      padding: 2rem;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .case-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--accent);
+      box-shadow: 0 20px 40px rgba(168, 142, 99, 0.05);
+    }
+
+    .case-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .case-title {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 400;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .case-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .case-meta {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      font-size: 0.8rem;
+    }
+
+    .meta-label {
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .meta-val {
+      font-weight: 600;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <!-- Header Nav -->
+  <header>
+    <div class="logo">REPLAN.STUDIO</div>
+    <ul class="nav-links">
+      <li><a href="#">О студии</a></li>
+      <li><a href="#">Услуги</a></li>
+      <li><a href="#">Кейсы</a></li>
+      <li><a href="#">Лицензии</a></li>
+    </ul>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-info">
+      <div class="hero-badge">
+        <span></span>
+        Премиальные архитектурные решения
+      </div>
+      <h1>Свобода <em>пространства</em>. Легально.</h1>
+      <p class="hero-desc">
+        Разрабатываем и узакониваем архитектурные перепланировки квартир бизнес-класса в Москве. Создаем безупречные, законные проекты, беря на себя все переговоры и согласования с Мосжилинспекцией под ключ.
+      </p>
+
+      <a href="#" class="btn-premium">Обсудить проект с архитектором</a>
+    </div>
+
+    <!-- Right Side Floor Plan Rendering -->
+    <div class="visual-box">
+      <!-- Luxury Vector Blueprint -->
+      <svg class="luxury-svg" viewBox="0 0 500 350">
+        <!-- Thin architectural layout boundaries -->
+        <rect x="20" y="20" width="460" height="310" class="svg-part" stroke-width="2.5" />
+        
+        <!-- Interior walls -->
+        <line x1="230" y1="20" x2="230" y2="330" class="svg-part" stroke-width="2.5" />
+        
+        <!-- Luxury sliding wall partition -->
+        <line x1="230" y1="180" x2="430" y2="180" class="svg-part accent-wall" />
+        <circle cx="330" cy="180" r="6" fill="var(--accent)" />
+        
+        <!-- Labels with serif typography styling -->
+        <text x="50" y="80" class="svg-label">Кухня-Гостиная</text>
+        <text x="270" y="80" class="svg-label">Мастер-Спальня</text>
+        <text x="270" y="240" class="svg-label">Гардеробная</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="section-stats">
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-num">14<span>лет</span></div>
+        <div class="stat-title">Опыта на рынке Москвы</div>
+        <div class="stat-desc">Проектируем и согласовываем изменения планировок любой сложности с 2012 года.</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">SRO<span>лицензия</span></div>
+        <div class="stat-title">Официальный допуск</div>
+        <div class="stat-desc">Составляем официальные технические заключения от членов СРО с юридической силой.</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">100%<span>успеха</span></div>
+        <div class="stat-title">Гарантированный результат</div>
+        <div class="stat-desc">Прописываем финансовые гарантии положительного решения Жилинспекции в договоре.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cases Section -->
+  <section class="section-cases">
+    <div class="section-header">
+      <p>РЕАЛИЗОВАННЫЕ КЕЙСЫ</p>
+      <h2>Наши проекты в Москве</h2>
+    </div>
+
+    <div class="cases-grid">
+      <!-- Case 1 -->
+      <div class="case-card">
+        <div class="case-tag">ЖК СЕРДЦЕ СТОЛИЦЫ // 92 м²</div>
+        <h3 class="case-title">Слияние кухни с гостиной</h3>
+        <p class="case-desc">Успешное объединение кухонной зоны с гостиной с сохранением несущей колонны и расширением площади коридора.</p>
+        <div class="case-meta">
+          <div>
+            <div class="meta-label">Срок решения</div>
+            <div class="meta-val">22 дня</div>
+          </div>
+          <div>
+            <div class="meta-label">Статус</div>
+            <div class="meta-val" style="color: var(--accent);">Узаконено в ЕГРН</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 2 -->
+      <div class="case-card">
+        <div class="case-tag">ЖК СОБЫТИЕ // 118 м²</div>
+        <h3 class="case-title">Два мастер-санузла</h3>
+        <p class="case-desc">Перепланировка с расширением ванной зоны на территорию нежилой кладовой и организацией дополнительного санузла.</p>
+        <div class="case-meta">
+          <div>
+            <div class="meta-label">Срок решения</div>
+            <div class="meta-val">26 дней</div>
+          </div>
+          <div>
+            <div class="meta-label">Статус</div>
+            <div class="meta-val" style="color: var(--accent);">Узаконено в ЕГРН</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 3 -->
+      <div class="case-card">
+        <div class="case-tag">ЖК ФИЛИ СИТИ // 76 м²</div>
+        <h3 class="case-title">Организация гардеробной</h3>
+        <p class="case-desc">Перенос внутренних ГКЛ-перегородок жилых комнат для создания обособленной гардеробной в прихожей.</p>
+        <div class="case-meta">
+          <div>
+            <div class="meta-label">Срок решения</div>
+            <div class="meta-val">19 дней</div>
+          </div>
+          <div>
+            <div class="meta-label">Статус</div>
+            <div class="meta-val" style="color: var(--accent);">Узаконено в ЕГРН</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

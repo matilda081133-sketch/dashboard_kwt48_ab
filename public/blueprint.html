@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN.ENGINEERING — Согласование перепланировок в Москве</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --grid: #e5e5e5;
+      --text: #171717;
+      --text-muted: #737373;
+      --accent: #ff3d00; /* Safety Neon Orange */
+      --accent-hover: #dd3300;
+      --success: #00c853;
+      --border: #171717;
+      --font-mono: 'Fira Code', monospace;
+      --font-sans: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 24px 24px;
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--accent);
+      transform: translateX(-4px);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      min-height: calc(100vh - 8rem);
+      align-items: center;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding-top: 6rem;
+      }
+    }
+
+    /* Left Info Column */
+    .info-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .meta-tag {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-tag::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent);
+      border-radius: 50%;
+    }
+
+    h1 {
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin-bottom: 2rem;
+      text-transform: uppercase;
+      border-bottom: 4px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    p.lead {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      max-width: 540px;
+    }
+
+    /* Specifications Table */
+    .tech-table {
+      font-family: var(--font-mono);
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2.5rem;
+      font-size: 0.9rem;
+    }
+
+    .tech-table td {
+      padding: 0.75rem 0;
+      border-bottom: 1px dashed var(--text-muted);
+    }
+
+    .tech-table td.val {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .btn-action {
+      background: var(--text);
+      color: var(--bg);
+      border: 2px solid var(--text);
+      padding: 1.25rem 2rem;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+      max-width: 400px;
+    }
+
+    .btn-action:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      transform: translateY(-2px);
+    }
+
+    /* Right Blueprint Drawing Column */
+    .drawing-column {
+      background: #111;
+      border: 3px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5rem;
+      color: #00e676; /* Classic terminal green or cyan */
+      font-family: var(--font-mono);
+      display: flex;
+      flex-direction: column;
+      aspect-ratio: 1;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      position: relative;
+    }
+
+    .drawing-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 230, 118, 0.3);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    /* Interactive SVG Floor Plan */
+    .floorplan-svg {
+      flex: 1;
+      width: 100%;
+      height: auto;
+      max-height: 320px;
+    }
+
+    .wall {
+      fill: none;
+      stroke: #00e676;
+      stroke-width: 4;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    /* Bearing walls (heavy) */
+    .wall.bearing {
+      stroke-width: 12;
+      stroke-dasharray: 2, 4;
+    }
+
+    .wall:hover {
+      stroke: var(--accent);
+      filter: drop-shadow(0 0 8px var(--accent));
+    }
+
+    /* Active dynamic terminal text */
+    .console-output {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      padding: 1rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      margin-top: auto;
+      min-height: 85px;
+      color: #a3e635;
+      overflow-y: auto;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: #00e676;
+      margin-left: 4px;
+      animation: blink 1s infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <div class="container">
+    <!-- Info Block -->
+    <div class="info-column">
+      <div class="meta-tag">АРХИТЕКТУРНО-ИНЖЕНЕРНОЕ БЮРО</div>
+      <h1>REPLAN.ENG</h1>
+      <p class="lead">
+        Профессиональное проектирование и техническое обследование несущих конструкций. Согласование перепланировок коммерческой и премиальной жилой недвижимости в Москве.
+      </p>
+
+      <table class="tech-table">
+        <tr>
+          <td>ЛИЦЕНЗИЯ СРО</td>
+          <td class="val">СРО-П-140-18092012</td>
+        </tr>
+        <tr>
+          <td>АТТЕСТАТ ЖИЛИНСПЕКЦИИ</td>
+          <td class="val">СОГЛАСОВАНО 100%</td>
+        </tr>
+        <tr>
+          <td>ТИП ОБЪЕКТОВ</td>
+          <td class="val">КВАРТИРЫ / НЕЖИЛЫЕ ПОМЕЩЕНИЯ</td>
+        </tr>
+        <tr>
+          <td>СРЕДНИЙ СРОК РЕШЕНИЯ</td>
+          <td class="val">25 РАБОЧИХ ДНЕЙ</td>
+        </tr>
+      </table>
+
+      <a href="#" class="btn-action">
+        <span>РАССЧИТАТЬ СТОИМОСТЬ СХЕМЫ</span>
+        <span>→</span>
+      </a>
+    </div>
+
+    <!-- Interactive Floor Plan Block -->
+    <div class="drawing-column">
+      <div class="drawing-header">
+        <span>МОДЕЛЬ КВАРТИРЫ: ЖК_БИЗНЕС_72м2</span>
+        <span>МАСШТАБ 1:50</span>
+      </div>
+
+      <!-- Plan Layout -->
+      <svg class="floorplan-svg" viewBox="0 0 600 350">
+        <!-- Outer walls (bearing) -->
+        <rect x="30" y="30" width="540" height="290" class="wall bearing" data-info="ВНЕШНЯЯ НЕСУЩАЯ СТЕНА. Демонтаж запрещен. Любые изменения фасада подлежат согласованию с Комитетом по Архитектуре." />
+        
+        <!-- Interior walls -->
+        <!-- Load bearing interior column -->
+        <line x1="280" y1="30" x2="280" y2="180" class="wall bearing" data-info="ВНУТРЕННЯЯ НЕСУЩАЯ ПАНЕЛЬ (180мм). Полный демонтаж запрещен. Возможно согласование дверного проема до 900мм с усилением стальной рамой из швеллеров." />
+        
+        <!-- Non-bearing thin walls -->
+        <line x1="280" y1="180" x2="280" y2="320" class="wall non-bearing" data-info="ПЕРЕГОРОДКА ИЗ ГИПСОБЛОКА (80мм). Не является несущей конструкцией. Разрешен полный демонтаж. Согласование по эскизу за 15 дней." />
+        <line x1="280" y1="180" x2="450" y2="180" class="wall non-bearing" data-info="ГКЛ ПЕРЕГОРОДКА САНУЗЛА. Не несущая. Перенос разрешен при условии гидроизоляции пола и сохранения границ мокрой зоны над жилой зоной соседей." />
+        <line x1="120" y1="30" x2="120" y2="240" class="wall non-bearing" data-info="ПЕРЕГОРОДКА ЖИЛОЙ КОМНАТЫ. Демонтаж разрешен. Позволяет объединить кухню с гостиной, если плита электрическая." />
+        <line x1="120" y1="240" x2="280" y2="240" class="wall non-bearing" data-info="ГРАНИЦА КУХНИ. Не является несущей стеной. Разрешен перенос или создание ниши." />
+      </svg>
+
+      <div class="console-output" id="console">
+        ⚡ НАВЕДИТЕ КУРСОР НА ЛЮБУЮ СТЕНУ ЧЕРТЕЖА, ЧТОБЫ ПОЛУЧИТЬ ИНЖЕНЕРНУЮ СПРАВКУ И СТАТУС СОГЛАСОВАНИЯ...<span class="cursor"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const consoleBox = document.getElementById('console');
+    const walls = document.querySelectorAll('.wall');
+
+    walls.forEach(wall => {
+      wall.addEventListener('mouseenter', () => {
+        const info = wall.getAttribute('data-info');
+        consoleBox.innerHTML = `> АНАЛИЗ КОНСТРУКЦИИ:<br>${info}<span class="cursor"></span>`;
+      });
+      wall.addEventListener('mouseleave', () => {
+        consoleBox.innerHTML = `⚡ НАВЕДИТЕ КУРСОР НА ЛЮБУЮ СТЕНУ ЧЕРТЕЖА, ЧТОБЫ ПОЛУЧИТЬ ИНЖЕНЕРНУЮ СПРАВКУ И СТАТУС СОГЛАСОВАНИЯ...<span class="cursor"></span>`;
+      });
+    });
+  </script>
+</body>
+</html>

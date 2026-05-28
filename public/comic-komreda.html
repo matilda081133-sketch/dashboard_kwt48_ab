@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN.COMIC — Согласование перепланировок в деталях</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #fafafa;
+      --text: #111111;
+      --text-muted: #666666;
+      --primary: #ff2eff; /* Vibrant Neon Magenta */
+      --primary-light: #ffe4ff; /* Pastel Pink */
+      --border: #111111;
+      --border-light: #e5e7eb;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 3rem 2rem;
+      overflow-x: hidden;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--primary-light);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Top Logo Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 4rem;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .logo span {
+      color: var(--primary);
+    }
+
+    .header-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Intro Hero Block */
+    .intro-block {
+      max-width: 800px;
+      margin-bottom: 4rem;
+    }
+
+    .intro-block h1 {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .intro-block h1 span {
+      color: var(--primary);
+    }
+
+    /* Clean modern pop-art badges */
+    .badge-pow {
+      display: inline-block;
+      background: var(--primary-light);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 30px;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* 4-Panel Comic Strip Grid with Komreda styling */
+    .comic-strip {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3rem;
+      margin-bottom: 5rem;
+    }
+
+    @media (max-width: 968px) {
+      .comic-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .comic-panel {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 480px;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .comic-panel:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+      box-shadow: 0 20px 40px rgba(255, 46, 255, 0.08);
+    }
+
+    .panel-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .panel-num {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .panel-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Elegant Custom Vector illustrations inside panels */
+    .panel-illustration {
+      height: 140px;
+      width: 100%;
+      border: 1px dashed var(--border-light);
+      border-radius: 16px;
+      background: white;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Clean Vector Plan Elements inside illustrations */
+    .illus-svg {
+      width: 80%;
+      height: 80%;
+    }
+
+    /* Elegant Comic Speech Bubble (Komreda style) */
+    .speech-bubble {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      position: relative;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.5;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 30px;
+      border-width: 10px 10px 0;
+      border-style: solid;
+      border-color: white transparent;
+      display: block;
+      width: 0;
+      z-index: 2;
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -11px;
+      left: 29px;
+      border-width: 11px 11px 0;
+      border-style: solid;
+      border-color: var(--border) transparent;
+      display: block;
+      width: 0;
+      z-index: 1;
+    }
+
+    /* Pop Art Pow Banner Footer */
+    .pow-footer {
+      background: var(--text);
+      color: white;
+      border-radius: 28px;
+      padding: 4rem 3.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .pow-footer {
+        flex-direction: column;
+        text-align: center;
+        padding: 3rem 2rem;
+      }
+    }
+
+    .pow-footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center left, rgba(255, 46, 255, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .footer-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .footer-title span {
+      color: var(--primary);
+    }
+
+    .btn-pow {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 1.25rem 2.5rem;
+      border-radius: 35px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 25px rgba(255, 46, 255, 0.3);
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-pow:hover {
+      background: white;
+      color: var(--text);
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Back button -->
+    <a href="/" class="btn-back">
+      <span>← НА ГЛАВНУЮ</span>
+    </a>
+
+    <!-- Top Header -->
+    <header>
+      <a href="/" class="logo">REPLAN<span>.</span></a>
+      <div class="header-tag">КРЕАТИВНЫЙ МАКЕТ // КОМИКС-СТОРИТЕЛЛИНГ</div>
+    </header>
+
+    <!-- Intro Hero Block -->
+    <section class="intro-block">
+      <div class="badge-pow">Дизайнерский концепт</div>
+      <h1>Мы узаконим ваши <span>перепланировки</span>. Превращаем бюрократический кошмар в искусство.</h1>
+    </section>
+
+    <!-- 4 Panel Comic Strip Grid -->
+    <section class="comic-strip">
+      
+      <!-- Panel 1: Sledgehammer Decision -->
+      <div class="comic-panel">
+        <div class="panel-meta">
+          <span class="panel-num">PART_01 // THE IDEA</span>
+          <span class="header-tag">ЭПИЗОД 1</span>
+        </div>
+        
+        <h3 class="panel-title">Снос перегородок</h3>
+        
+        <!-- Elegant flat visual vector line art -->
+        <div class="panel-illustration">
+          <svg class="illus-svg" viewBox="0 0 200 100">
+            <!-- Fine blueprint grid background inside box -->
+            <rect x="10" y="10" width="180" height="80" fill="none" stroke="var(--border-light)" stroke-width="1" />
+            <!-- Layout lines -->
+            <line x1="100" y1="10" x2="100" y2="90" stroke="var(--border)" stroke-width="2" />
+            <!-- Highlight wall to demolish in pink -->
+            <line x1="50" y1="10" x2="50" y2="90" stroke="var(--primary)" stroke-width="3" stroke-dasharray="4, 4" />
+            <circle cx="50" cy="50" r="4" fill="var(--primary)" />
+          </svg>
+        </div>
+
+        <div class="speech-bubble">
+          🔨 <strong>«Хочу убрать эту тонкую перегородку между кухней и комнатой, чтобы впустить свет!»</strong>
+        </div>
+      </div>
+
+      <!-- Panel 2: The Fine / Red Tape -->
+      <div class="comic-panel">
+        <div class="panel-meta">
+          <span class="panel-num">PART_02 // THE CONFLICT</span>
+          <span class="header-tag">ЭПИЗОД 2</span>
+        </div>
+        
+        <h3 class="panel-title" style="color: var(--primary);">Бюрократия БТИ</h3>
+        
+        <!-- Red tape illustration -->
+        <div class="panel-illustration">
+          <svg class="illus-svg" viewBox="0 0 200 100">
+            <!-- Stamp symbol in pop art style -->
+            <rect x="60" y="20" width="80" height="50" fill="none" stroke="var(--primary)" stroke-width="2" rx="6" />
+            <text x="75" y="50" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="var(--primary)">ШТРАФ БТИ</text>
+            <line x1="40" y1="80" x2="160" y2="80" stroke="var(--border)" stroke-width="1.5" />
+          </svg>
+        </div>
+
+        <div class="speech-bubble" style="border-color: var(--primary);">
+          🛑 <strong>«Красная печать! Незаконно! Верните стену на место или мы подаем на вас в суд!»</strong>
+        </div>
+      </div>
+
+      <!-- Panel 3: Superhero Action -->
+      <div class="comic-panel">
+        <div class="panel-meta">
+          <span class="panel-num">PART_03 // THE HEROES</span>
+          <span class="header-tag">ЭПИЗОД 3</span>
+        </div>
+        
+        <h3 class="panel-title">Служба спасения</h3>
+        
+        <!-- Shield/Protection illustration -->
+        <div class="panel-illustration">
+          <svg class="illus-svg" viewBox="0 0 200 100">
+            <!-- Shield shape -->
+            <path d="M100 20 L140 35 L140 65 Q100 85 100 85 Q100 85 60 65 L60 35 Z" fill="none" stroke="var(--border)" stroke-width="2.5" />
+            <!-- Star inside shield -->
+            <polygon points="100,38 103,48 112,48 105,54 108,63 100,57 92,63 95,54 88,48 97,48" fill="var(--primary)" />
+          </svg>
+        </div>
+
+        <div class="speech-bubble">
+          ⚡ <strong>«Спокойно. Мы берем штурмом Жилинспекцию, разрабатываем проект СРО и защищаем ваши интересы!»</strong>
+        </div>
+      </div>
+
+      <!-- Panel 4: Triumph -->
+      <div class="comic-panel">
+        <div class="panel-meta">
+          <span class="panel-num">PART_04 // THE TRIUMPH</span>
+          <span class="header-tag">ЭПИЗОД 4</span>
+        </div>
+        
+        <h3 class="panel-title" style="color: var(--primary);">Полный триумф</h3>
+        
+        <!-- Approved plan illustration -->
+        <div class="panel-illustration">
+          <svg class="illus-svg" viewBox="0 0 200 100">
+            <!-- Approved seal -->
+            <circle cx="100" cy="50" r="30" fill="none" stroke="var(--primary)" stroke-width="2" />
+            <path d="M 85,50 L 97,60 L 115,40" fill="none" stroke="var(--primary)" stroke-width="3" />
+            <text x="80" y="93" font-family="var(--font-mono)" font-size="8" fill="var(--text-muted)">РОСРЕЕСТР</text>
+          </svg>
+        </div>
+
+        <div class="speech-bubble" style="border-color: var(--primary);">
+          🏆 <strong>«Миссия выполнена. Штамп получен, планировка полностью законна. Квартира выросла в цене на 20%!»</strong>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Pop Art Pow Banner Footer -->
+    <footer class="pow-footer">
+      <div>
+        <div class="footer-title">БТИ наступает? <span>КА-БУМ!</span></div>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.75rem; font-weight: 500;">Вызовите команду REPLAN прямо сейчас и получите аудит вашего чертежа.</p>
+      </div>
+      <div>
+        <a href="#" class="btn-pow" onclick="alert('Команда спасения REPLAN выезжает на помощь!')">вызвать команду →</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

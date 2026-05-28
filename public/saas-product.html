@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN.PRODUCT — Простая легализация перепланировок</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --card-bg: #f9fafb;
+      --text: #111827;
+      --text-muted: #4b5563;
+      --primary: #0066cc; /* Crisp tech blue */
+      --primary-hover: #0052a3;
+      --border: #e5e7eb;
+      --font: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #f3f4f6;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--border);
+      transform: translateY(-1px);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 968px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding-top: 6rem;
+        gap: 3rem;
+      }
+    }
+
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      max-width: 500px;
+    }
+
+    /* Modern action buttons */
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-action:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+    }
+
+    /* Accordion roadmap block */
+    .roadmap-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+    }
+
+    .roadmap-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .acc-item {
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 0;
+      cursor: pointer;
+    }
+
+    .acc-item:last-child {
+      border-bottom: none;
+    }
+
+    .acc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .acc-num {
+      color: var(--primary);
+      margin-right: 0.75rem;
+      font-weight: 700;
+    }
+
+    .acc-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0;
+    }
+
+    .acc-item.active .acc-body {
+      max-height: 100px;
+      margin-top: 0.75rem;
+    }
+
+    .acc-icon {
+      transition: transform 0.2s ease;
+    }
+
+    .acc-item.active .acc-icon {
+      transform: rotate(45deg);
+    }
+  </style>
+</head>
+<body>
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <div class="container">
+    <!-- Left Column -->
+    <div>
+      <div class="meta-badge">Технологичный сервис</div>
+      <h1>Прозрачное согласование перепланировок.</h1>
+      <p class="subtitle">
+        Легально узакониваем изменения в планировке квартир. Забудьте о визитах в МФЦ и переговорах с Жилинспекцией. Контролируйте каждый шаг онлайн.
+      </p>
+
+      <a href="#" class="btn-action">
+        Рассчитать проект бесплатно
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </a>
+    </div>
+
+    <!-- Right Column (Roadmap Accordion) -->
+    <div class="roadmap-card">
+      <h3 class="roadmap-title">Как работает согласование</h3>
+      
+      <div class="acc-item active" onclick="toggleAcc(this)">
+        <div class="acc-header">
+          <span><span class="acc-num">01</span>Экспертный осмотр квартиры</span>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          Выезжаем на объект, проводим лазерный обмер помещений и определяем расположение несущих конструкций и инженерных коммуникаций.
+        </div>
+      </div>
+
+      <div class="acc-item" onclick="toggleAcc(this)">
+        <div class="acc-header">
+          <span><span class="acc-num">02</span>Разработка проекта СРО</span>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          Составляем официальный проект перепланировки и техническое заключение СРО в полном соответствии с требованиями Мосжилинспекции.
+        </div>
+      </div>
+
+      <div class="acc-item" onclick="toggleAcc(this)">
+        <div class="acc-header">
+          <span><span class="acc-num">03</span>Получение распоряжения МЖИ</span>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          Подаем документы через электронные ведомства и получаем официальное распоряжение на проведение или узаконивание работ.
+        </div>
+      </div>
+
+      <div class="acc-item" onclick="toggleAcc(this)">
+        <div class="acc-header">
+          <span><span class="acc-num">04</span>Внесение изменений в ЕГРН</span>
+          <span class="acc-icon">+</span>
+        </div>
+        <div class="acc-body">
+          Вызываем кадастрового инженера, оформляем новый технический план БТИ и вносим обновленные данные в реестр Росреестра.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleAcc(element) {
+      // Find all accordions and collapse them
+      const items = document.querySelectorAll('.acc-item');
+      items.forEach(item => {
+        if (item !== element) {
+          item.classList.remove('active');
+        }
+      });
+      // Toggle selected accordion
+      element.classList.toggle('active');
+    }
+  </script>
+</body>
+</html>

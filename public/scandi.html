@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сканди-Реплан — Забота о вашем уютном доме</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf6f0; /* Soft warm cream */
+      --card-bg: #ffffff;
+      --text: #2c3531; /* Soft charcoal */
+      --text-muted: #6e7a74;
+      --primary: #4a5c53; /* Deep forest green */
+      --primary-hover: #3b4942;
+      --accent: #d4a373; /* Warm terracotta clay */
+      --accent-light: #f4ebe1;
+      --border: #e8e2d8;
+      --font-serif: 'Playfair Display', serif;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(74, 92, 83, 0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .hero-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 968px) {
+      .hero-container {
+        grid-template-columns: 1fr;
+        padding-top: 6rem;
+        gap: 3rem;
+      }
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      background: var(--accent-light);
+      color: #9c6644;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 3.8rem;
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    p.lead {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+      max-width: 520px;
+    }
+
+    /* Soft Buttons */
+    .btn-soft {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 1.1rem 2.2rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(74, 92, 83, 0.2);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+      margin-right: 1rem;
+    }
+
+    .btn-soft:hover {
+      background: var(--primary-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 30px rgba(74, 92, 83, 0.3);
+    }
+
+    /* Before/After Showcase card */
+    .showcase-card {
+      background: var(--card-bg);
+      border-radius: 32px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(74, 92, 83, 0.06);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .slider-box {
+      width: 100%;
+      height: 300px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      background: #e5e5e5;
+      border: 1px solid var(--border);
+    }
+
+    .slider-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Beautiful SVG illustrations representing home layout */
+    .img-before {
+      background: #e6ebe9;
+      color: var(--primary);
+    }
+
+    .img-after {
+      background: var(--accent-light);
+      color: #9c6644;
+      opacity: 0;
+    }
+
+    .slider-img svg {
+      width: 80%;
+      height: 80%;
+      opacity: 0.8;
+    }
+
+    .slider-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .slider-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 0.6rem 1.5rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .slider-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .features-list {
+      margin-top: 2rem;
+      list-style: none;
+    }
+
+    .features-list li {
+      position: relative;
+      padding-left: 1.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .features-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <div class="hero-container">
+    <!-- Left Column -->
+    <div>
+      <div class="badge">Заботливое согласование</div>
+      <h1>Ваш <em>уютный</em> и просторный дом</h1>
+      <p class="lead">
+        Мы помогаем законно объединить кухню с гостиной, расширить санузел и сделать квартиру светлее. Берем на себя всю бумажную работу и переговоры с ведомствами.
+      </p>
+
+      <div style="margin-bottom: 2rem;">
+        <a href="#" class="btn-soft">Создать уютный дом →</a>
+      </div>
+
+      <ul class="features-list">
+        <li>Согласование перепланировок квартир по индивидуальным проектам</li>
+        <li>Никакого стресса: все документы оформляем за вас по доверенности</li>
+        <li>Гарантия законности и внесение изменений в реестр Росреестра</li>
+      </ul>
+    </div>
+
+    <!-- Right Column (Before/After layout showcase) -->
+    <div class="showcase-card">
+      <h3 style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 1rem; color: var(--primary);">Визуализация пространства</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+        Посмотрите, как меняется планировка после сноса нежелательных перегородок:
+      </p>
+
+      <div class="slider-box">
+        <!-- Before layout mockup (traditional, cramped) -->
+        <div class="slider-img img-before" id="imgBefore">
+          <!-- SVG plan for before -->
+          <svg viewBox="0 0 200 120" style="padding: 10px;">
+            <!-- Outer border -->
+            <rect x="10" y="10" width="180" height="100" fill="none" stroke="#4a5c53" stroke-width="2"/>
+            <!-- Interior cramped rooms -->
+            <line x1="100" y1="10" x2="100" y2="110" stroke="#4a5c53" stroke-width="2"/>
+            <line x1="10" y1="60" x2="100" y2="60" stroke="#4a5c53" stroke-width="2"/>
+            <text x="30" y="40" font-size="10" font-family="sans-serif" fill="#4a5c53">Кухня 6м²</text>
+            <text x="30" y="90" font-size="10" font-family="sans-serif" fill="#4a5c53">Коридор</text>
+            <text x="120" y="65" font-size="10" font-family="sans-serif" fill="#4a5c53">Комната 18м²</text>
+            <!-- Heavy doors -->
+            <path d="M 100,45 A 15,15 0 0,1 85,60" fill="none" stroke="#4a5c53" stroke-width="1"/>
+          </svg>
+        </div>
+
+        <!-- After layout mockup (open-space, airy) -->
+        <div class="slider-img img-after" id="imgAfter">
+          <!-- SVG plan for after -->
+          <svg viewBox="0 0 200 120" style="padding: 10px;">
+            <!-- Outer border -->
+            <rect x="10" y="10" width="180" height="100" fill="none" stroke="#9c6644" stroke-width="2"/>
+            <!-- Open space concept -->
+            <line x1="100" y1="10" x2="100" y2="40" stroke="#9c6644" stroke-width="2"/>
+            <line x1="100" y1="80" x2="100" y2="110" stroke="#9c6644" stroke-width="2"/>
+            <text x="45" y="65" font-size="12" font-family="sans-serif" font-weight="bold" fill="#9c6644">Кухня-Гостиная 28м²</text>
+            <text x="145" y="65" font-size="8" font-family="sans-serif" fill="#9c6644">Светлая зона</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="slider-controls">
+        <button class="slider-btn active" id="btnBefore" onclick="showSlide('before')">КАК БЫЛО (Тесно)</button>
+        <button class="slider-btn" id="btnAfter" onclick="showSlide('after')">КАК СТАЛО (Просторно)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showSlide(type) {
+      const beforeImg = document.getElementById('imgBefore');
+      const afterImg = document.getElementById('imgAfter');
+      const beforeBtn = document.getElementById('btnBefore');
+      const afterBtn = document.getElementById('btnAfter');
+
+      if (type === 'before') {
+        beforeImg.style.opacity = '1';
+        afterImg.style.opacity = '0';
+        beforeBtn.classList.add('active');
+        afterBtn.classList.remove('active');
+      } else {
+        beforeImg.style.opacity = '0';
+        afterImg.style.opacity = '1';
+        beforeBtn.classList.remove('active');
+        afterBtn.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

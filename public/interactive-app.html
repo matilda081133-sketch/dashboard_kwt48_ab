@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN.WORK — Интерактивный планировщик согласований</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-workspace: #0a0b0e;
+      --bg-panel: #12141c;
+      --text: #f3f4f6;
+      --text-muted: #6b7280;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #6366f1; /* Indigo */
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --success: #10b981;
+      --danger: #ef4444;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-workspace);
+      color: var(--text);
+      font-family: var(--font-body);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: var(--bg-panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* CAD Workspace Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* Left Toolbar (Figma/CAD Vibe) */
+    .toolbar {
+      width: 70px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5rem 0 2rem;
+      gap: 1.5rem;
+      z-index: 10;
+    }
+
+    .tool-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .tool-btn:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .tool-btn.active {
+      color: white;
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Tooltip */
+    .tool-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 80px;
+      background: #1e293b;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+    }
+
+    .tool-btn:hover::after {
+      opacity: 1;
+    }
+
+    /* Central Drawing Board Canvas */
+    .canvas {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow: hidden;
+      /* Dots background for Figma vibe */
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    .canvas-title {
+      position: absolute;
+      top: 20px;
+      left: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    /* Interactive Floor Plan Container */
+    .blueprint-container {
+      width: 100%;
+      max-width: 750px;
+      aspect-ratio: 1.5;
+      background: rgba(18, 20, 28, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 3rem;
+      box-shadow: 0 30px 60px -15px rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Interactive SVG Blueprint Styling */
+    .interactive-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .svg-wall {
+      fill: none;
+      stroke: #374151; /* Dark grey default walls */
+      stroke-width: 4;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+
+    .svg-wall.bearing {
+      stroke-width: 8;
+      stroke: #4b5563;
+    }
+
+    /* Active Tool highlights on hover */
+    .mode-demolish .svg-wall:not(.bearing):hover {
+      stroke: var(--success);
+      filter: drop-shadow(0 0 8px var(--success));
+      stroke-width: 6;
+    }
+
+    .mode-demolish .svg-wall.bearing:hover {
+      stroke: var(--danger);
+      filter: drop-shadow(0 0 8px var(--danger));
+      stroke-width: 10;
+    }
+
+    /* Wet zone highlight style */
+    .svg-room {
+      fill: rgba(255,255,255,0.01);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .mode-wetzone .svg-room.wet-zone {
+      fill: rgba(59, 130, 246, 0.08);
+      stroke: rgba(59, 130, 246, 0.3);
+      stroke-width: 2;
+    }
+
+    .mode-wetzone .svg-room.wet-zone:hover {
+      fill: rgba(59, 130, 246, 0.15);
+      stroke: rgba(59, 130, 246, 0.5);
+    }
+
+    /* Right Detail Inspector Panel (Figma style sidebar) */
+    .inspector {
+      width: 360px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      z-index: 10;
+      box-shadow: -15px 0 30px rgba(0,0,0,0.3);
+    }
+
+    .inspector-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.25rem;
+    }
+
+    .inspector-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .inspector-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Live Output Box */
+    .output-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .output-header {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .output-text {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    .price-tag {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: white;
+      margin-top: 1rem;
+      font-family: var(--font-mono);
+    }
+
+    .btn-apply {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 10px 20px var(--accent-glow);
+    }
+
+    .btn-apply:hover {
+      background: #4f46e5;
+      box-shadow: 0 15px 25px rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body class="mode-demolish">
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <div class="app-container">
+    <!-- Left Figma-like Toolbar -->
+    <div class="toolbar">
+      <button class="tool-btn active" id="btnDemolish" data-tooltip="Режим: Снос перегородок" onclick="setMode('demolish')">🔨</button>
+      <button class="tool-btn" id="btnWetzone" data-tooltip="Режим: Мокрые зоны" onclick="setMode('wetzone')">💧</button>
+      <button class="tool-btn" id="btnHelp" data-tooltip="Инструкция пользователя" onclick="setMode('help')">❓</button>
+    </div>
+
+    <!-- Central Canvas Workspace -->
+    <div class="canvas" id="canvasArea">
+      <div class="canvas-title">
+        <span class="status-dot"></span>
+        <span>WORKSPACE // ЖК_БИЗНЕС_ПЛАНИРОВЩИК_2026 // РЕЖИМ: СНОС СТЕН</span>
+      </div>
+
+      <div class="blueprint-container">
+        <!-- Interactive CAD Map -->
+        <svg class="interactive-svg" viewBox="0 0 600 350">
+          <!-- Rooms (wet zones highlighted in wet-zone mode) -->
+          <rect x="30" y="30" width="180" height="150" class="svg-room wet-zone" id="roomKitchen" />
+          <rect x="210" y="30" width="160" height="150" class="svg-room wet-zone" id="roomBathroom" />
+          <rect x="370" y="30" width="200" height="290" class="svg-room" id="roomLiving" />
+          
+          <!-- Exterior boundaries (bearing) -->
+          <rect x="30" y="30" width="540" height="290" class="svg-wall bearing" data-type="ext-bearing" />
+
+          <!-- Interior bearing wall (restricted) -->
+          <line x1="370" y1="30" x2="370" y2="180" class="svg-wall bearing" id="wallBearing1" data-type="interior-bearing" />
+
+          <!-- Interior thin partitions (demolishable) -->
+          <line x1="210" y1="30" x2="210" y2="180" class="svg-wall" id="wallPart1" data-type="partition" data-target="roomKitchen" />
+          <line x1="210" y1="180" x2="370" y2="180" class="svg-wall" id="wallPart2" data-type="partition" data-target="roomBathroom" />
+          <line x1="370" y1="180" x2="370" y2="320" class="svg-wall" id="wallPart3" data-type="partition" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Right Figma style Inspector -->
+    <div class="inspector">
+      <div class="inspector-header">
+        <div class="inspector-title" id="inspTitle">Анализатор планировки</div>
+        <div class="inspector-subtitle" id="inspSubtitle">Кликните на элементы планировки слева</div>
+      </div>
+
+      <div class="output-box" id="outputBox">
+        <div class="output-header" id="outHeader">СИСТЕМА ГОТОВА</div>
+        <div class="output-text" id="outText">
+          Выберите инструмент на панели слева.<br><br>
+          👉 <strong>🔨 Снос стен:</strong> Кликните на перегородку, чтобы убрать её легально.<br><br>
+          👉 <strong>💧 Мокрые зоны:</strong> Исследуйте границы кухни и ванной комнаты.
+        </div>
+        <div class="price-tag" id="outPrice">—</div>
+      </div>
+
+      <button class="btn-apply" onclick="alert('Заявка на расчет чертежа принята! Мы свяжемся с вами в течение 5 минут.')">ОТПРАВИТЬ СХЕМУ ЮРИСТУ</button>
+    </div>
+  </div>
+
+  <script>
+    let currentMode = 'demolish';
+    let demolishedWalls = {};
+    let totalCost = 35000;
+
+    function setMode(mode) {
+      currentMode = mode;
+      
+      // Update body class
+      document.body.className = `mode-${mode}`;
+      
+      // Update buttons active status
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+      if (mode === 'demolish') document.getElementById('btnDemolish').classList.add('active');
+      if (mode === 'wetzone') document.getElementById('btnWetzone').classList.add('active');
+      if (mode === 'help') document.getElementById('btnHelp').classList.add('active');
+
+      // Update workspace header text
+      document.querySelector('.canvas-title span:last-child').innerText = `WORKSPACE // ЖК_БИЗНЕС_ПЛАНИРОВЩИК_2026 // РЕЖИМ: ${mode.toUpperCase()}`;
+
+      // Reset inspector default
+      resetInspector();
+    }
+
+    function resetInspector() {
+      const header = document.getElementById('outHeader');
+      const text = document.getElementById('outText');
+      const price = document.getElementById('outPrice');
+      const title = document.getElementById('inspTitle');
+      const subtitle = document.getElementById('inspSubtitle');
+
+      if (currentMode === 'demolish') {
+        title.innerText = 'Снос перегородок';
+        subtitle.innerText = 'Инструмент демонтажа стен';
+        header.innerText = 'РАБОЧИЙ РЕЖИМ';
+        text.innerHTML = 'Кликните по любой внутренней перегородке на схеме квартиры.<br><br>Зеленые линии можно демонтировать безопасно. Красные линии трогать нельзя.';
+        price.innerText = '—';
+      } else if (currentMode === 'wetzone') {
+        title.innerText = 'Контроль мокрых зон';
+        subtitle.innerText = 'Границы кухни и санузла';
+        header.innerText = 'КОНТРОЛЬ ЗОН';
+        text.innerHTML = 'Наведите курсор или кликните по подсвеченной голубым зоне кухни или санузла, чтобы проверить законные правила переноса.';
+        price.innerText = '—';
+      } else {
+        title.innerText = 'Инструкция';
+        subtitle.innerText = 'Справка по планировщику';
+        header.innerText = 'СПРАВКА';
+        text.innerHTML = 'Данный модуль симулирует работу архитектурного CAD-редактора перепланировок. Каждое действие пользователя анализируется встроенным юридическим парсером правил Мосжилинспекции.';
+        price.innerText = '—';
+      }
+    }
+
+    // Attach click listeners to walls and rooms
+    document.querySelectorAll('.svg-wall').forEach(wall => {
+      wall.addEventListener('click', () => {
+        if (currentMode !== 'demolish') return;
+
+        const type = wall.getAttribute('data-type');
+        const id = wall.getAttribute('id');
+        const header = document.getElementById('outHeader');
+        const text = document.getElementById('outText');
+        const price = document.getElementById('outPrice');
+
+        if (type === 'ext-bearing') {
+          header.innerText = 'КРИТИЧЕСКАЯ ОШИБКА';
+          text.innerHTML = '<span style="color: var(--danger);"><strong>НАРУШЕНИЕ ЗАКОНА!</strong></span> Демонтаж внешних несущих стен дома категорически запрещен. Это грозит обрушением здания и уголовной ответственностью.';
+          price.innerText = 'ЗАПРЕЩЕНО';
+        } else if (type === 'interior-bearing') {
+          header.innerText = 'ОГРАНИЧЕНИЕ';
+          text.innerHTML = '<span style="color: var(--danger);"><strong>НЕСУЩАЯ СТЕНА!</strong></span> Полный демонтаж запрещен. Но мы можем согласовать <strong>проем до 900мм с металлоусилением</strong> рамой из швеллеров.';
+          price.innerText = 'от 85 000 ₽';
+        } else if (type === 'partition') {
+          if (demolishedWalls[id]) {
+            // Restore wall
+            wall.style.stroke = '#374151';
+            wall.style.opacity = '1';
+            demolishedWalls[id] = false;
+            totalCost -= 12000;
+            
+            header.innerText = 'СТЕНА ВОССТАНОВЛЕНА';
+            text.innerHTML = 'Перегородка возвращена на место. Вы можете кликнуть по ней снова, чтобы симулировать снос.';
+            price.innerText = totalCost > 35000 ? `${totalCost} ₽` : '—';
+          } else {
+            // Demolish wall
+            wall.style.stroke = 'transparent';
+            wall.style.opacity = '0.1';
+            demolishedWalls[id] = true;
+            totalCost += 12000;
+
+            header.innerText = 'ДЕМОНТАЖ ВЫПОЛНЕН';
+            text.innerHTML = '<span style="color: var(--success);"><strong>ЗАКОННО И БЕЗОПАСНО!</strong></span> Перегородка не является несущей. Согласование по эскизу гарантировано в упрощенном порядке.';
+            price.innerText = `${totalCost} ₽`;
+          }
+        }
+      });
+    });
+
+    // Rooms interactions
+    document.querySelectorAll('.svg-room').forEach(room => {
+      room.addEventListener('click', () => {
+        if (currentMode !== 'wetzone') return;
+
+        const id = room.getAttribute('id');
+        const header = document.getElementById('outHeader');
+        const text = document.getElementById('outText');
+        const price = document.getElementById('outPrice');
+
+        if (id === 'roomKitchen') {
+          header.innerText = 'ПРАВИЛО КУХНИ';
+          text.innerHTML = 'Кухню нельзя переносить на территорию жилой комнаты соседей снизу. Но можно объединить с гостиной (если плита электрическая) или перенести в коридор (сделать кухню-нишу).';
+          price.innerText = 'согласуемо';
+        } else if (id === 'roomBathroom') {
+          header.innerText = 'ПРАВИЛО САНУЗЛА';
+          text.innerHTML = 'Расширение санузла допускается исключительно за счет нежилых зон (коридор, кладовая, гардеробная). Расширять ванную на площадь комнат или кухни запрещено.';
+          price.innerText = 'согласуемо';
+        } else {
+          header.innerText = 'ЖИЛАЯ ЗОНА';
+          text.innerHTML = 'Жилые комнаты квартир. Минимальная площадь хотя бы одной жилой комнаты в квартире по закону должна составлять не менее 9 м².';
+          price.innerText = '—';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

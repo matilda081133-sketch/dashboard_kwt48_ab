@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPLAN.STUDIO — Согласование перепланировок квартир в Москве</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #fafafa;
+      --text: #111111;
+      --text-muted: #666666;
+      --primary: #ff2eff; /* Neon Magenta */
+      --primary-light: #ffe4ff; /* Light Pastel Pink */
+      --border: #111111;
+      --border-light: #e5e7eb;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--primary-light);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    /* Top Progress Bar */
+    .top-progress {
+      height: 3px;
+      background-color: var(--primary);
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 999;
+    }
+
+    /* Header Nav (Structured like replan-msk.ru) */
+    header {
+      max-width: 1200px;
+      margin: 3px auto 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-light);
+      background: white;
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .logo span {
+      color: var(--primary);
+    }
+
+    .header-contacts {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .header-contacts {
+        display: none;
+      }
+    }
+
+    .phone-num {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .work-hours {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .btn-callback {
+      background: var(--primary-light);
+      color: var(--text);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-callback:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Page Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Hero Section (Headline + Pasha's illustration) */
+    .hero {
+      padding: 6rem 0;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 5rem;
+      align-items: center;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    @media (max-width: 968px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 4rem 0;
+        gap: 3rem;
+      }
+    }
+
+    .hero-info h1 {
+      font-size: 3.6rem;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-info h1 span {
+      color: var(--primary);
+    }
+
+    .hero-desc {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+      max-width: 540px;
+    }
+
+    /* Comic Character Avatars / Bios Intro */
+    .character-team {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .char-avatar-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border-light);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .char-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Right Hero Visual (Pasha's layout conflict) */
+    .hero-visual {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Custom Comic Speech Bubble */
+    .speech-bubble {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      position: relative;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.5;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 30px;
+      border-width: 10px 10px 0;
+      border-style: solid;
+      border-color: white transparent;
+      display: block;
+      width: 0;
+      z-index: 2;
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -11px;
+      left: 29px;
+      border-width: 11px 11px 0;
+      border-style: solid;
+      border-color: var(--border) transparent;
+      display: block;
+      width: 0;
+      z-index: 1;
+    }
+
+    /* Section Headers */
+    .section-title {
+      padding: 6rem 0 3rem;
+    }
+
+    .section-title span {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title h2 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      margin-top: 0.5rem;
+    }
+
+    /* Services & Prices Section (Structured Table from replan-msk.ru) */
+    .prices-layout {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 4rem;
+      align-items: start;
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 6rem;
+    }
+
+    @media (max-width: 968px) {
+      .prices-layout {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+      }
+    }
+
+    .price-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .price-table th {
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+    }
+
+    .price-table td {
+      padding: 1.75rem 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 1rem;
+    }
+
+    .price-table td.service-name {
+      font-weight: 700;
+    }
+
+    .price-table td.price-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-align: right;
+      color: var(--primary);
+    }
+
+    /* Work Steps Section (Structured roadmap from replan-msk.ru) */
+    .steps-section {
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 6rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+    }
+
+    @media (max-width: 968px) {
+      .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 540px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 240px;
+      transition: all 0.3s ease;
+    }
+
+    .step-card:hover {
+      border-color: var(--primary);
+    }
+
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .step-card h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .step-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Contact Form Section */
+    .contact-section {
+      background: var(--bg-alt);
+      padding: 6rem 0;
+    }
+
+    .form-container {
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .form-input-wrap {
+      margin-bottom: 2rem;
+    }
+
+    .form-field {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--border-light);
+      padding: 1rem 0;
+      font-size: 1.1rem;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-field:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-submit {
+      background: var(--primary-light);
+      color: var(--text);
+      border: 1px solid var(--primary);
+      padding: 16px 40px;
+      border-radius: 30px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Footer styling */
+    footer {
+      border-top: 1px solid var(--border-light);
+      padding: 3rem 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="top-progress"></div>
+
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <!-- Header Nav -->
+  <header>
+    <a href="/" class="logo">REPLAN<span>.</span></a>
+    <div class="header-contacts">
+      <div>
+        <a href="tel:+74951234567" class="phone-num">+7 (495) 123-45-67</a>
+        <div class="work-hours">ПН-ПТ // 09:00 - 19:00</div>
+      </div>
+      <a href="#request" class="btn-callback">Оставить заявку</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-info">
+        <div class="badge-pow" style="background: var(--primary-light); border: 1px solid var(--primary); color: var(--primary);">Служба спасения от планировок</div>
+        <h1>Узаконим <span>стены</span> Паши. Безопасно.</h1>
+        <p class="hero-desc">
+          Разрабатываем проекты перепланировок любой сложности в Москве с гарантией юридической чистоты. Проводим согласования в БТИ и Мосжилинспекции под ключ.
+        </p>
+
+        <a href="#request" class="btn-hero">Получить проект бесплатно</a>
+
+        <!-- Character Team Intro -->
+        <div class="character-team">
+          <div class="char-avatar-box">
+            <span class="char-dot" style="background: #ffaa00;"></span>
+            <span>Паша (Собственник) 🔨</span>
+          </div>
+          <div class="char-avatar-box">
+            <span class="char-dot" style="background: var(--primary);"></span>
+            <span>Катя (Инженер) 📐</span>
+          </div>
+          <div class="char-avatar-box">
+            <span class="char-dot" style="background: #00d2ff;"></span>
+            <span>Семён (Юрист) 🛡️</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Visual (Pasha's layout struggle) -->
+      <div class="hero-visual">
+        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">SCENE_01 // КВАРТИРА ПАШИ</div>
+        
+        <!-- Pasha SVG avatar -->
+        <svg viewBox="0 0 100 50" style="width: 100px; height: 50px;">
+          <!-- Pasha head & hair -->
+          <circle cx="50" cy="25" r="15" fill="#fbcfe8" />
+          <path d="M 35,25 Q 50,10 65,25 Z" fill="#475569" />
+          <!-- Funny eyes -->
+          <circle cx="45" cy="23" r="2" fill="#000" />
+          <circle cx="55" cy="23" r="2" fill="#000" />
+        </svg>
+
+        <div class="speech-bubble">
+          👨 <strong>Паша:</strong> «Ребята, я просто хотел объединить кухню с гостиной и убрал эту тонкую стенку. А вчера пришло уведомление от БТИ с угрозой суда! Спасите мои нервы!»
+        </div>
+      </div>
+    </section>
+
+    <!-- Services & Prices Section (Exactly like replan-msk.ru) -->
+    <section class="section-title" id="prices">
+      <span>УСЛУГИ И ЦЕНЫ // SERVICES & PRICING</span>
+      <h2>СКОЛЬКО СТОИТ СПАСЕНИЕ ПАШИ</h2>
+    </section>
+
+    <div class="prices-layout">
+      <!-- Price Table -->
+      <div>
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Наименование услуги</th>
+              <th style="text-align: right;">Стоимость</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="service-name">Разработка Проекта перепланировки (СРО)</td>
+              <td class="price-val">от 15 000 ₽</td>
+            </tr>
+            <tr>
+              <td class="service-name">Техническое заключение о безопасности конструкций</td>
+              <td class="price-val">от 20 000 ₽</td>
+            </tr>
+            <tr>
+              <td class="service-name">Согласование перепланировки в Мосжилинспекции под ключ</td>
+              <td class="price-val">от 50 000 ₽</td>
+            </tr>
+            <tr>
+              <td class="service-name">Разработка технического плана БТИ & внесение изменений в ЕГРН</td>
+              <td class="price-val">от 15 000 ₽</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Katya the Engineer comments -->
+      <div class="hero-visual" style="background: var(--primary-light); border-color: var(--primary);">
+        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--primary);">ENGINEER_KATYA // СПРАВКА СРО</div>
+        
+        <!-- Katya SVG avatar -->
+        <svg viewBox="0 0 100 50" style="width: 100px; height: 50px;">
+          <!-- Katya head, hair, glasses -->
+          <circle cx="50" cy="25" r="15" fill="#fde047" />
+          <path d="M 35,25 Q 50,5 65,25 Z" fill="#9333ea" />
+          <rect x="42" y="20" width="8" height="6" fill="none" stroke="#000" stroke-width="1.5" />
+          <rect x="52" y="20" width="8" height="6" fill="none" stroke="#000" stroke-width="1.5" />
+          <line x1="50" y1="23" x2="52" y2="23" stroke="#000" stroke-width="1.5" />
+        </svg>
+
+        <div class="speech-bubble" style="border-color: var(--primary);">
+          👩‍🔬 <strong>Катя:</strong> «Паша, не переживай! Перегородка не была несущей. Мы быстро подготовим проект СРО и техническое заключение. Все расчеты сделаем строго по СНиП, Жилинспекция одобрит без единого вопроса!»
+        </div>
+      </div>
+    </div>
+
+    <!-- Work Steps Section (Structured roadmap from replan-msk.ru) -->
+    <section class="section-title" id="steps">
+      <span>ЭТАПЫ НАШЕГО ПРИКЛЮЧЕНИЯ // STEPS</span>
+      <h2>КАК МЫ БУДЕМ ДЕЙСТВОВАТЬ</h2>
+    </section>
+
+    <div class="steps-section">
+      <div class="steps-grid" style="margin-bottom: 4rem;">
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num">01</span>
+            <span style="font-size: 1.25rem;">📐</span>
+          </div>
+          <div>
+            <h3>Обмер квартиры</h3>
+            <p>Выезжаем на объект с лазерными приборами и делаем точный обмер.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num">02</span>
+            <span style="font-size: 1.25rem;">📝</span>
+          </div>
+          <div>
+            <h3>Проект СРО</h3>
+            <p>Разрабатываем проектную документацию и техзаключение.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num">03</span>
+            <span style="font-size: 1.25rem;">🏛️</span>
+          </div>
+          <div>
+            <h3>Согласование</h3>
+            <p>Подаем документы в Жилинспекцию и получаем разрешение.</p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num">04</span>
+            <span style="font-size: 1.25rem;">🏆</span>
+          </div>
+          <div>
+            <h3>Регистрация</h3>
+            <p>Вносим изменения в базу Росреестра и выдаем новые документы БТИ.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semyon the Lawyer comments -->
+      <div class="hero-visual" style="background: rgba(0,210,255,0.05); border-color: #00d2ff; max-width: 800px; margin: 0 auto;">
+        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #00d2ff;">LAWYER_SEMYON // ЮРИДИЧЕСКАЯ СПРАВКА</div>
+        
+        <!-- Semyon SVG avatar -->
+        <svg viewBox="0 0 100 50" style="width: 100px; height: 50px;">
+          <!-- Semyon head, hair, glasses -->
+          <circle cx="50" cy="25" r="15" fill="#bae6fd" />
+          <path d="M 35,25 Q 50,15 65,25 Z" fill="#1e293b" />
+          <!-- Cool sunglasses -->
+          <polygon points="40,20 48,20 46,26 40,26" fill="#000" />
+          <polygon points="52,20 60,20 58,26 52,26" fill="#000" />
+          <line x1="48" y1="23" x2="52" y2="23" stroke="#000" stroke-width="1.5" />
+        </svg>
+
+        <div class="speech-bubble" style="border-color: #00d2ff;">
+          🕵️‍♂️ <strong>Семён:</strong> «Паша, расслабься и пей кофе. Очереди во МФЦ и кабинеты Жилинспекции — это моя локация. У меня есть доверенность и знание всех законов Москвы. Я сам пройду все ведомства и принесу тебе готовый штамп!»
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Form Section -->
+  <section class="contact-section" id="request">
+    <div class="form-container">
+      <div class="badge-pow" style="background: var(--primary-light); border: 1px solid var(--primary); color: var(--primary);">СВЯЗАТЬСЯ С КОМАНДОЙ СПАСЕНИЯ</div>
+      <h2>ПОМОЧЬ ВАШИМ СТЕНАМ?</h2>
+      <p>Оставьте ваши контакты. Семён и Катя свяжутся с вами в течение 10 минут, составят план и защитят вас от БТИ!</p>
+
+      <form onsubmit="event.preventDefault(); alert('Спасибо! Команда REPLAN выезжает на помощь вашим стенам!')">
+        <div class="form-input-wrap">
+          <input type="text" class="form-field" placeholder="Ваше имя (или Паша)" required>
+        </div>
+        <div class="form-input-wrap">
+          <input type="tel" class="form-field" placeholder="Ваш телефон для связи" required>
+        </div>
+        <div class="form-input-wrap">
+          <input type="text" class="form-field" placeholder="Какой ЖК или адрес в Москве?" required>
+        </div>
+        <button type="submit" class="btn-submit">ОТПРАВИТЬ СХЕМУ НА РАСЧЕТ</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>© 2026 REPLAN.STUDIO // СОГЛАСОВАНИЕ ПЕРЕПЛАНИРОВОК КВАРТИР В МОСКВЕ // ЛИЦЕНЗИЯ СРО</p>
+    </div>
+  </footer>
+</body>
+</html>

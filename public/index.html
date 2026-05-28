@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Replan Showcase — Креативные Концепции Дизайна</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b0c10;
+      --bg-card: #151821;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent-blue: #0ea5e9;
+      --accent-orange: #ff5722;
+      --accent-green: #10b981;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      padding: 3rem 2rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Glow effects background */
+    .glow-1 {
+      position: absolute;
+      top: -100px;
+      left: 10%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(50px);
+    }
+    .glow-2 {
+      position: absolute;
+      top: 100px;
+      right: 10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(60px);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.6;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 2rem 5rem;
+      z-index: 10;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 2.5rem;
+      margin-bottom: 4rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
+                  0 0 30px rgba(99, 102, 241, 0.1);
+    }
+
+    .card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.1);
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+      font-size: 0.95rem;
+      flex: 1;
+    }
+
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.9rem 1.75rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      width: 100%;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Target specs styling inside cards */
+    .specs {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 1.25rem;
+      margin-top: auto;
+      font-size: 0.85rem;
+    }
+
+    .spec-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .spec-label {
+      color: var(--text-muted);
+    }
+
+    .spec-val {
+      font-weight: 600;
+    }
+
+    /* Distinct card styles based on target */
+    .card-blueprint:hover {
+      border-color: var(--accent-orange);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 87, 34, 0.1);
+    }
+    .card-blueprint .card-icon {
+      color: var(--accent-orange);
+      background: rgba(255, 87, 34, 0.1);
+      border-color: rgba(255, 87, 34, 0.2);
+    }
+
+    .card-brutalist:hover {
+      border-color: #8b5cf6;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(139, 92, 246, 0.15);
+    }
+    .card-brutalist .card-icon {
+      color: #a78bfa;
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    .card-scandi:hover {
+      border-color: var(--accent-green);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(16, 185, 129, 0.1);
+    }
+    .card-scandi .card-icon {
+      color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .card-modern-dark:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(59, 130, 246, 0.2);
+    }
+    .card-modern-dark .card-icon {
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .card-editorial:hover {
+      border-color: #8c7853;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(140, 120, 83, 0.15);
+    }
+    .card-editorial .card-icon {
+      color: #bfa87a;
+      background: rgba(140, 120, 83, 0.1);
+      border-color: rgba(140, 120, 83, 0.2);
+    }
+
+    .card-saas:hover {
+      border-color: #0066cc;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 102, 204, 0.15);
+    }
+    .card-saas .card-icon {
+      color: #3399ff;
+      background: rgba(0, 102, 204, 0.1);
+      border-color: rgba(0, 102, 204, 0.2);
+    }
+
+    .card-premium-sample {
+      border: 2px solid #a88e63 !important;
+      background: linear-gradient(180deg, #151821 0%, #1e1c18 100%) !important;
+      box-shadow: 0 20px 40px rgba(168, 142, 99, 0.15) !important;
+    }
+    .card-premium-sample:hover {
+      border-color: #c5a878 !important;
+      box-shadow: 0 20px 40px rgba(168, 142, 99, 0.3), 0 0 30px rgba(168, 142, 99, 0.3) !important;
+    }
+    .card-premium-sample .card-icon {
+      color: #a88e63;
+      background: rgba(168, 142, 99, 0.1);
+      border-color: rgba(168, 142, 99, 0.2);
+    }
+
+    .card-replan-comic-final {
+      border: 3px solid #ff2eff !important;
+      background: linear-gradient(180deg, #151821 0%, #2a152d 100%) !important;
+      box-shadow: 0 20px 40px rgba(255, 46, 255, 0.25) !important;
+    }
+    .card-replan-comic-final:hover {
+      border-color: #ff52ff !important;
+      box-shadow: 0 20px 45px rgba(255, 46, 255, 0.45), 0 0 35px rgba(255, 46, 255, 0.35) !important;
+    }
+    .card-replan-comic-final .card-icon {
+      color: #ff2eff;
+      background: rgba(255, 46, 255, 0.1);
+      border-color: rgba(255, 46, 255, 0.2);
+    }
+
+    .card-komreda {
+      border: 2px solid #ff2eff !important;
+      background: linear-gradient(180deg, #151821 0%, #22152b 100%) !important;
+      box-shadow: 0 20px 40px rgba(255, 46, 255, 0.15) !important;
+    }
+    .card-komreda:hover {
+      border-color: #ff66ff !important;
+      box-shadow: 0 20px 40px rgba(255, 46, 255, 0.3), 0 0 30px rgba(255, 46, 255, 0.3) !important;
+    }
+    .card-komreda .card-icon {
+      color: #ff2eff;
+      background: rgba(255, 46, 255, 0.1);
+      border-color: rgba(255, 46, 255, 0.2);
+    }
+
+    .card-interactive-app:hover {
+      border-color: #818cf8;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(129, 140, 248, 0.2);
+    }
+    .card-interactive-app .card-icon {
+      color: #a5b4fc;
+      background: rgba(129, 140, 248, 0.1);
+      border-color: rgba(129, 140, 248, 0.2);
+    }
+
+    .card-canvas:hover {
+      border-color: #f43f5e;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(244, 63, 94, 0.2);
+    }
+    .card-canvas .card-icon {
+      color: #fda4af;
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
+
+    .card-comic-komreda:hover {
+      border-color: #ff2eff;
+      box-shadow: 0 20px 40px rgba(255, 46, 255, 0.4), 0 0 30px rgba(255, 46, 255, 0.25);
+    }
+    .card-comic-komreda .card-icon {
+      color: #ff2eff;
+      background: rgba(255, 46, 255, 0.1);
+      border-color: rgba(255, 46, 255, 0.2);
+    }
+
+    footer {
+      background: rgba(0,0,0,0.3);
+      border-top: 1px solid var(--border-color);
+      padding: 2rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .info-box {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      max-width: 900px;
+      margin: 0 auto 3rem;
+      text-align: left;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .info-box h3 {
+      font-family: var(--font-display);
+      margin-bottom: 0.5rem;
+      color: white;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <header>
+    <div class="badge">Мульти-лендинг концепция</div>
+    <h1>Шаблоны Креативных Дизайнов</h1>
+    <p class="subtitle">
+      Разнообразные, стильные и коммерчески выверенные шаблоны для согласования перепланировок квартир в Москве. Идеальный инструмент для охвата 100% аудитории с разделением по болям клиентов.
+    </p>
+  </header>
+
+  <main>
+    <div class="info-box">
+      <h3>💡 Зачем нужны разные концепции дизайна?</h3>
+      <p>
+        Ваш базовый сайт <strong>replan-msk.ru</strong> ориентирован на массовый корпоративный рынок. Однако клиенты бывают разными: дизайнерам интерьеров нужен роскошный визуал, инженерам — точные схемы, а уставшим от бюрократии семьям — простота и забота. Переключайтесь между концепциями ниже, чтобы увидеть, как одна и та же услуга продается через разные эмоции.
+      </p>
+    </div>
+
+    <div class="grid">
+      <!-- KILOWATT LANDING PAGES QUALITY DASHBOARD -->
+      <a href="/kilowatt-quality-report.html" class="card" style="grid-column: 1 / -1; margin-bottom: 2rem; border: 2px solid #10b981; background: linear-gradient(180deg, #151821 0%, #0d2019 100%); box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15);">
+        <div class="card-icon" style="font-size: 2.2rem; width: 70px; height: 70px; border-radius: 20px; color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);">📊</div>
+        <h2 class="card-title" style="font-size: 2.2rem; color: #10b981; font-family: var(--font-display);">КИЛОВАТТ: ДАШБОРД КАЧЕСТВА ЛЕНДИНГОВ</h2>
+        <p class="card-desc" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 2rem;">
+          Профессиональная интерактивная аналитическая панель для контроля качества двух лендингов проекта «Киловатт» (счетчики 106046280 и 109278709). Включает отслеживание конверсий по целям, времени на сайте, скролла, логов изменений, A/B-тестирования с автоматическим калькулятором достоверности и опцией Metrika Live API!
+        </p>
+        <div class="tag-container">
+          <span class="tag" style="background: rgba(16, 185, 129, 0.25); color: #e6f9f2;">Яндекс.Метрика API</span>
+          <span class="tag" style="background: rgba(16, 185, 129, 0.25); color: #e6f9f2;">Анализ A/B Тестов</span>
+          <span class="tag" style="background: rgba(16, 185, 129, 0.25); color: #e6f9f2;">Логирование изменений</span>
+        </div>
+        <div class="specs" style="border-top-color: rgba(16, 185, 129, 0.25); padding-top: 1.5rem;">
+          <div class="spec-item">
+            <span class="spec-label" style="font-size: 0.95rem;">Интеграция:</span>
+            <span class="spec-val" style="color: #10b981; font-size: 0.95rem;">Счетчики 106046280 (Tilda) и 109278709 (Online)</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- FLAGSHIP: Replan Comic Final Hybrid -->
+      <a href="/replan-comic-final.html" class="card card-replan-comic-final" style="grid-column: 1 / -1; margin-bottom: 2rem;">
+        <div class="card-icon" style="font-size: 2.2rem; width: 70px; height: 70px; border-radius: 20px;">👑</div>
+        <h2 class="card-title" style="font-size: 2.2rem; color: #ff2eff; font-family: var(--font-display);">ГЛАВНЫЙ КРЕАТИВНЫЙ МАКЕТ: REPLAN COMIC FINAL</h2>
+        <p class="card-desc" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 2rem;">
+          Флагманский макет, объединяющий реальную коммерческую структуру сайта replan-msk.ru (контакты, подробная таблица цен, этапы, форма) с трендовой дизайн-системой komreda.ru и комикс-персонажами: собственником Пашей, инженером Катей и юристом Семёном. Лучший вариант для презентации.
+        </p>
+        <div class="tag-container">
+          <span class="tag" style="background: rgba(255, 46, 255, 0.25); color: #ffe4ff;">Персонажи комиксов</span>
+          <span class="tag" style="background: rgba(255, 46, 255, 0.25); color: #ffe4ff;">Таблица услуг и цен</span>
+          <span class="tag" style="background: rgba(255, 46, 255, 0.25); color: #ffe4ff;">Стиль komreda.ru</span>
+        </div>
+        <div class="specs" style="border-top-color: rgba(255, 46, 255, 0.25); padding-top: 1.5rem;">
+          <div class="spec-item">
+            <span class="spec-label" style="font-size: 0.95rem;">Основная цель:</span>
+            <span class="spec-val" style="color: #ff2eff; font-size: 0.95rem;">Продать услуги через мощный креатив на реальной структуре бизнеса</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- RECOMMENDED: Premium Presentation Sample -->
+      <a href="/premium-sample.html" class="card card-premium-sample" style="margin-bottom: 2rem;">
+        <div class="card-icon" style="font-size: 2.2rem; width: 70px; height: 70px; border-radius: 20px;">⭐</div>
+        <h2 class="card-title" style="font-size: 2rem; color: #a88e63; font-family: var(--font-display);">ОБРАЗЕЦ: PREMIUM STUDIO</h2>
+        <p class="card-desc" style="font-size: 1rem; color: var(--text-main); margin-bottom: 2rem;">
+          Флагманский коммерческий дизайн-макет премиального уровня. Изысканная антиква Cormorant Garamond, сбалансированная цветовая гамма теплого песка и латуни, чистые отступы, интерактивные карты и готовые блоки кейсов. Создан специально для презентации вашему заказчику.
+        </p>
+        <div class="tag-container">
+          <span class="tag" style="background: rgba(168, 142, 99, 0.2); color: #f5f0e6;">Премиум дизайн</span>
+          <span class="tag" style="background: rgba(168, 142, 99, 0.2); color: #f5f0e6;">100% Завершенность</span>
+        </div>
+        <div class="specs" style="border-top-color: rgba(168, 142, 99, 0.2); padding-top: 1.5rem;">
+          <div class="spec-item">
+            <span class="spec-label" style="font-size: 0.85rem;">Основная цель:</span>
+            <span class="spec-val" style="color: #a88e63; font-size: 0.85rem;">Показать безупречное качество и премиальный вкус</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- FEATURED: Komreda Style -->
+      <a href="/komreda-replan.html" class="card card-komreda" style="margin-bottom: 2rem;">
+        <div class="card-icon" style="font-size: 2.2rem; width: 70px; height: 70px; border-radius: 20px;">⚡</div>
+        <h2 class="card-title" style="font-size: 2rem; color: #ff2eff; font-family: var(--font-display);">КРЕАТИВ: СТИЛЬ КОМРЕДЫ</h2>
+        <p class="card-desc" style="font-size: 1rem; color: var(--text-main); margin-bottom: 2rem;">
+          100% соответствие фирменному дизайну komreda.ru. Ультрасовременный шрифт Inter в сочетании с JetBrains Mono, яркие неоновые акценты мадженты (#ff2eff), аккуратная пиксельная сетка и минималистичный интерактивный чертеж. Дорогой, чистый и невероятно креативный образец.
+        </p>
+        <div class="tag-container">
+          <span class="tag" style="background: rgba(255, 46, 255, 0.2); color: #ffe4ff;">Шрифт JetBrains Mono</span>
+          <span class="tag" style="background: rgba(255, 46, 255, 0.2); color: #ffe4ff;">Неоновый розовый</span>
+        </div>
+        <div class="specs" style="border-top-color: rgba(255, 46, 255, 0.2); padding-top: 1.5rem;">
+          <div class="spec-item">
+            <span class="spec-label" style="font-size: 0.85rem;">Основная цель:</span>
+            <span class="spec-val" style="color: #ff2eff; font-size: 0.85rem;">Трендовый креативный дизайн без шаблонов</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Comic-Komreda Hybrid Card -->
+      <a href="/comic-komreda.html" class="card card-comic-komreda" style="margin-bottom: 2rem;">
+        <div class="card-icon" style="font-size: 2.2rem; width: 70px; height: 70px; border-radius: 20px;">⚡</div>
+        <h2 class="card-title" style="font-size: 2rem; color: #ff2eff; font-family: var(--font-display);">ГИБРИД: КОМИКС В СТИЛЕ КОМРЕДЫ</h2>
+        <p class="card-desc" style="font-size: 1rem; color: var(--text-main); margin-bottom: 2rem;">
+          Абсолютный креативный лидер. Сочетает дизайн-систему komreda.ru (Inter, JetBrains Mono, белый фон и неоновый розовый) с художественными комикс-панелями, тонкими стильными речевыми пузырями и векторными схемами перепланировок.
+        </p>
+        <div class="tag-container">
+          <span class="tag" style="background: rgba(255, 46, 255, 0.2); color: #ffe4ff;">Комикс-панели</span>
+          <span class="tag" style="background: rgba(255, 46, 255, 0.2); color: #ffe4ff;">Векторные схемы</span>
+          <span class="tag" style="background: rgba(255, 46, 255, 0.2); color: #ffe4ff;">Стиль komreda.ru</span>
+        </div>
+        <div class="specs" style="border-top-color: rgba(255, 46, 255, 0.2); padding-top: 1.5rem;">
+          <div class="spec-item">
+            <span class="spec-label" style="font-size: 0.85rem;">Основная цель:</span>
+            <span class="spec-val" style="color: #ff2eff; font-size: 0.85rem;">Максимальный вирусный креатив без шаблонов</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Blueprint Card -->
+      <a href="/blueprint.html" class="card card-blueprint">
+        <div class="card-icon">📐</div>
+        <h2 class="card-title">Инженерный Минимализм</h2>
+        <p class="card-desc">
+          Высокоточный, строгий стиль с чертежным фоном, тонкими линиями CAD, моноширинными шрифтами и ярким сигнально-оранжевым акцентом. Ничего лишнего, только профессионализм.
+        </p>
+        <div class="tag-container">
+          <span class="tag">Швейцарский стиль</span>
+          <span class="tag">Точность</span>
+          <span class="tag">Интерактивный чертеж</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: var(--accent-orange)">Архитекторы, инженеры</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Безупречная точность расчетов</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Brutalist/Playful Card -->
+      <a href="/brutalist.html" class="card card-brutalist">
+        <div class="card-icon">⚡</div>
+        <h2 class="card-title">Дерзкий Нео-брутализм</h2>
+        <p class="card-desc">
+          Дизайн в стиле komreda.ru и Figma. Толстые черные границы, яркие контрастные цвета, стилизация под ретро-интерфейсы операционных систем и ироничный юмор в копирайтинге.
+        </p>
+        <div class="tag-container">
+          <span class="tag">Стиль komreda.ru</span>
+          <span class="tag">Смелый дизайн</span>
+          <span class="tag">Ретро-панели</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: #a78bfa">Молодежь, IT-сектор, лофты</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Быстро, просто, без соплей</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Scandinavian/Cozy Card -->
+      <a href="/scandi.html" class="card card-scandi">
+        <div class="card-icon">🛋️</div>
+        <h2 class="card-title">Скандинавский Уют</h2>
+        <p class="card-desc">
+          Эстетика тепла, домашнего уюта и минимализма. Мягкие скругленные карточки, природные цвета (песочный, оливковый), изящные шрифты с засечками и фокус на счастливой будущей жизни.
+        </p>
+        <div class="tag-container">
+          <span class="tag">Pinterest-эстетика</span>
+          <span class="tag">Забота</span>
+          <span class="tag">Эко-лайфстайл</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: var(--accent-green)">Семьи, новоселы</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Спокойствие за свой дом</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Modern Dark Card -->
+      <a href="/modern-dark.html" class="card card-modern-dark">
+        <div class="card-icon">🌌</div>
+        <h2 class="card-title">Высокотехнологичный Dark Mode</h2>
+        <p class="card-desc">
+          Ультрасовременный премиальный темный интерфейс с интерактивным калькулятором стоимости, стеклянным эффектом (Glassmorphism), мягким свечением и идеальной типографикой.
+        </p>
+        <div class="tag-container">
+          <span class="tag">Dark Mode</span>
+          <span class="tag">Премиум</span>
+          <span class="tag">Glassmorphism</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: #60a5fa">Премиум-сегмент, ЖК бизнес-класса</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Все под ключ, дорого, надежно</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Editorial Card -->
+      <a href="/editorial.html" class="card card-editorial">
+        <div class="card-icon">🏛️</div>
+        <h2 class="card-title">Архитектурный Editorial</h2>
+        <p class="card-desc">
+          Минималистичный дизайн в духе элитных архитектурных студий. Большие изящные шрифты с засечками, много воздуха, тонкие разделительные линии и элегантное сравнение планировок «До и После».
+        </p>
+        <div class="tag-container">
+          <span class="tag">Минимализм</span>
+          <span class="tag">Архитектурный стиль</span>
+          <span class="tag">Сплит-слайдер</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: #bfa87a">Дизайнеры, элитное жилье</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Эстетика и уважение к закону</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- SaaS Product Card -->
+      <a href="/saas-product.html" class="card card-saas">
+        <div class="card-icon">📱</div>
+        <h2 class="card-title">Современный SaaS/Product</h2>
+        <p class="card-desc">
+          Стиль передовых IT-продуктов вроде Linear и Stripe. Чистый белый фон, скругленные кнопки, интерактивные дорожные карты с плавными аккордеонами и фокусом на прозрачности этапов.
+        </p>
+        <div class="tag-container">
+          <span class="tag">SaaS стиль</span>
+          <span class="tag">Интерактивный таймлайн</span>
+          <span class="tag">Clean UI</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: #3399ff">Технологичные пользователи</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Простота и прозрачный онлайн-контроль</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Figma CAD Card -->
+      <a href="/interactive-app.html" class="card card-interactive-app">
+        <div class="card-icon">🛠️</div>
+        <h2 class="card-title">Интерактивный Figma CAD</h2>
+        <p class="card-desc">
+          Полный разрыв шаблонов. Сайт представляет собой интерактивную панель управления с инструментами (Снос стен, Мокрые зоны). Пользователь буквально играет в архитектора, снося перегородки на схеме.
+        </p>
+        <div class="tag-container">
+          <span class="tag">Интерактивное приложение</span>
+          <span class="tag">Figma Vibe</span>
+          <span class="tag">CAD планировщик</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: #a5b4fc">Дизайнеры, ценители интерактива</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Игровой процесс и вовлечение</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Infinite Canvas Card -->
+      <a href="/infinite-canvas.html" class="card card-canvas">
+        <div class="card-icon">🌀</div>
+        <h2 class="card-title">Бесконечный Zoom-Холст</h2>
+        <p class="card-desc">
+          Сайт-презентация на бесконечном координатном поле (в стиле Prezi или Figma). Навигация перемещает камеру, масштабирует чертеж и зумит разделы прямо на огромном полотне.
+        </p>
+        <div class="tag-container">
+          <span class="tag">Бесконечный холст</span>
+          <span class="tag">Zoom-навигация</span>
+          <span class="tag">Цифровой арт</span>
+        </div>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Аудитория:</span>
+            <span class="spec-val" style="color: #fda4af">Любители "вау-эффектов", инвесторы</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Главный триггер:</span>
+            <span class="spec-val">Кинематографичная глубина сайта</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    <p>Создано специально для демонстрации мультиканальных лендингов согласования перепланировок. 2026</p>
+  </footer>
+</body>
+</html>

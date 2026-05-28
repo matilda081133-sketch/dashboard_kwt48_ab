@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>БЕЗ БЮРОКРАТИИ — Перепланировки от комреды</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-desktop: #3b82f6; /* Nostalgic blue desktop color */
+      --window-bg: #c0c0c0; /* Windows 95 grey */
+      --window-border-light: #ffffff;
+      --window-border-dark: #808080;
+      --text: #000000;
+      --primary: #f97316; /* Bright Orange */
+      --secondary: #8b5cf6; /* Bold Purple */
+      --accent-green: #22c55e;
+      --font-display: 'Unbounded', sans-serif;
+      --font-body: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-desktop);
+      font-family: var(--font-body);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 2rem;
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="black" stroke="white" stroke-width="2"><polygon points="0,0 16,16 9,16 6,22"/></svg>'), auto;
+    }
+
+    /* Back Link Button */
+    .btn-back {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #000;
+      color: #fff;
+      border: 3px solid #000;
+      padding: 8px 16px;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 4px 4px 0px #000;
+      transition: all 0.1s ease;
+    }
+    .btn-back:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000;
+      background: var(--primary);
+    }
+
+    /* Windows style grid layout */
+    .desktop-layout {
+      max-width: 1200px;
+      margin: 3rem auto 0;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .desktop-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Standard Windows 95 Style Card */
+    .window {
+      background: var(--window-bg);
+      border-top: 2px solid var(--window-border-light);
+      border-left: 2px solid var(--window-border-light);
+      border-bottom: 2px solid var(--window-border-dark);
+      border-right: 2px solid var(--window-border-dark);
+      box-shadow: 8px 8px 0px rgba(0,0,0,0.3);
+      padding: 3px;
+      margin-bottom: 2rem;
+    }
+
+    .window-header {
+      background: linear-gradient(90deg, #000080, #1084d0); /* Classic Windows 95 Navy */
+      color: #ffffff;
+      padding: 0.5rem 0.75rem;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 3px;
+    }
+
+    .win-btn {
+      background: var(--window-bg);
+      border-top: 1.5px solid var(--window-border-light);
+      border-left: 1.5px solid var(--window-border-light);
+      border-bottom: 1.5px solid var(--window-border-dark);
+      border-right: 1.5px solid var(--window-border-dark);
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: black;
+      cursor: pointer;
+    }
+
+    .win-btn:active {
+      border-top: 1.5px solid var(--window-border-dark);
+      border-left: 1.5px solid var(--window-border-dark);
+      border-bottom: 1.5px solid var(--window-border-light);
+      border-right: 1.5px solid var(--window-border-light);
+    }
+
+    .window-body {
+      padding: 2rem;
+      background: #faf8f5; /* Off-white for clean readability */
+      border: 2px solid var(--window-border-dark);
+      margin-top: 3px;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+    }
+
+    h1 span {
+      background-color: var(--primary);
+      padding: 0.2rem 0.5rem;
+      display: inline-block;
+      transform: rotate(-1.5deg);
+      box-shadow: 4px 4px 0px #000;
+      border: 3px solid #000;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Neo-Brutalist Sticker Badge */
+    .sticker {
+      display: inline-block;
+      background: #fef08a; /* Soft bright yellow */
+      border: 3px solid #000;
+      padding: 0.5rem 1rem;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      transform: rotate(3deg);
+      margin-bottom: 1.5rem;
+      box-shadow: 4px 4px 0px #000;
+    }
+
+    /* Brutalist Buttons */
+    .brutal-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      color: #000;
+      border: 4px solid #000;
+      padding: 1rem 2rem;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 6px 6px 0px #000;
+      transition: all 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+      width: 100%;
+      text-decoration: none;
+    }
+
+    .brutal-btn:hover {
+      transform: translate(3px, 3px);
+      box-shadow: 3px 3px 0px #000;
+      background: var(--secondary);
+      color: white;
+    }
+
+    /* Custom MS-Paint/Sticker Box */
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .sticker-card {
+      border: 3px solid #000;
+      padding: 1rem;
+      background: white;
+      box-shadow: 4px 4px 0px #000;
+    }
+
+    .sticker-card h3 {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Desktop Icons (Windows Style navigation) */
+    .desktop-icons {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 1rem 0;
+    }
+
+    .icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 80px;
+      color: white;
+      text-align: center;
+      font-size: 0.75rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .icon-symbol {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--window-bg);
+      border-top: 1.5px solid var(--window-border-light);
+      border-left: 1.5px solid var(--window-border-light);
+      border-bottom: 1.5px solid var(--window-border-dark);
+      border-right: 1.5px solid var(--window-border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.25);
+    }
+
+    .icon-item:hover .icon-symbol {
+      background: white;
+    }
+
+    .icon-label {
+      font-weight: 700;
+      text-shadow: 1px 1px 2px black;
+    }
+
+    /* Dialog box quiz style */
+    .dialog-quiz {
+      background: var(--window-bg);
+      border: 2px solid var(--window-border-dark);
+      padding: 1.5rem;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+    }
+
+    .quiz-opt {
+      background: white;
+      border: 3px solid #000;
+      padding: 0.75rem 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      transition: all 0.1s ease;
+    }
+
+    .quiz-opt:hover {
+      background: #fef08a;
+      transform: translateX(4px);
+    }
+
+    .quiz-progress {
+      height: 16px;
+      background: white;
+      border: 2px solid var(--window-border-dark);
+      margin-top: 1.5rem;
+      display: flex;
+    }
+
+    .quiz-bar {
+      height: 100%;
+      background: #000080;
+      width: 33%;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- Back button -->
+  <a href="/" class="btn-back">
+    <span>← НА ГЛАВНУЮ</span>
+  </a>
+
+  <div class="desktop-layout">
+    <!-- Left Main Window -->
+    <div class="window">
+      <div class="window-header">
+        <span>replan_v1.0.exe</span>
+        <div class="window-controls">
+          <div class="win-btn">_</div>
+          <div class="win-btn">[]</div>
+          <div class="win-btn">X</div>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="sticker">РАБОТАЕМ ПО ВСЕЙ МОСКВЕ ⚡</div>
+        <h1>Снесли стену? <span>Узаконим!</span></h1>
+        
+        <p>
+          БТИ наезжает, а инспекторы грозят гигантскими штрафами и судами? Спокойно. Мы согласовываем перепланировки любой сложности, даже те, от которых отказались другие бюро. Делаем это легально, быстро и без лишней болтовни.
+        </p>
+
+        <div class="sticker-grid">
+          <div class="sticker-card" style="transform: rotate(-1deg)">
+            <h3>📋 100% ЛЕГАЛЬНО</h3>
+            <p style="font-size: 0.85rem; margin: 0;">Получаем официальные распоряжения Мосжилинспекции и новые планы БТИ.</p>
+          </div>
+          <div class="sticker-card" style="transform: rotate(1.5deg)">
+            <h3>🚀 БЕЗ ОЧЕРЕДЕЙ</h3>
+            <p style="font-size: 0.85rem; margin: 0;">Наши специалисты обожают очереди в МФЦ. Странные люди, но дело своё знают.</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+          <a href="#" class="brutal-btn">Связаться в чате без соплей →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column (Desktop Icons + Dialog Quiz) -->
+    <div>
+      <!-- Desktop Icons Mockup -->
+      <div class="window" style="margin-bottom: 2rem; background: transparent; border: none; box-shadow: none;">
+        <div class="desktop-icons">
+          <div class="icon-item">
+            <div class="icon-symbol">📂</div>
+            <div class="icon-label">Лицензии</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-symbol">🖨️</div>
+            <div class="icon-label">Цены.txt</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dialog Box Quiz -->
+      <div class="window">
+        <div class="window-header">
+          <span>Оценка шансов.dll</span>
+          <div class="window-controls">
+            <div class="win-btn">X</div>
+          </div>
+        </div>
+        <div class="window-body" style="padding: 1.5rem; background: var(--window-bg);">
+          <div class="dialog-quiz">
+            <h3 style="font-family: var(--font-display); font-size: 1rem; text-align: center;">КАКОЙ У ВАС ТИП ДОМА?</h3>
+            
+            <div class="quiz-options">
+              <div class="quiz-opt" onclick="nextStep(66)">
+                <span>🏢 Монолитный</span>
+                <span>→</span>
+              </div>
+              <div class="quiz-opt" onclick="nextStep(100)">
+                <span>🧱 Кирпичный</span>
+                <span>→</span>
+              </div>
+              <div class="quiz-opt" onclick="nextStep(50)">
+                <span>📦 Панельный (серии П-44 и др.)</span>
+                <span>→</span>
+              </div>
+            </div>
+
+            <div style="font-size: 0.75rem; text-align: center; color: #555;">Шаг 1 из 3</div>
+            <div class="quiz-progress">
+              <div class="quiz-bar" id="quizBar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function nextStep(percent) {
+      const bar = document.getElementById('quizBar');
+      bar.style.width = percent + '%';
+      
+      if(percent === 100) {
+        alert('Шансы на успешное согласование: 99.9%! Напишите нам для мгновенного запуска процедуры!');
+      } else {
+        alert(`Шанс согласования высок! Продвигаемся к анализу несущих стен. Текущий прогресс: ${percent}%`);
+      }
+    }
+  </script>
+</body>
+</html>
