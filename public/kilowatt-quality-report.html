@@ -1388,20 +1388,47 @@
             throw new Error(stats.errors[0].message);
           }
           
-          // Query goals count (Form submits & Click on number)
-          const formGoalId = activeLP === 'tilda' ? '504021229' : '560588280';
-          const phoneGoalId = activeLP === 'tilda' ? '504021243' : '560586648';
+          // Query goals count dynamically for Tilda (106046280) vs Online (109278709) as requested by user
+          let formReaches = 0, phoneReaches = 0, quizReaches = 0, totalGoals = 0;
+          let goalsBreakdown = [];
           
-          const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${formGoalId}reaches,ym:s:goal${phoneGoalId}reaches&date1=${date1}&date2=${date2}`;
-          const goalsRes = await fetch(goalsUrl, {
-            headers: { 'Authorization': `OAuth ${oauthToken}` }
-          });
-          const goalsStats = await goalsRes.json();
+          if (activeLP === 'tilda') {
+            const formGoalId = '505531986'; // "Автоцель: отправил контактные данные"
+            const quizGoalId = '542671358'; // "отправка формы с квиза"
+            
+            const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${formGoalId}reaches,ym:s:goal${quizGoalId}reaches&date1=${date1}&date2=${date2}`;
+            const goalsRes = await fetch(goalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
+            const goalsStats = await goalsRes.json();
+            
+            formReaches = (goalsStats.totals && goalsStats.totals[0]) ? Math.round(goalsStats.totals[0]) : 0;
+            quizReaches = (goalsStats.totals && goalsStats.totals[1]) ? Math.round(goalsStats.totals[1]) : 0;
+            totalGoals = formReaches + quizReaches;
+            
+            goalsBreakdown = [
+              { name: 'Автоцель: отправил контактные данные', count: formReaches, total: totalGoals || 1 },
+              { name: 'Отправка формы с квиза', count: quizReaches, total: totalGoals || 1 }
+            ];
+          } else {
+            const formGoalId = '560510600';  // "Автоцель: отправил контактные данные"
+            const phoneGoalId = '560586648'; // "нажал на позвонить"
+            const botGoalId = '560586538';   // "перешел в чат бота"
+            
+            const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${formGoalId}reaches,ym:s:goal${phoneGoalId}reaches,ym:s:goal${botGoalId}reaches&date1=${date1}&date2=${date2}`;
+            const goalsRes = await fetch(goalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
+            const goalsStats = await goalsRes.json();
+            
+            formReaches = (goalsStats.totals && goalsStats.totals[0]) ? Math.round(goalsStats.totals[0]) : 0;
+            phoneReaches = (goalsStats.totals && goalsStats.totals[1]) ? Math.round(goalsStats.totals[1]) : 0;
+            quizReaches = (goalsStats.totals && goalsStats.totals[2]) ? Math.round(goalsStats.totals[2]) : 0;
+            totalGoals = formReaches + phoneReaches + quizReaches;
+            
+            goalsBreakdown = [
+              { name: 'Автоцель: отправил контактные данные', count: formReaches, total: totalGoals || 1 },
+              { name: 'Нажал на позвонить', count: phoneReaches, total: totalGoals || 1 },
+              { name: 'Перешел в чат бота', count: quizReaches, total: totalGoals || 1 }
+            ];
+          }
           
-          const formReaches = (goalsStats.totals && goalsStats.totals[0]) ? Math.round(goalsStats.totals[0]) : 0;
-          const phoneReaches = (goalsStats.totals && goalsStats.totals[1]) ? Math.round(goalsStats.totals[1]) : 0;
-          
-          const totalGoals = formReaches + phoneReaches;
           const totals = stats.totals || [0, 0, 0, 0];
           const visits = Math.round(totals[0] || 0);
           const users = Math.round(totals[1] || 0);
@@ -1452,35 +1479,41 @@
                 const pathA = t.varA.includes('—') ? t.varA.split('—')[1].trim() : '';
                 const pathB = t.varB.includes('—') ? t.varB.split('—')[1].trim() : '';
                 
-                    // Fallback to average baseline of this counter if it's the main index page (which has no suffix)
-                    return { visits: Math.round(visits / 2), duration: avgDuration, reaches: Math.round(totalGoals / 2) };
-                  }
-                  
-                  // Query page visits and time
-                  const pageUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:visits,ym:s:avgVisitDuration&dimensions=ym:s:startURLPathWithoutParams&filters=ym:s:startURLPathWithoutParams=='${pagePath}'&date1=${date1}&date2=${date2}`;
-                  const r = await fetch(pageUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
-                  const pStats = await r.json();
-                  
-                  const pVisits = (pStats.totals && pStats.totals[0]) ? Math.round(pStats.totals[0]) : 0;
-                  const pDuration = (pStats.totals && pStats.totals[1]) ? Math.round(pStats.totals[1]) : 0;
-                  
-                  // Query goal reaches on this page specifically
-                  const pageGoalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${formGoalId}reaches,ym:s:goal${phoneGoalId}reaches&dimensions=ym:s:startURLPathWithoutParams&filters=ym:s:startURLPathWithoutParams=='${pagePath}'&date1=${date1}&date2=${date2}`;
-                  const rg = await fetch(pageGoalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
-                  const pgStats = await rg.json();
-                  
-                  const fReaches = (pgStats.totals && pgStats.totals[0]) ? Math.round(pgStats.totals[0]) : 0;
-                  const phReaches = (pgStats.totals && pgStats.totals[1]) ? Math.round(pgStats.totals[1]) : 0;
-                  
-                  return {
-                    visits: pVisits || Math.round(50 + Math.random() * 200), // Prevent absolute zero state for visualization
-                    duration: pDuration || 90,
-                    reaches: (fReaches + phReaches) || Math.round(5 + Math.random() * 15)
-                  };
-                }
-                
-                const statsA = await queryPageStats(pathA);
-                const statsB = await queryPageStats(pathB);
+                 // Helper to query Metrika filtered by specific page
+                 async function queryPageStats(pagePath, isVariantB, pathBTarget) {
+                   let filterStr = '';
+                   if (isVariantB) {
+                     filterStr = `ym:s:startURL=~'.*${pagePath}.*'`;
+                   } else {
+                     // For control Variant A, we negative match the Variant B's path to prevent overlap
+                     filterStr = `ym:s:startURL!~'.*${pathBTarget}.*'`;
+                   }
+                   
+                   // Query page visits and time
+                   const pageUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:visits,ym:s:avgVisitDuration&filters=${encodeURIComponent(filterStr)}&date1=${date1}&date2=${date2}`;
+                   const r = await fetch(pageUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
+                   const pStats = await r.json();
+                   
+                   const pVisits = (pStats.totals && pStats.totals[0]) ? Math.round(pStats.totals[0]) : 0;
+                   const pDuration = (pStats.totals && pStats.totals[1]) ? Math.round(pStats.totals[1]) : 0;
+                   
+                   // Query goal reaches on this page specifically
+                   const goalMetric = activeLP === 'tilda' ? `ym:s:goal505531986reaches` : `ym:s:goal560510600reaches`;
+                   const pageGoalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=${goalMetric}&filters=${encodeURIComponent(filterStr)}&date1=${date1}&date2=${date2}`;
+                   const rg = await fetch(pageGoalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
+                   const pgStats = await rg.json();
+                   
+                   const reaches = (pgStats.totals && pgStats.totals[0]) ? Math.round(pgStats.totals[0]) : 0;
+                   
+                   return {
+                     visits: pVisits,
+                     duration: pDuration,
+                     reaches: reaches
+                   };
+                 }
+                 
+                 const statsA = await queryPageStats(pathA, false, pathB);
+                 const statsB = await queryPageStats(pathB, true, pathB);
                 
                 // Map real values to test
                 t.visitsA = statsA.visits;
@@ -1546,10 +1579,7 @@
             session_t1: bounce,
             session_t2: 42.1,
             session_t3: parseFloat((100 - bounce - 42.1).toFixed(1)),
-            goals_breakdown: [
-              { name: 'Отправка контактных данных', count: formReaches, total: totalGoals || 1 },
-              { name: 'Клик по номеру телефона', count: phoneReaches, total: totalGoals || 1 }
-            ],
+            goals_breakdown: goalsBreakdown,
             chart: {
               labels,
               visits: visitsPoints,
