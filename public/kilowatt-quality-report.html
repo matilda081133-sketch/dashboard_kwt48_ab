@@ -1059,7 +1059,7 @@
     // Global State
     let activeLP = 'tilda';
     let activePeriod = 'week';
-    let isLiveApi = false;
+    let isLiveApi = true;
     let oauthToken = 'y0__wgBEOGKkuEHGN_zQSDKt5nVFyoCGr6McWywMYfMJhQEfM7qzc8I';
     let chartInstance = null;
 
@@ -1088,7 +1088,7 @@
           session_t2: 24.1,
           session_t3: 30.3,
           goals_breakdown: [
-            { name: 'Отправил контакты (осн. страница) [504021243]', count: 38, total: 77 },
+            { name: 'Клик по номеру: все номера телефонов [504021243]', count: 38, total: 77 },
             { name: 'Автоцель: отправил контакты [505531986]', count: 28, total: 77 },
             { name: 'Отправка формы с квиза [542671358]', count: 11, total: 77 }
           ],
@@ -1120,7 +1120,7 @@
           session_t2: 43.5,
           session_t3: 39.4,
           goals_breakdown: [
-            { name: 'Отправил контакты (осн. страница) [504021243]', count: 480, total: 923 },
+            { name: 'Клик по номеру: все номера телефонов [504021243]', count: 480, total: 923 },
             { name: 'Автоцель: отправил контакты [505531986]', count: 320, total: 923 },
             { name: 'Отправка формы с квиза [542671358]', count: 123, total: 923 }
           ],
@@ -1412,7 +1412,7 @@
             totalGoals = reaches1 + reaches2 + reaches3;
             
             goalsBreakdown = [
-              { name: 'Отправил контакты (осн. страница) [504021243]', count: reaches1, total: totalGoals || 1 },
+              { name: 'Клик по номеру: все номера телефонов [504021243]', count: reaches1, total: totalGoals || 1 },
               { name: 'Автоцель: отправил контакты [505531986]', count: reaches2, total: totalGoals || 1 },
               { name: 'Отправка формы с квиза [542671358]', count: reaches3, total: totalGoals || 1 }
             ];
