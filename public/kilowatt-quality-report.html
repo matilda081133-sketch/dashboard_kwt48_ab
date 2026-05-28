@@ -951,20 +951,20 @@
       <!-- Add A/B Test form panel -->
       <div class="log-form">
         <h3 style="font-size: 12px; font-weight: 700; margin-bottom: 12px;">Внести данные нового А/Б эксперимента</h3>
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 10px;">
-          <div class="form-group">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <div class="form-group" style="grid-column: span 4;">
             <label for="ab-hypothesis">Тестируемая гипотеза</label>
             <input type="text" id="ab-hypothesis" placeholder="Гипотеза: Изменение офера снизит показатель отказов" class="input-field" style="width: 100%;">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label for="ab-start-date">Начало эксперимента</label>
             <input type="date" id="ab-start-date" class="input-field" style="width: 100%;">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label for="ab-end-date">Конец эксперимента</label>
             <input type="date" id="ab-end-date" class="input-field" style="width: 100%;">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 2;">
             <label for="ab-variants">Сравниваемые варианты</label>
             <input type="text" id="ab-variants" placeholder="Контрольный (A), Эксперимент (B)" class="input-field" style="width: 100%;">
           </div>
@@ -1004,7 +1004,7 @@
           <thead>
             <tr>
               <th>Период</th>
-              <th>Тестируемая гипотеза</th>
+              <th style="min-width: 320px;">Тестируемая гипотеза</th>
               <th>Варианты</th>
               <th>Визиты</th>
               <th>Время на сайте</th>
