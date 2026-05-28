@@ -1202,143 +1202,16 @@
       { id: 'vq_launch_1', date: '2026-05-25', lp: 'tilda', title: 'Запущен А/Б тест полей форм (Varioqub)', desc: 'Старт эксперимента редиректа на страницу /page143561946.html для проверки конверсии в цель "посетил спасибо" при заполнении форм.' }
     ];
 
-    // Default custom A/B testing dataset loaded EXACTLY from the user's Varioqub screenshots
-    const defaultAbTests = [
-      { 
-        id: 'vq_1', 
-        lp: 'tilda',
-        startDate: '2026-05-25', 
-        endDate: '2026-06-08', 
-        hypothesis: 'тест полей форм (Конверсия в цели: посетил спасибо)', 
-        varA: 'Базовая версия (A) — kilowatt48.tilda.ws', 
-        varB: 'Вариант 1 (B) — /page143561946.html', 
-        visitsA: 2150, 
-        visitsB: 2090, 
-        timeA: 110, 
-        timeB: 122, 
-        goalsA: 98, 
-        goalsB: 128, 
-        convA: 4.56, 
-        convB: 6.12, 
-        ciA: 0.90, 
-        ciB: 1.05, 
-        pvalue: 0.024, 
-        interpretation: 'Вариант 1 (B) дает статистически значимый прирост конверсии. Разница доказана.' 
-      },
-      { 
-        id: 'vq_2', 
-        lp: 'tilda',
-        startDate: '2026-03-17', 
-        endDate: '2026-04-07', 
-        hypothesis: 'тест каталог (Время на сайте, Цель: посетил спасибо)', 
-        varA: 'Контрольный вариант (A) — kilowatt-48.рф', 
-        varB: 'Вариант 1 (B) — /page122199756.html', 
-        visitsA: 3256, 
-        visitsB: 2823, 
-        timeA: 87, // 1м 27с
-        timeB: 96, // 1м 36с
-        goalsA: 148, 
-        goalsB: 162, 
-        convA: 4.54, 
-        convB: 5.73, 
-        ciA: 0.72, 
-        ciB: 0.86, 
-        pvalue: 0.235, 
-        interpretation: 'Разница времени на сайте (+9с) статистически незначима (p-value > 0.05). Эффект не подтвержден.' 
-      },
-      { 
-        id: 'vq_3', 
-        lp: 'tilda',
-        startDate: '2026-04-10', 
-        endDate: '2026-04-30', 
-        hypothesis: 'тест видео кнопки и квиза (Время на сайте, Цель: посетил спасибо)', 
-        varA: 'Базовая версия (A) — kilowatt-48.рф', 
-        varB: 'Эксперимент (B) — /page122199756.html', 
-        visitsA: 1850, 
-        visitsB: 1910, 
-        timeA: 104, 
-        timeB: 118, 
-        goalsA: 83, 
-        goalsB: 114, 
-        convA: 4.49, 
-        convB: 5.97, 
-        ciA: 0.96, 
-        ciB: 1.08, 
-        pvalue: 0.039, 
-        interpretation: 'Вариант B показывает статистически значимое увеличение вовлеченности и конверсий.' 
-      },
-      { 
-        id: 'vq_4', 
-        lp: 'tilda',
-        startDate: '2026-04-12', 
-        endDate: '2026-05-02', 
-        hypothesis: 'тест оффера (Время на сайте, Цель: посетил спасибо)', 
-        varA: 'Базовая версия (A) — kilowatt-48.рф', 
-        varB: 'Эксперимент (B) — /page122196886.html', 
-        visitsA: 2400, 
-        visitsB: 2350, 
-        timeA: 95, 
-        timeB: 92, 
-        goalsA: 108, 
-        goalsB: 94, 
-        convA: 4.50, 
-        convB: 4.00, 
-        ciA: 0.85, 
-        ciB: 0.81, 
-        pvalue: 0.385, 
-        interpretation: 'Изменение оффера снизило показатели. Экспериментальный вариант B отклонен.' 
-      },
-      { 
-        id: 'vq_5', 
-        lp: 'online',
-        startDate: '2026-04-10', 
-        endDate: '2026-04-30', 
-        hypothesis: 'тест видео кнопки и квиза (Время на сайте)', 
-        varA: 'Базовая версия (A) — kwt48.online', 
-        varB: 'Эксперимент (B) — /page122199756.html', 
-        visitsA: 1950, 
-        visitsB: 2010, 
-        timeA: 112, 
-        timeB: 128, 
-        goalsA: 95, 
-        goalsB: 132, 
-        convA: 4.87, 
-        convB: 6.57, 
-        ciA: 0.97, 
-        ciB: 1.10, 
-        pvalue: 0.019, 
-        interpretation: 'Вариант B дает статистически доказанный рост конверсии на онлайн-счетчике.' 
-      },
-      { 
-        id: 'vq_6', 
-        lp: 'online',
-        startDate: '2026-04-12', 
-        endDate: '2026-05-02', 
-        hypothesis: 'тест оффера (Время на сайте, Цель: посетил спасибо)', 
-        varA: 'Базовая версия (A) — kwt48.online', 
-        varB: 'Эксперимент (B) — /page122196886.html', 
-        visitsA: 1540, 
-        visitsB: 1620, 
-        timeA: 98, 
-        timeB: 94, 
-        goalsA: 78, 
-        goalsB: 72, 
-        convA: 5.06, 
-        convB: 4.44, 
-        ciA: 1.11, 
-        ciB: 1.02, 
-        pvalue: 0.421, 
-        interpretation: 'Различие офферов незначимо. Возврат к базовой версии.' 
-      }
-    ];
+    // Default custom A/B testing dataset loaded from real data JSON
+    const defaultAbTests = [];
 
     // Load persisted or default logs
     let lpChanges = JSON.parse(localStorage.getItem('kilowatt_changes')) || defaultChanges;
-    let abTests = defaultAbTests; // Reset to dynamic screenshot array to ensure they display
+    let abTests = defaultAbTests;
 
 
     // Init function
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       // Set default change dates
       document.getElementById('change-date').value = new Date().toISOString().split('T')[0];
       document.getElementById('ab-start-date').value = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -1355,9 +1228,21 @@
       // Prefill OAuth Token in field
       document.getElementById('oauth-token').value = oauthToken;
       
+      // Load real A/B test data collected by the script
+      try {
+        const response = await fetch('/real_ab_data.json');
+        if (response.ok) {
+          abTests = await response.json();
+          console.log('Loaded real A/B test data:', abTests);
+        } else {
+          console.warn('Failed to load real A/B test data from JSON');
+        }
+      } catch (err) {
+        console.error('Error loading real A/B test data:', err);
+      }
+      
       // Initial render
       updateDashboardData();
-    });
 
     // Generate custom period mock data
     function generateCustomPeriodData(lp, fromStr, toStr) {
@@ -1564,13 +1449,9 @@
             for (let t of abTests) {
               if (t.lp === activeLP) {
                 // Extract URL paths for variants A and B
-                // e.g. "Вариант 1 (B) — /page143561946.html" => "/page143561946.html"
                 const pathA = t.varA.includes('—') ? t.varA.split('—')[1].trim() : '';
                 const pathB = t.varB.includes('—') ? t.varB.split('—')[1].trim() : '';
                 
-                // Helper to query Metrika filtered by specific page
-                async function queryPageStats(pagePath) {
-                  if (!pagePath || pagePath.startsWith('http') || pagePath.includes('ws')) {
                     // Fallback to average baseline of this counter if it's the main index page (which has no suffix)
                     return { visits: Math.round(visits / 2), duration: avgDuration, reaches: Math.round(totalGoals / 2) };
                   }
