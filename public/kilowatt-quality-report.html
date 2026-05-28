@@ -16,9 +16,9 @@
   <style>
     :root {
       /* Yandex DataLens Professional Light Theme Color Palette */
-      --bg-main: #f4f5f8;
+      --bg-main: #f2f3f7;       /* Iconic DataLens canvas background */
       --bg-card: #ffffff;
-      --border-color: #e3e5ec;
+      --border-color: #dcdfe6;  /* Authentic light gray borders */
       --text-main: #1f2433;     /* Deep slate blue/black for max readability */
       --text-muted: #7f8a9e;    /* Gray for labels and non-essential text */
       
@@ -40,7 +40,7 @@
       
       /* Flat DataLens elevation (strictly minimal borders, no heavy shadows) */
       --border-lens: 1px solid var(--border-color);
-      --shadow-lens: 0 1px 3px rgba(31, 36, 51, 0.04);
+      --shadow-lens: 0 1px 2px rgba(31, 36, 51, 0.04);
     }
 
     * {
@@ -53,7 +53,7 @@
       background-color: var(--bg-main);
       color: var(--text-main);
       font-family: var(--font-family);
-      font-size: 14px;
+      font-size: 15px; /* Slightly increased from 14px */
       line-height: 1.5;
       min-height: 100vh;
       display: flex;
@@ -64,7 +64,7 @@
     header {
       background: var(--bg-card);
       border-bottom: var(--border-lens);
-      padding: 12px 24px;
+      padding: 14px 24px; /* Slightly increased padding */
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -80,7 +80,7 @@
     }
 
     .brand-section h1 {
-      font-size: 18px;
+      font-size: 20px; /* Slightly increased from 18px */
       font-weight: 700;
       letter-spacing: -0.01em;
       color: var(--text-main);
@@ -93,14 +93,14 @@
       content: '';
       display: inline-block;
       width: 4px;
-      height: 16px;
+      height: 18px;
       background: var(--primary);
       border-radius: 2px;
     }
 
     .brand-section p {
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
       border-left: 1px solid var(--border-color);
       padding-left: 16px;
       margin-left: 4px;
@@ -128,8 +128,8 @@
       background: transparent;
       border: none;
       color: var(--text-main);
-      padding: 5px 12px;
-      font-size: 13px;
+      padding: 6px 14px; /* Slightly wider padding */
+      font-size: 14px; /* Slightly increased from 13px */
       font-weight: 500;
       border-radius: var(--radius-sm);
       cursor: pointer;
@@ -155,7 +155,7 @@
 
     /* Classic inputs for Dates */
     .date-label {
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -166,10 +166,10 @@
       background: #ffffff;
       border: var(--border-lens);
       border-radius: var(--radius-sm);
-      padding: 4px 8px;
+      padding: 6px 10px; /* Slightly increased padding */
       color: var(--text-main);
       font-family: var(--font-family);
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
       outline: none;
       transition: border-color 0.15s ease-in-out;
     }
@@ -183,8 +183,8 @@
       border: var(--border-lens);
       color: var(--text-main);
       border-radius: var(--radius-sm);
-      padding: 4px 10px;
-      font-size: 13px;
+      padding: 6px 12px; /* Slightly increased padding */
+      font-size: 14px; /* Slightly increased from 13px */
       font-weight: 500;
       cursor: pointer;
       font-family: var(--font-family);
@@ -201,8 +201,8 @@
       background: var(--primary-light);
       border: 1px solid rgba(75, 115, 255, 0.2);
       color: var(--primary);
-      padding: 5px 12px;
-      font-size: 13px;
+      padding: 6px 14px; /* Slightly increased padding */
+      font-size: 14px; /* Slightly increased from 13px */
       font-weight: 600;
       border-radius: var(--radius-sm);
       cursor: pointer;
@@ -228,7 +228,7 @@
     /* Layout structure */
     .btn-back {
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       font-weight: 600;
       text-decoration: none;
       border-right: 1px solid var(--border-color);
@@ -245,17 +245,17 @@
       max-width: 1600px;
       width: 100%;
       margin: 0 auto;
-      padding: 16px 24px 32px;
+      padding: 20px 24px 36px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px; /* Margins slightly increased */
     }
 
     /* Grid layout for KPIs (Classic DataLens structured dashboard widgets) */
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
+      gap: 16px; /* Slightly wider gap */
     }
 
     @media (max-width: 1024px) {
@@ -268,15 +268,19 @@
       background: var(--bg-card);
       border: var(--border-lens);
       border-radius: var(--radius-md);
-      padding: 16px;
+      padding: 18px; /* Slightly increased from 16px */
       box-shadow: var(--shadow-lens);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      transition: border-color 0.15s ease;
+    }
+    .metric-card:hover {
+      border-color: #b0b7c6; /* Subtle DataLens card hover border */
     }
 
     .metric-title {
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.02em;
@@ -285,11 +289,11 @@
     }
 
     .metric-value {
-      font-size: 30px;
+      font-size: 33px; /* Slightly increased from 30px */
       font-weight: 700;
       color: var(--text-main);
       line-height: 1.2;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.015em;
       margin-bottom: 6px;
     }
 
@@ -297,7 +301,7 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       font-weight: 600;
     }
 
@@ -319,7 +323,7 @@
     .dashboard-row {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      gap: 16px;
+      gap: 20px; /* Slightly wider gap */
     }
 
     @media (max-width: 1024px) {
@@ -332,7 +336,7 @@
       background: var(--bg-card);
       border: var(--border-lens);
       border-radius: var(--radius-md);
-      padding: 20px;
+      padding: 24px; /* Increased from 20px */
       box-shadow: var(--shadow-lens);
       display: flex;
       flex-direction: column;
@@ -342,13 +346,13 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #f0f1f4;
-      padding-bottom: 12px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid #eef0f3;
+      padding-bottom: 14px;
     }
 
     .panel-title {
-      font-size: 16px;
+      font-size: 17px; /* Slightly increased from 16px */
       font-weight: 700;
       color: var(--text-main);
       display: flex;
@@ -360,38 +364,38 @@
       content: '';
       display: inline-block;
       width: 3px;
-      height: 12px;
+      height: 14px;
       background: var(--primary);
     }
 
     .chart-container {
       position: relative;
       width: 100%;
-      height: 320px;
+      height: 340px; /* Slightly taller */
     }
 
     /* Goals progress indicators - clean minimalist bars */
     .goals-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px; /* Increased gap */
     }
 
     .goal-item {
       background: #f8f9fc;
       border: var(--border-lens);
       border-radius: var(--radius-sm);
-      padding: 12px;
+      padding: 14px; /* Increased padding */
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .goal-item-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
     }
 
     .goal-name {
@@ -417,9 +421,9 @@
     }
 
     .goal-bar-bg {
-      height: 5px;
+      height: 6px; /* Slightly thicker */
       background: #e9ecf4;
-      border-radius: 2px;
+      border-radius: 3px;
       overflow: hidden;
     }
 
@@ -440,18 +444,18 @@
       background: #f8f9fc;
       border: var(--border-lens);
       border-radius: var(--radius-sm);
-      padding: 16px;
-      margin-bottom: 16px;
+      padding: 18px; /* Increased padding */
+      margin-bottom: 18px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
     .form-group label {
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -463,8 +467,8 @@
       color: #ffffff;
       border: none;
       border-radius: var(--radius-sm);
-      padding: 8px 16px;
-      font-size: 13px;
+      padding: 10px 18px; /* Increased from 8px 16px */
+      font-size: 14px; /* Slightly increased from 13px */
       font-weight: 600;
       cursor: pointer;
       font-family: var(--font-family);
@@ -479,17 +483,17 @@
     .timeline {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      max-height: 400px;
+      gap: 14px;
+      max-height: 420px;
       overflow-y: auto;
       padding-right: 4px;
     }
 
     .timeline-item {
       position: relative;
-      padding-left: 16px;
-      border-left: 2px solid #e3e5ec;
-      padding-bottom: 8px;
+      padding-left: 20px;
+      border-left: 2px solid #dcdfe6;
+      padding-bottom: 10px;
     }
 
     .timeline-item::before {
@@ -508,26 +512,26 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     .timeline-date {
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       color: var(--text-muted);
       font-weight: 600;
     }
 
     .timeline-title {
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
       font-weight: 700;
       color: var(--text-main);
     }
 
     .timeline-desc {
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
       color: var(--text-muted);
-      line-height: 1.4;
-      margin-bottom: 4px;
+      line-height: 1.42;
+      margin-bottom: 6px;
     }
 
     .btn-delete {
@@ -535,7 +539,7 @@
       border: none;
       color: var(--danger);
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       font-weight: 600;
       padding: 0;
       font-family: var(--font-family);
@@ -557,27 +561,27 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
     }
 
     .premium-table th {
-      background: #f0f1f4;
+      background: #eaecf0; /* Slightly darker authentic DataLens th background */
       color: var(--text-main);
       font-weight: 600;
-      padding: 10px 12px;
+      padding: 12px 14px; /* Increased padding */
       border-bottom: var(--border-lens);
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       text-transform: uppercase;
       letter-spacing: 0.02em;
     }
 
     .premium-table td {
-      padding: 10px 12px;
+      padding: 12px 14px; /* Increased padding */
       border-bottom: var(--border-lens);
       color: var(--text-main);
       background: #ffffff;
-      vertical-align: top;
-      line-height: 1.4;
+      vertical-align: middle; /* Aligned center vertically */
+      line-height: 1.45;
     }
 
     .premium-table tr:last-child td {
@@ -585,15 +589,15 @@
     }
 
     .premium-table tr:hover td {
-      background: #fafbfc;
+      background: #f7f8fa; /* Even softer DataLens hover */
     }
 
     .badge-variant {
       display: inline-block;
-      padding: 2px 6px;
+      padding: 3px 8px; /* Slightly roomier badges */
       border-radius: var(--radius-sm);
       font-weight: 600;
-      font-size: 12px;
+      font-size: 13px; /* Slightly increased from 12px */
       margin-right: 4px;
     }
 
@@ -613,20 +617,20 @@
     .traffic-source-badge {
       display: flex;
       justify-content: space-between;
-      padding: 8px 12px;
+      padding: 10px 14px; /* Increased padding */
       border-radius: var(--radius-sm);
       background: #f8f9fc;
       border: var(--border-lens);
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
     }
 
     .active-filter-banner {
       background: #f0f4ff;
       border: 1px solid rgba(75, 115, 255, 0.15);
       border-radius: var(--radius-sm);
-      padding: 8px 16px;
+      padding: 10px 18px; /* Increased padding */
       color: var(--primary);
-      font-size: 13px;
+      font-size: 14px; /* Slightly increased from 13px */
       font-weight: 500;
       display: flex;
       align-items: center;
@@ -635,7 +639,7 @@
 
     .active-filter-banner::before {
       content: '●';
-      font-size: 8px;
+      font-size: 9px;
       color: var(--primary);
     }
 
@@ -658,8 +662,8 @@
       background: #ffffff;
       border: var(--border-lens);
       border-radius: var(--radius-lg);
-      padding: 24px;
-      max-width: 500px;
+      padding: 28px; /* Increased padding */
+      max-width: 520px;
       width: 90%;
       position: relative;
       box-shadow: 0 10px 30px rgba(31, 36, 51, 0.08);
@@ -672,12 +676,12 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 18px;
+      font-size: 20px;
       cursor: pointer;
     }
 
     .modal-title {
-      font-size: 15px;
+      font-size: 16px; /* Slightly increased from 15px */
       font-weight: 700;
       margin-bottom: 8px;
       color: var(--text-main);
@@ -690,16 +694,16 @@
       content: '';
       display: inline-block;
       width: 3px;
-      height: 12px;
+      height: 14px;
       background: var(--primary);
     }
 
     footer {
       background: #ffffff;
       border-top: var(--border-lens);
-      padding: 16px;
+      padding: 20px; /* Increased padding */
       text-align: center;
-      font-size: 11px;
+      font-size: 12px; /* Slightly increased from 11px */
       color: var(--text-muted);
       margin-top: auto;
     }
