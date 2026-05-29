@@ -268,69 +268,87 @@
       background: var(--bg-card);
       border: var(--border-lens);
       border-radius: var(--radius-md);
-      padding: 18px; /* Slightly increased from 16px */
+      padding: 18px 20px;
       box-shadow: var(--shadow-lens);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: border-color 0.15s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
+    
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+    }
+    
+    /* Subtle color coding on left edges like Yandex DataLens dashboard indicators */
+    .metric-card:nth-child(1)::before { background: #4b73ff; } /* Visitors: Blue */
+    .metric-card:nth-child(2)::before { background: #2ca579; } /* CR: Green */
+    .metric-card:nth-child(3)::before { background: #7928ca; } /* Goals: Purple */
+    .metric-card:nth-child(4)::before { background: #f2994a; } /* Time: Orange */
+    .metric-card:nth-child(5)::before { background: #d94f5c; } /* Bounce: Red */
+
     .metric-card:hover {
-      border-color: #b0b7c6; /* Subtle DataLens card hover border */
+      border-color: #ccd0db;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(31, 36, 51, 0.05);
     }
 
     .metric-title {
-      font-size: 13px; /* Slightly increased from 12px */
+      font-size: 11px; /* DataLens uses slightly smaller, clean uppercase labels */
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.05em;
       color: var(--text-muted);
       margin-bottom: 8px;
     }
 
     .metric-value {
-      font-size: 33px; /* Slightly increased from 30px */
+      font-size: 32px;
       font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.015em;
-      margin-bottom: 6px;
-    }
-
-    #kpi-visitors {
-      color: #0066ff; /* Yandex DataLens Brand Blue */
-    }
-    #kpi-conversion {
-      color: #00a261; /* Yandex Metrika CR Green */
-    }
-    #kpi-goals {
-      color: #7928ca; /* Premium Violet/Indigo */
-    }
-    #kpi-time {
-      color: #2ca579; /* Soft Emerald Green for session length */
-    }
-    #kpi-bounce {
-      color: #d94f5c; /* Warning Burgundy for bounces */
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      color: var(--text-main); /* Uniform premium dark slate color */
     }
 
     .metric-trend {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 13px; /* Slightly increased from 12px */
-      font-weight: 600;
+      gap: 6px;
+      font-size: 12px;
     }
 
-    .metric-trend.up {
+    .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .trend-badge.trend-badge-up {
+      background-color: var(--accent-light);
       color: var(--accent);
     }
 
-    .metric-trend.down {
+    .trend-badge.trend-badge-down {
+      background-color: var(--danger-light);
       color: var(--danger);
     }
 
     .trend-text {
       color: var(--text-muted);
       font-weight: 400;
+      font-size: 12px;
       margin-left: 2px;
     }
 
@@ -805,7 +823,7 @@
       <div class="metric-card">
         <span class="metric-title">Показатель отказов</span>
         <div class="metric-value" id="kpi-bounce">16.4%</div>
-        <span class="metric-trend up" id="kpi-bounce-trend" style="color: var(--accent);">
+        <span class="metric-trend" id="kpi-bounce-trend">
           ▼ -1.8% <span class="trend-text">хорошая динамика</span>
         </span>
       </div>
@@ -1766,19 +1784,14 @@
       updateTrendIndicator('kpi-goals-trend', data.goals, data.goals_prev, '', true);
       
       const timeTrendEl = document.getElementById('kpi-time-trend');
-      timeTrendEl.className = 'metric-trend up';
-      timeTrendEl.innerHTML = `▲ улучшение <span class="trend-text">к прош. периоду</span>`;
+      timeTrendEl.innerHTML = `<span class="trend-badge trend-badge-up">▲ улучшение</span><span class="trend-text">к прош. периоду</span>`;
 
       const bounceTrendEl = document.getElementById('kpi-bounce-trend');
       const bounceDiff = (data.bounce - data.bounce_prev).toFixed(1);
       if (bounceDiff <= 0) {
-        bounceTrendEl.className = 'metric-trend up';
-        bounceTrendEl.style.color = 'var(--accent)';
-        bounceTrendEl.innerHTML = `▼ ${bounceDiff}% <span class="trend-text">хорошая динамика</span>`;
+        bounceTrendEl.innerHTML = `<span class="trend-badge trend-badge-up">▼ ${bounceDiff}%</span><span class="trend-text">хорошая динамика</span>`;
       } else {
-        bounceTrendEl.className = 'metric-trend down';
-        bounceTrendEl.style.color = 'var(--danger)';
-        bounceTrendEl.innerHTML = `▲ +${bounceDiff}% <span class="trend-text">увеличение отказов</span>`;
+        bounceTrendEl.innerHTML = `<span class="trend-badge trend-badge-down">▲ +${bounceDiff}%</span><span class="trend-text">увеличение отказов</span>`;
       }
 
       // Traffic Quality Breakdown
@@ -1871,13 +1884,11 @@
       const isPositive = diff >= 0;
       const isGood = higherIsBetter ? isPositive : !isPositive;
 
-      if (isGood) {
-        el.className = 'metric-trend up';
-        el.innerHTML = `▲ +${pct}% <span class="trend-text">к прош. периоду</span>`;
-      } else {
-        el.className = 'metric-trend down';
-        el.innerHTML = `▼ ${pct}% <span class="trend-text">к прош. периоду</span>`;
-      }
+      const sign = isPositive ? '+' : '';
+      const arrow = isPositive ? '▲' : '▼';
+      const badgeClass = isGood ? 'trend-badge-up' : 'trend-badge-down';
+
+      el.innerHTML = `<span class="trend-badge ${badgeClass}">${arrow} ${sign}${pct}${suffix}</span><span class="trend-text">к прош. периоду</span>`;
     }
 
     // Switch active Landing Page
