@@ -278,22 +278,6 @@
       overflow: hidden;
     }
     
-    .metric-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-    }
-    
-    /* Subtle color coding on left edges like Yandex DataLens dashboard indicators */
-    .metric-card:nth-child(1)::before { background: #4b73ff; } /* Visitors: Blue */
-    .metric-card:nth-child(2)::before { background: #2ca579; } /* CR: Green */
-    .metric-card:nth-child(3)::before { background: #7928ca; } /* Goals: Purple */
-    .metric-card:nth-child(4)::before { background: #f2994a; } /* Time: Orange */
-    .metric-card:nth-child(5)::before { background: #d94f5c; } /* Bounce: Red */
-
     .metric-card:hover {
       border-color: #ccd0db;
       transform: translateY(-2px);
@@ -315,7 +299,22 @@
       line-height: 1.25;
       letter-spacing: -0.02em;
       margin-bottom: 8px;
-      color: var(--text-main); /* Uniform premium dark slate color */
+    }
+
+    #kpi-visitors {
+      color: #0066ff; /* Yandex DataLens Brand Blue */
+    }
+    #kpi-conversion {
+      color: #00a261; /* Yandex Metrika CR Green */
+    }
+    #kpi-goals {
+      color: #7928ca; /* Premium Violet/Indigo */
+    }
+    #kpi-time {
+      color: #2ca579; /* Soft Emerald Green for session length */
+    }
+    #kpi-bounce {
+      color: #d94f5c; /* Warning Burgundy for bounces */
     }
 
     .metric-trend {
