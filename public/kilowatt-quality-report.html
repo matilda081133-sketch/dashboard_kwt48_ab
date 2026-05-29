@@ -1646,12 +1646,16 @@
           }
           
           // Fetch Yandex.Direct stats
-          const directUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:visits,ym:s:goal${goal1}reaches,ym:s:goal${goal2}reaches,ym:s:goal${goal3}reaches&dimensions=ym:s:lastDirectPlatformType,ym:s:lastDirectClickOrder&date1=${date1}&date2=${date2}&limit=100`;
+          const adStatsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:visits,ym:s:goal${goal1}reaches,ym:s:goal${goal2}reaches,ym:s:goal${goal3}reaches&filters=ym:s:lastSignTrafficSource%3D%3D%27ad%27&date1=${date1}&date2=${date2}`;
+          const adRes = await fetch(adStatsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
+          const adStats = await adRes.json();
+
+          const directTotalVisits = adStats.totals ? (adStats.totals[0] || 0) : 0;
+          const directTotalGoals = adStats.totals ? ((adStats.totals[1] || 0) + (adStats.totals[2] || 0) + (adStats.totals[3] || 0)) : 0;
+
+          const directUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:visits,ym:s:goal${goal1}reaches,ym:s:goal${goal2}reaches,ym:s:goal${goal3}reaches&dimensions=ym:s:lastSignDirectPlatformType,ym:s:lastSignDirectClickOrder&date1=${date1}&date2=${date2}&limit=100`;
           const directRes = await fetch(directUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
           const directStats = await directRes.json();
-          
-          let directTotalVisits = 0;
-          let directTotalGoals = 0;
           
           let searchVisits = 0;
           let searchGoals = 0;
@@ -1660,6 +1664,9 @@
           let rsyVisits = 0;
           let rsyGoals = 0;
           let rsyMap = {};
+
+          let campaignSumVisits = 0;
+          let campaignSumGoals = 0;
 
           const totalSiteVisits = visits || 1;
 
@@ -1670,8 +1677,8 @@
               const visits = row.metrics[0] || 0;
               let goals = (row.metrics[1] || 0) + (row.metrics[2] || 0) + (row.metrics[3] || 0);
               
-              directTotalVisits += visits;
-              directTotalGoals += goals;
+              campaignSumVisits += visits;
+              campaignSumGoals += goals;
               
               if (platform === 'search') {
                 searchVisits += visits;
@@ -1691,6 +1698,20 @@
                 rsyMap[campaignName].goals += goals;
               }
             });
+          }
+
+          // Push undetermined traffic to rsyMap (context) if there is any remainder
+          const otherVisits = directTotalVisits - campaignSumVisits;
+          const otherGoals = directTotalGoals - campaignSumGoals;
+          if (otherVisits > 0) {
+            const otherName = "Яндекс.Директ: Не определено";
+            rsyVisits += otherVisits;
+            rsyGoals += otherGoals;
+            if (!rsyMap[otherName]) {
+              rsyMap[otherName] = { name: otherName, visits: 0, goals: 0 };
+            }
+            rsyMap[otherName].visits += otherVisits;
+            rsyMap[otherName].goals += otherGoals;
           }
 
           const searchCampaigns = Object.values(searchMap).map(c => {
