@@ -1925,16 +1925,46 @@
 
       chartInstance = new Chart(ctx, {
         type: 'line',
+        plugins: [{
+          id: 'verticalLine',
+          afterDraw: (chart) => {
+            if (chart.tooltip?._active?.length) {
+              const activePoint = chart.tooltip._active[0];
+              const ctx = chart.ctx;
+              const x = activePoint.element.x;
+              const topY = chart.scales.y.top;
+              const bottomY = chart.scales.y.bottom;
+              
+              ctx.save();
+              ctx.beginPath();
+              ctx.moveTo(x, topY);
+              ctx.lineTo(x, bottomY);
+              ctx.lineWidth = 1;
+              ctx.strokeStyle = '#dcdfe6';
+              ctx.setLineDash([4, 4]); // Dashed hover line
+              ctx.stroke();
+              ctx.restore();
+            }
+          }
+        }],
         data: {
           labels: chartData.labels,
           datasets: [
             {
               label: 'Конверсия сайта (%)',
               data: chartData.conversionsPercentage,
-              borderColor: '#2ca579',
-              backgroundColor: 'rgba(44, 165, 121, 0.04)',
-              borderWidth: 2.5,
-              tension: 0.1,
+              borderColor: '#2ca579', // Pure solid green for success
+              backgroundColor: (context) => {
+                const chart = context.chart;
+                const {ctx, chartArea} = chart;
+                if (!chartArea) return 'rgba(44, 165, 121, 0.02)';
+                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                gradient.addColorStop(0, 'rgba(44, 165, 121, 0.22)');
+                gradient.addColorStop(1, 'rgba(44, 165, 121, 0.00)');
+                return gradient;
+              },
+              borderWidth: 3,
+              tension: 0.15,
               fill: true,
               yAxisID: 'y',
               // Custom points to indicate changes based on lpChanges
@@ -1947,7 +1977,7 @@
                   const cLabel = cDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
                   return cLabel === label;
                 });
-                return hasChanges ? 8 : 4;
+                return hasChanges ? 7 : 0; // Hide points on standard days for a clean line
               },
               pointHoverRadius: (context) => {
                 const index = context.dataIndex;
@@ -1958,7 +1988,7 @@
                   const cLabel = cDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
                   return cLabel === label;
                 });
-                return hasChanges ? 10 : 6;
+                return hasChanges ? 9 : 5;
               },
               pointBackgroundColor: (context) => {
                 const index = context.dataIndex;
@@ -1972,16 +2002,9 @@
                 return hasChanges ? '#d94f5c' : '#2ca579';
               },
               pointBorderColor: (context) => {
-                const index = context.dataIndex;
-                const label = context.chart.data.labels[index];
-                const hasChanges = lpChanges.some(c => {
-                  if (c.lp !== activeLP) return false;
-                  const cDate = new Date(c.date);
-                  const cLabel = cDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-                  return cLabel === label;
-                });
-                return hasChanges ? '#ffffff' : '#2ca579';
+                return '#ffffff';
               },
+              pointBorderWidth: 2,
               pointStyle: (context) => {
                 const index = context.dataIndex;
                 const label = context.chart.data.labels[index];
@@ -2006,14 +2029,36 @@
           plugins: {
             legend: {
               position: 'top',
+              align: 'start',
               labels: {
-                boxWidth: 12,
+                boxWidth: 8,
+                boxHeight: 8,
+                usePointStyle: true,
                 color: '#1f2433',
-                font: { family: 'Inter', size: 11, weight: '500' }
+                font: { family: 'Inter', size: 12, weight: '500' }
               }
             },
             tooltip: {
+              enabled: true,
+              mode: 'index',
+              intersect: false,
+              backgroundColor: '#1f2433', // Deep slate blue DataLens color
+              titleColor: '#ffffff',
+              titleFont: { family: 'Inter', size: 12, weight: '600' },
+              bodyColor: '#e2e8f0',
+              bodyFont: { family: 'Inter', size: 12 },
+              footerColor: '#ff8a9a', // Light red to draw attention to changes
+              footerFont: { family: 'Inter', size: 11, weight: '500', style: 'italic' },
+              borderColor: '#2d3548',
+              borderWidth: 1,
+              padding: 10,
+              cornerRadius: 4,
+              boxPadding: 6,
+              displayColors: true,
               callbacks: {
+                label: (context) => {
+                  return ` Конверсия: ${context.parsed.y}%`;
+                },
                 footer: (tooltipItems) => {
                   const label = tooltipItems[0].label;
                   const changes = lpChanges.filter(c => {
@@ -2023,7 +2068,7 @@
                     return cLabel === label;
                   });
                   if (changes.length > 0) {
-                    return '\n[Корректировки сайта]:\n' + changes.map(c => `• ${c.title}: ${c.desc}`).join('\n');
+                    return '\n[Корректировки сайта]:\n' + changes.map(c => `• ${c.title}`).join('\n');
                   }
                   return '';
                 }
@@ -2035,16 +2080,26 @@
               type: 'linear',
               display: true,
               position: 'left',
-              grid: { color: '#f0f1f4' },
+              grid: { 
+                color: '#eef0f3',
+                drawBorder: false
+              },
               ticks: { 
                 color: '#7f8a9e', 
-                font: { size: 10 },
+                font: { family: 'Inter', size: 11 },
+                padding: 8,
                 callback: function(value) { return value + '%'; }
               }
             },
             x: {
-              grid: { color: '#f0f1f4' },
-              ticks: { color: '#7f8a9e', font: { size: 10 } }
+              grid: { 
+                display: false
+              },
+              ticks: { 
+                color: '#7f8a9e', 
+                font: { family: 'Inter', size: 11 },
+                padding: 8
+              }
             }
           }
         }
