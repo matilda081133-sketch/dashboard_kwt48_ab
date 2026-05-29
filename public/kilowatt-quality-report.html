@@ -1426,6 +1426,55 @@
           searchCampaigns: isTilda ? [
             { name: 'Поиск_Бренд', share: parseFloat(((searchVisits * 0.6) / visitors * 100).toFixed(1)), cr: parseFloat((searchCR * 1.1).toFixed(2)), visits: Math.round(searchVisits * 0.6), goals: Math.round(searchGoals * 0.6) },
             { name: 'Поиск_Котлы', share: parseFloat(((searchVisits * 0.4) / visitors * 100).toFixed(1)), cr: parseFloat((searchCR * 0.85).toFixed(2)), visits: Math.round(searchVisits * 0.4), goals: Math.round(searchGoals * 0.4) }
+          ] : [
+            { name: 'Поиск/общая', share: parseFloat(((searchVisits * 0.65) / visitors * 100).toFixed(1)), cr: parseFloat((searchCR * 0.98).toFixed(2)), visits: Math.round(searchVisits * 0.65), goals: Math.round(searchGoals * 0.65) },
+            { name: 'Поиск/ТЭК', share: parseFloat(((searchVisits * 0.35) / visitors * 100).toFixed(1)), cr: parseFloat((searchCR * 1.05).toFixed(2)), visits: Math.round(searchVisits * 0.35), goals: Math.round(searchGoals * 0.35) }
+          ],
+          rsyCampaigns: isTilda ? [
+            { name: 'РСЯ_Ретаргетинг', share: parseFloat(((rsyVisits * 0.65) / visitors * 100).toFixed(1)), cr: parseFloat((rsyCR * 1.02).toFixed(2)), visits: Math.round(rsyVisits * 0.65), goals: Math.round(rsyGoals * 0.65) },
+            { name: 'РСЯ_Интересы', share: parseFloat(((rsyVisits * 0.35) / visitors * 100).toFixed(1)), cr: parseFloat((rsyCR * 0.95).toFixed(2)), visits: Math.round(rsyVisits * 0.35), goals: Math.round(rsyGoals * 0.35) }
+          ] : [
+            { name: 'РСЯ/общая', share: parseFloat(((rsyVisits * 0.6) / visitors * 100).toFixed(1)), cr: parseFloat((rsyCR * 0.97).toFixed(2)), visits: Math.round(rsyVisits * 0.6), goals: Math.round(rsyGoals * 0.6) },
+            { name: 'РСЯ/Ретаргетинг', share: parseFloat(((rsyVisits * 0.4) / visitors * 100).toFixed(1)), cr: parseFloat((rsyCR * 1.05).toFixed(2)), visits: Math.round(rsyVisits * 0.4), goals: Math.round(rsyGoals * 0.4) }
+          ]
+        }
+      };
+    }
+
+    // Apply custom selected dates
+    function applyCustomDates() {
+      const fromStr = document.getElementById('date-from').value;
+      const toStr = document.getElementById('date-to').value;
+      
+      if (!fromStr || !toStr) {
+        alert('Пожалуйста, выберите начальную и конечную даты!');
+        return;
+      }
+      
+      const from = new Date(fromStr);
+      const to = new Date(toStr);
+      
+      if (from > to) {
+        alert('Начальная дата не может быть позже конечной!');
+        return;
+      }
+      
+      document.getElementById('period-week-btn').classList.remove('active');
+      document.getElementById('period-month-btn').classList.remove('active');
+      
+      activePeriod = 'custom';
+      
+      if (!highFidelityData[activeLP]) {
+        highFidelityData[activeLP] = {};
+      }
+      highFidelityData[activeLP]['custom'] = generateCustomPeriodData(activeLP, fromStr, toStr);
+      
+      const fromFormat = from.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      const toFormat = to.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      document.getElementById('chart-subtitle').innerText = `Динамика за период: ${fromFormat} — ${toFormat}`;
+      
+      updateDashboardData();
+    }
           // Update Dashboard values
     async function updateDashboardData() {
       let data = highFidelityData[activeLP][activePeriod];
@@ -1758,72 +1807,6 @@
           `;
         });
       }
-
-      // Goals Breakdown render
-      const breakdownEl = document.getElementById('goals-breakdown-list');
-      breakdownEl.innerHTML = '';
-      data.goals_breakdown.forEach(g => {
-        const percentage = ((g.count / g.total) * 100).toFixed(0);
-        breakdownEl.innerHTML += `
-          <div class="goal-item">
-            <div class="goal-item-meta">
-              <span class="goal-name">${g.name}</span>
-              <span class="goal-count">${g.count} <span style="color: var(--text-muted); font-weight: normal; font-size: 11px;">(${percentage}%)</span></span>
-            </div>
-            <div class="goal-bar-bg">
-              <div class="goal-bar-fill" style="width: ${percentage}%"></div>
-            </div>
-          </div>
-        `;
-      });
-
-      // Update Chart
-      renderChart(data.chart);
-
-      // Render Logs
-      renderChangesLog();
-      renderAbTestsTable();
-    }nnerText = data.bounce + '%';
-
-      // Compute Trends
-      updateTrendIndicator('kpi-visitors-trend', data.visitors, data.visitors_prev, '', true);
-      updateTrendIndicator('kpi-conversion-trend', data.conversion, data.conversion_prev, '%', true);
-      updateTrendIndicator('kpi-goals-trend', data.goals, data.goals_prev, '', true);
-      
-      const timeTrendEl = document.getElementById('kpi-time-trend');
-      timeTrendEl.className = 'metric-trend up';
-      timeTrendEl.innerHTML = `▲ улучшение <span class="trend-text">к прош. периоду</span>`;
-
-      const bounceTrendEl = document.getElementById('kpi-bounce-trend');
-      const bounceDiff = (data.bounce - data.bounce_prev).toFixed(1);
-      if (bounceDiff <= 0) {
-        bounceTrendEl.className = 'metric-trend up';
-        bounceTrendEl.style.color = 'var(--accent)';
-        bounceTrendEl.innerHTML = `▼ ${bounceDiff}% <span class="trend-text">хорошая динамика</span>`;
-      } else {
-        bounceTrendEl.className = 'metric-trend down';
-        bounceTrendEl.style.color = 'var(--danger)';
-        bounceTrendEl.innerHTML = `▲ +${bounceDiff}% <span class="trend-text">увеличение отказов</span>`;
-      }
-
-      // Traffic Quality Breakdown
-      document.getElementById('session-t1').innerText = data.session_t1 + '%';
-      document.getElementById('session-t2').innerText = data.session_t2 + '%';
-      document.getElementById('session-t3').innerText = data.session_t3 + '%';
-
-      // Scroll depth bars
-      document.getElementById('scroll-hero').innerText = data.scroll_hero + '%';
-      document.getElementById('scroll-hero-fill').style.width = data.scroll_hero + '%';
-      document.getElementById('scroll-calculator').innerText = data.scroll_calc + '%';
-      document.getElementById('scroll-calculator-fill').style.width = data.scroll_calc + '%';
-      document.getElementById('scroll-footer').innerText = data.scroll_footer + '%';
-      document.getElementById('scroll-footer-fill').style.width = data.scroll_footer + '%';
-
-      // Traffic Sources
-      document.getElementById('source-direct').innerText = data.source_direct + '%';
-      document.getElementById('source-seo').innerText = data.source_seo + '%';
-      document.getElementById('source-direct-url').innerText = data.source_direct_url + '%';
-      document.getElementById('source-social').innerText = data.source_social + '%';
 
       // Goals Breakdown render
       const breakdownEl = document.getElementById('goals-breakdown-list');
