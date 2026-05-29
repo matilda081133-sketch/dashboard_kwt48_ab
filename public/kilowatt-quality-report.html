@@ -1638,11 +1638,11 @@
           
           let searchVisits = 0;
           let searchGoals = 0;
-          let searchCampaigns = [];
+          let searchMap = {};
           
           let rsyVisits = 0;
           let rsyGoals = 0;
-          let rsyCampaigns = [];
+          let rsyMap = {};
 
           const totalSiteVisits = visits || 1;
 
@@ -1656,22 +1656,37 @@
               directTotalVisits += visits;
               directTotalGoals += goals;
               
-              const cr = visits > 0 ? parseFloat(((goals / visits) * 100).toFixed(2)) : 0;
-              const share = parseFloat(((visits / totalSiteVisits) * 100).toFixed(1));
-              
-              const campObj = { name: campaignName, visits, goals, cr, share };
-              
               if (platform === 'search') {
                 searchVisits += visits;
                 searchGoals += goals;
-                searchCampaigns.push(campObj);
+                if (!searchMap[campaignName]) {
+                  searchMap[campaignName] = { name: campaignName, visits: 0, goals: 0 };
+                }
+                searchMap[campaignName].visits += visits;
+                searchMap[campaignName].goals += goals;
               } else {
                 rsyVisits += visits;
                 rsyGoals += goals;
-                rsyCampaigns.push(campObj);
+                if (!rsyMap[campaignName]) {
+                  rsyMap[campaignName] = { name: campaignName, visits: 0, goals: 0 };
+                }
+                rsyMap[campaignName].visits += visits;
+                rsyMap[campaignName].goals += goals;
               }
             });
           }
+
+          const searchCampaigns = Object.values(searchMap).map(c => {
+            c.cr = c.visits > 0 ? parseFloat(((c.goals / c.visits) * 100).toFixed(2)) : 0;
+            c.share = parseFloat(((c.visits / totalSiteVisits) * 100).toFixed(1));
+            return c;
+          });
+
+          const rsyCampaigns = Object.values(rsyMap).map(c => {
+            c.cr = c.visits > 0 ? parseFloat(((c.goals / c.visits) * 100).toFixed(2)) : 0;
+            c.share = parseFloat(((c.visits / totalSiteVisits) * 100).toFixed(1));
+            return c;
+          });
 
           let directTotalShare = parseFloat(((directTotalVisits / totalSiteVisits) * 100).toFixed(1));
           let directTotalCR = directTotalVisits > 0 ? parseFloat(((directTotalGoals / directTotalVisits) * 100).toFixed(2)) : 0;
