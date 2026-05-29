@@ -2291,6 +2291,14 @@
       renderAbTestsTable();
     }
 
+    function toggleCampaignsList(type) {
+      const listEl = document.getElementById(`direct-${type}-list`);
+      if (listEl) {
+        const isHidden = listEl.style.display === 'none' || listEl.style.display === '';
+        listEl.style.display = isHidden ? 'flex' : 'none';
+      }
+    }
+
     // Modal view handlers
     function toggleApiModal() {
       const modal = document.getElementById('api-modal');
