@@ -14,11 +14,25 @@
     localStorage.setItem('kilowatt_users', JSON.stringify(defaultUsers));
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    if (!hasSession) {
+  function init() {
+    const currentSession = localStorage.getItem('kilowatt_auth_session');
+    if (!currentSession) {
       showLoginScreen();
     } else {
       setupAuthenticatedUI();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Handle back-forward cache (bfcache)
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      window.location.reload();
     }
   });
 
