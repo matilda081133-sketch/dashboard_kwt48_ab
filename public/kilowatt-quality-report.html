@@ -755,9 +755,11 @@
 
     <div class="controls">
       <!-- Active LP Switcher -->
-      <div class="selector-group">
-        <button class="selector-btn active" id="lp-tilda-btn" onclick="switchLandingPage('tilda')">kilowatt48.tilda.ws</button>
-        <button class="selector-btn" id="lp-online-btn" onclick="switchLandingPage('online')">kwt48.online</button>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="selector-group" id="lp-switcher-group">
+          <!-- Rendered dynamically -->
+        </div>
+        <button class="btn-action" style="padding: 6px 12px; font-size: 13px; height: 32px; display: inline-flex; align-items: center; gap: 4px;" onclick="openAddLandingModal()">➕ Добавить лендинг</button>
       </div>
 
       <!-- Period Selector -->
@@ -1060,13 +1062,68 @@
     </div>
   </main>
 
+  <!-- Add New Landing Page Modal -->
+  <div class="modal-overlay" id="add-landing-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeAddLandingModal()">×</button>
+      <h2 class="modal-title">Добавить новый лендинг и счетчик</h2>
+      <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px; line-height: 1.4;">
+        Введите адрес вашего нового лендинга и соответствующий ему ID счетчика Яндекс.Метрики. Вы также можете указать ID ключевых целей для сбора статистики.
+      </p>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Адрес лендинга (домен)</label>
+        <input type="text" id="new-lp-name" placeholder="mypage.ru" class="input-field" style="width: 100%;">
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">ID счетчика Яндекс.Метрики</label>
+        <input type="text" id="new-lp-counter" placeholder="123456789" class="input-field" style="width: 100%;">
+      </div>
+      <div style="background: #f8f9fc; padding: 12px; border-radius: var(--radius-sm); border: var(--border-lens); margin-bottom: 16px;">
+        <span style="display:block; font-size:11px; font-weight:700; color:var(--text-main); margin-bottom:8px; text-transform:uppercase;">ID целей Яндекс.Метрики (необязательно)</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-muted); margin-bottom:2px;">Цель 1: Звонок/Кнопка</label>
+            <input type="text" id="new-lp-goal1" placeholder="560510600" class="input-field" style="width: 100%; font-size:11px; padding: 4px 8px;">
+          </div>
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-muted); margin-bottom:2px;">Название цели 1</label>
+            <input type="text" id="new-lp-goal1-name" placeholder="Автоцель: звонок" class="input-field" style="width: 100%; font-size:11px; padding: 4px 8px;">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-muted); margin-bottom:2px;">Цель 2: Форма контактов</label>
+            <input type="text" id="new-lp-goal2" placeholder="560586538" class="input-field" style="width: 100%; font-size:11px; padding: 4px 8px;">
+          </div>
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-muted); margin-bottom:2px;">Название цели 2</label>
+            <input type="text" id="new-lp-goal2-name" placeholder="Отправил контакты" class="input-field" style="width: 100%; font-size:11px; padding: 4px 8px;">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-muted); margin-bottom:2px;">Цель 3: Квиз/Чат</label>
+            <input type="text" id="new-lp-goal3" placeholder="560586648" class="input-field" style="width: 100%; font-size:11px; padding: 4px 8px;">
+          </div>
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-muted); margin-bottom:2px;">Название цели 3</label>
+            <input type="text" id="new-lp-goal3-name" placeholder="Нажал на позвонить" class="input-field" style="width: 100%; font-size:11px; padding: 4px 8px;">
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-submit" style="width: 100%; height: 36px; font-size: 13px;" onclick="saveNewLanding()">Добавить лендинг</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Live Yandex Metrika & Varioqub Integration Dialog -->
   <div class="modal-overlay" id="api-modal">
     <div class="modal">
       <button class="modal-close" onclick="toggleApiModal()">×</button>
       <h2 class="modal-title">Параметры интеграции с Яндекс.Метрикой</h2>
       <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px; line-height: 1.4;">
-        Введите OAuth-токен аккаунта <strong>kilovatt48</strong>, чтобы загружать живую статистику по счетчикам <strong>106046280</strong> и <strong>109278709</strong> в реальном времени.
+        Введите OAuth-токен аккаунта Яндекс.Паспорта, чтобы загружать живую статистику по всем подключенным счетчикам в реальном времени.
       </p>
       <div class="form-group" style="margin-bottom: 16px;">
         <label for="oauth-token">OAuth Токен Яндекс.Паспорта</label>
@@ -1096,7 +1153,33 @@
 
   <script>
     // Global State
-    let activeLP = 'tilda';
+    const defaultLandings = [
+      { 
+        id: 'tilda', 
+        name: 'kilowatt48.tilda.ws', 
+        counterId: '106046280',
+        goal1: '504021243', 
+        goal2: '505531986', 
+        goal3: '542671358',
+        goal1Name: 'Клик по номеру: все номера телефонов [504021243]',
+        goal2Name: 'Автоцель: отправил контакты [505531986]',
+        goal3Name: 'Отправка формы с квиза [542671358]'
+      },
+      { 
+        id: 'online', 
+        name: 'kwt48.online', 
+        counterId: '109278709',
+        goal1: '560510600', 
+        goal2: '560586538', 
+        goal3: '560586648',
+        goal1Name: 'Автоцель: отправил контакты [560510600]',
+        goal2Name: 'Перешел в чат бота [560586538]',
+        goal3Name: 'Нажал на позвонить [560586648]'
+      }
+    ];
+
+    let landings = JSON.parse(localStorage.getItem('kilowatt_landings')) || defaultLandings;
+    let activeLP = landings[0].id;
     let activePeriod = 'week';
     let isLiveApi = true;
     let oauthToken = 'y0__wgBEOGKkuEHGN_zQSDKt5nVFyoCGr6McWywMYfMJhQEfM7qzc8I';
@@ -1392,6 +1475,7 @@
       }
       
       // Initial render
+      renderLpSwitcher();
       updateDashboardData();
     });
 
@@ -1545,7 +1629,8 @@
       // If Live API Mode is enabled, try to fetch real data from Yandex Metrika counter
       if (isLiveApi) {
         try {
-          const counterId = activeLP === 'tilda' ? '106046280' : '109278709';
+          const landingObj = landings.find(l => l.id === activeLP) || landings[0];
+          const counterId = landingObj.counterId;
           
           // Get date parameters
           let date1 = '7daysAgo';
@@ -1572,19 +1657,11 @@
             throw new Error(stats.errors[0].message);
           }
           
-          // Query goals count dynamically for Tilda (106046280) vs Online (109278709) as requested by user
-          let goal1 = '', goal2 = '', goal3 = '';
+          // Query goals count dynamically for current landing
+          const goal1 = landingObj.goal1;
+          const goal2 = landingObj.goal2;
+          const goal3 = landingObj.goal3;
           let goalsBreakdown = [];
-          
-          if (activeLP === 'tilda') {
-            goal1 = '504021243'; // "Отправил контактные данные (основная страница)"
-            goal2 = '505531986'; // "Автоцель: отправил контактные данные"
-            goal3 = '542671358'; // "Отправка формы с квиза"
-          } else {
-            goal1 = '560510600';  // "Автоцель: отправил контактные данные"
-            goal2 = '560586538';   // "перешел в чат бота"
-            goal3 = '560586648'; // "нажал на позвонить"
-          }
           
           const goalsUrl = `https://api-metrika.yandex.net/stat/v1/data?ids=${counterId}&metrics=ym:s:goal${goal1}reaches,ym:s:goal${goal2}reaches,ym:s:goal${goal3}reaches&date1=${date1}&date2=${date2}`;
           const goalsRes = await fetch(goalsUrl, { headers: { 'Authorization': `OAuth ${oauthToken}` } });
@@ -1595,19 +1672,11 @@
           const reaches3 = (goalsStats.totals && goalsStats.totals[2]) ? Math.round(goalsStats.totals[2]) : 0;
           const totalGoals = reaches1 + reaches2 + reaches3;
           
-          if (activeLP === 'tilda') {
-            goalsBreakdown = [
-              { name: 'Клик по номеру: все номера телефонов [504021243]', count: reaches1, total: totalGoals || 1 },
-              { name: 'Автоцель: отправил контакты [505531986]', count: reaches2, total: totalGoals || 1 },
-              { name: 'Отправка формы с квиза [542671358]', count: reaches3, total: totalGoals || 1 }
-            ];
-          } else {
-            goalsBreakdown = [
-              { name: 'Автоцель: отправил контакты [560510600]', count: reaches1, total: totalGoals || 1 },
-              { name: 'Перешел в чат бота [560586538]', count: reaches2, total: totalGoals || 1 },
-              { name: 'Нажал на позвонить [560586648]', count: reaches3, total: totalGoals || 1 }
-            ];
-          }
+          goalsBreakdown = [
+            { name: landingObj.goal1Name, count: reaches1, total: totalGoals || 1 },
+            { name: landingObj.goal2Name, count: reaches2, total: totalGoals || 1 },
+            { name: landingObj.goal3Name, count: reaches3, total: totalGoals || 1 }
+          ];
           
           const totals = stats.totals || [0, 0, 0, 0];
           const visits = Math.round(totals[0] || 0);
@@ -1785,7 +1854,16 @@
           console.error("Metrika Live Fetch Error:", err.message);
           alert(`⚠️ Яндекс.Метрика: не удалось получить данные.\nПричина: ${err.message}.`);
           
-          data = getEmptyStateData();
+          if (!highFidelityData[activeLP]) {
+            // Generate mock data for custom LPs so they don't appear blank
+            const tempFrom = document.getElementById('date-from').value || new Date(Date.now() - 7 * 24 * 3600000).toISOString().split('T')[0];
+            const tempTo = document.getElementById('date-to').value || new Date().toISOString().split('T')[0];
+            highFidelityData[activeLP] = {
+              week: generateCustomPeriodData(activeLP, tempFrom, tempTo),
+              month: generateCustomPeriodData(activeLP, tempFrom, tempTo)
+            };
+          }
+          data = (highFidelityData[activeLP] && highFidelityData[activeLP][activePeriod]) ? highFidelityData[activeLP][activePeriod] : getEmptyStateData();
         }
       }
       
@@ -1915,12 +1993,78 @@
       el.innerHTML = `<span class="trend-badge ${badgeClass}">${arrow} ${sign}${pct}${suffix}</span><span class="trend-text">к прош. периоду</span>`;
     }
 
+    function renderLpSwitcher() {
+      const container = document.getElementById('lp-switcher-group');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      landings.forEach(l => {
+        const btn = document.createElement('button');
+        btn.className = l.id === activeLP ? 'selector-btn active' : 'selector-btn';
+        btn.innerText = l.name;
+        btn.onclick = () => switchLandingPage(l.id);
+        container.appendChild(btn);
+      });
+    }
+
     // Switch active Landing Page
     function switchLandingPage(lp) {
       activeLP = lp;
-      document.getElementById('lp-tilda-btn').className = lp === 'tilda' ? 'selector-btn active' : 'selector-btn';
-      document.getElementById('lp-online-btn').className = lp === 'online' ? 'selector-btn active' : 'selector-btn';
+      renderLpSwitcher();
       updateDashboardData();
+    }
+
+    function openAddLandingModal() {
+      document.getElementById('add-landing-modal').style.display = 'flex';
+      document.getElementById('new-lp-name').value = '';
+      document.getElementById('new-lp-counter').value = '';
+      document.getElementById('new-lp-goal1').value = '';
+      document.getElementById('new-lp-goal1-name').value = '';
+      document.getElementById('new-lp-goal2').value = '';
+      document.getElementById('new-lp-goal2-name').value = '';
+      document.getElementById('new-lp-goal3').value = '';
+      document.getElementById('new-lp-goal3-name').value = '';
+    }
+
+    function closeAddLandingModal() {
+      document.getElementById('add-landing-modal').style.display = 'none';
+    }
+
+    function saveNewLanding() {
+      const name = document.getElementById('new-lp-name').value.trim();
+      const counterId = document.getElementById('new-lp-counter').value.trim();
+      
+      if (!name || !counterId) {
+        alert('Пожалуйста, введите адрес лендинга и номер счетчика!');
+        return;
+      }
+      
+      const goal1 = document.getElementById('new-lp-goal1').value.trim() || '560510600';
+      const goal1Name = document.getElementById('new-lp-goal1-name').value.trim() || `Цель 1 [${goal1}]`;
+      const goal2 = document.getElementById('new-lp-goal2').value.trim() || '560586538';
+      const goal2Name = document.getElementById('new-lp-goal2-name').value.trim() || `Цель 2 [${goal2}]`;
+      const goal3 = document.getElementById('new-lp-goal3').value.trim() || '560586648';
+      const goal3Name = document.getElementById('new-lp-goal3-name').value.trim() || `Цель 3 [${goal3}]`;
+
+      const id = 'lp_' + Date.now();
+      
+      const newLandingObj = {
+        id,
+        name,
+        counterId,
+        goal1,
+        goal2,
+        goal3,
+        goal1Name,
+        goal2Name,
+        goal3Name
+      };
+      
+      landings.push(newLandingObj);
+      localStorage.setItem('kilowatt_landings', JSON.stringify(landings));
+      
+      closeAddLandingModal();
+      switchLandingPage(id);
     }
 
     // Switch Period
