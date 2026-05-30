@@ -4,7 +4,7 @@ const path = require('path');
 const url = require('url');
 const https = require('https');
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PLANS_FILE = path.join(__dirname, 'plans.json');
 
@@ -19,15 +19,31 @@ if (!fs.existsSync(excelPath)) {
 
 let XLSX;
 
-// Dynamically import XLSX module at startup
-import('../node_modules/xlsx/xlsx.mjs')
-  .then(module => {
-    XLSX = module;
-    console.log('✅ XLSX module dynamically loaded.');
-  })
-  .catch(err => {
-    console.error('❌ Failed to load XLSX module:', err);
-  });
+// Dynamically load XLSX module: try require first (CommonJS standard), then fallback to dynamic import
+try {
+  XLSX = require('xlsx');
+  console.log('✅ XLSX module successfully loaded via require.');
+} catch (e) {
+  console.log('⚠️ require("xlsx") failed. Attempting dynamic import...');
+  const tryImport = async () => {
+    // Try current directory first, then parent directory
+    const paths = ['./node_modules/xlsx/xlsx.mjs', '../node_modules/xlsx/xlsx.mjs'];
+    for (const p of paths) {
+      try {
+        const resolvedPath = path.resolve(__dirname, p);
+        if (fs.existsSync(resolvedPath)) {
+          XLSX = await import(p);
+          console.log(`✅ XLSX module dynamically loaded from: ${p}`);
+          return;
+        }
+      } catch (err) {
+        console.warn(`⚠️ Failed to import from ${p}:`, err.message);
+      }
+    }
+    console.error('❌ All XLSX import paths failed.');
+  };
+  tryImport();
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
