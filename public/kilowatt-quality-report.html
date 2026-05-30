@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>КИЛОВАТТ — Мониторинг Эффективности Лендингов (Yandex DataLens Style)</title>
   
+  <!-- Auth Protection -->
+  <script src="auth.js"></script>
+  
   <!-- Fonts: System-like premium interface fonts used in Yandex services -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -782,6 +785,15 @@
         <span class="status-indicator"></span>
         <span id="live-btn-text">Яндекс Метрика Live</span>
       </button>
+
+      <!-- User Profile block -->
+      <div class="user-profile" style="display: flex; align-items: center; gap: 8px; margin-left: 12px; border-left: 1px solid var(--border-color); padding-left: 12px; height: 32px;">
+        <div class="avatar" style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer;">К</div>
+        <div class="user-info" style="display: flex; flex-direction: column; line-height: 1.1; text-align: left;">
+          <span class="user-name" style="font-weight: 600; font-size: 12px;">Администратор</span>
+          <span class="user-role" style="font-size: 9px; color: var(--text-muted);">Проект Киловатт</span>
+        </div>
+      </div>
     </div>
   </header>
 
