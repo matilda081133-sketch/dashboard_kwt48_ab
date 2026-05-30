@@ -251,6 +251,10 @@
     .rnp-grid thead th.sticky-left-1,
     .rnp-grid thead th.sticky-left-2 {
       z-index: 10;
+      background: #e2e8f0 !important;
+      color: #0f172a !important;
+      font-weight: 600;
+      border-bottom: 2px solid #cbd5e1 !important;
     }
 
     /* Horizontal Grid Table Styles */
@@ -306,15 +310,43 @@
 
     /* Monthly Total column */
     .rnp-grid .monthly-col {
-      background: #fdfdfd;
-      border-right: 1px solid var(--border-color);
+      background: #f8fafc !important; /* Light steel blue tint for monthly totals */
+      font-weight: 600;
     }
     .rnp-grid th.monthly-header {
-      background: #eaecef;
-      border-right: 2px solid var(--border-color);
+      background: #e2e8f0 !important; /* Light slate Yandex DataLens */
+      color: #0f172a !important;
+      font-size: 11px;
+      font-weight: 600;
+      border-right: 2px solid #cbd5e1 !important;
+      border-bottom: 2px solid #cbd5e1 !important;
     }
     .rnp-grid td.monthly-col-border {
-      border-right: 2px solid var(--border-color);
+      border-right: 2px solid #cbd5e1 !important;
+    }
+
+    .rnp-grid th.week-header {
+      background: #f1f5f9 !important; /* Clean light grey for weeks */
+      color: #1e293b !important;
+      font-size: 11px;
+      font-weight: 600;
+      border-bottom: 2px solid #cbd5e1 !important;
+    }
+
+    .rnp-grid th.week-total-header {
+      background: #e2e8f0 !important; /* Soft grey-blue accent for week totals */
+      color: #1e293b !important;
+      font-size: 11px;
+      font-weight: 600;
+      border-bottom: 2px solid #cbd5e1 !important;
+    }
+
+    .rnp-grid th.day-header {
+      background: #f8fafc !important; /* Lightest grey for days */
+      color: #334155 !important;
+      font-size: 11px;
+      font-weight: 500;
+      border-bottom: 2px solid #e2e8f0 !important;
     }
 
     /* Cells highlighting */
@@ -326,6 +358,29 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.02em;
+    }
+
+    /* Sub-headers for plan, fact, percentage */
+    .rnp-grid th.col-plan {
+      background: #fffdf5 !important;
+      color: #4c5c36 !important;
+      font-size: 10px;
+      font-weight: 600;
+      border-bottom: 2px solid #e6dfb8 !important;
+    }
+    .rnp-grid th.col-fact {
+      background: #fafafa !important;
+      color: #1e293b !important;
+      font-size: 10px;
+      font-weight: 600;
+      border-bottom: 2px solid #e2e8f0 !important;
+    }
+    .rnp-grid th.col-pct {
+      background: #f0f4ff !important;
+      color: var(--primary) !important;
+      font-size: 10px;
+      font-weight: 700;
+      border-bottom: 2px solid #cbd5e1 !important;
     }
 
     .rnp-grid td {
@@ -660,7 +715,11 @@
 
   <header>
     <div class="brand-section">
-      <h1>КИЛОВАТТ</h1>
+      <a href="index.html" style="text-decoration: none; color: inherit; display: flex; align-items: center;"><h1>КИЛОВАТТ</h1></a>
+      <div class="selector-group" style="margin-left: 12px; margin-right: 12px;">
+        <a href="kilowatt-quality-report.html" class="selector-btn" style="text-decoration: none;">Эффективность лендингов</a>
+        <a href="kilowatt-rnp-report.html" class="selector-btn active" style="text-decoration: none;">Маркетинговый RNP</a>
+      </div>
       <p>Сквозной маркетинговый RNP дашборд (План / Факт / Формулы)</p>
     </div>
 
@@ -1282,8 +1341,14 @@
           const mPlan = getAggVal(ch, m.key, datesList, 'plan');
           const mFact = getAggVal(ch, m.key, datesList, 'fact');
 
-          tr.appendChild(createCell(mPlan, m.key));
-          tr.appendChild(createCell(mFact, m.key));
+          const tdMPlan = createCell(mPlan, m.key);
+          tdMPlan.className = 'monthly-col';
+          tr.appendChild(tdMPlan);
+
+          const tdMFact = createCell(mFact, m.key);
+          tdMFact.className = 'monthly-col';
+          tr.appendChild(tdMFact);
+
           tr.appendChild(createPctCell(mPlan, mFact, m.key, true)); // True adds border-right
 
           // Loop weeks
@@ -1315,7 +1380,29 @@
                 tr.appendChild(createCell(dPlan, m.key));
               }
 
-              tr.appendChild(createCell(dFact, m.key));
+              // Create Fact cell with potential % of weekly plan
+              const tdFact = document.createElement('td');
+              tdFact.innerText = fmtVal(dFact, m.key);
+              
+              // Apply special weekly plan correlation if applicable (for raw metrics only)
+              if (!m.isCalc) {
+                const monPlan = getCellVal(ch, m.key, w.dates[0], 'plan');
+                if (monPlan > 0) {
+                  // Check if plans for other days (Tue-Sun) are all 0
+                  let otherDaysHavePlan = false;
+                  for (let i = 1; i < w.dates.length; i++) {
+                    if (getCellVal(ch, m.key, w.dates[i], 'plan') > 0) {
+                      otherDaysHavePlan = true;
+                      break;
+                    }
+                  }
+                  if (!otherDaysHavePlan) {
+                    const pctVal = (dFact / monPlan) * 100;
+                    tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
+                  }
+                }
+              }
+              tr.appendChild(tdFact);
             });
 
             // Weekly total columns
@@ -1364,8 +1451,14 @@
         const mPlan = getTotalAggVal(m.key, datesList, 'plan');
         const mFact = getTotalAggVal(m.key, datesList, 'fact');
 
-        tr.appendChild(createCell(mPlan, m.key));
-        tr.appendChild(createCell(mFact, m.key));
+        const tdMPlan = createCell(mPlan, m.key);
+        tdMPlan.className = 'monthly-col';
+        tr.appendChild(tdMPlan);
+
+        const tdMFact = createCell(mFact, m.key);
+        tdMFact.className = 'monthly-col';
+        tr.appendChild(tdMFact);
+
         tr.appendChild(createPctCell(mPlan, mFact, m.key, true));
 
         // Loop weeks
@@ -1381,7 +1474,28 @@
             const dPlan = getTotalVal(m.key, dateStr, 'plan');
             const dFact = getTotalVal(m.key, dateStr, 'fact');
             tr.appendChild(createCell(dPlan, m.key));
-            tr.appendChild(createCell(dFact, m.key));
+            
+            // Create Fact cell with potential % of weekly plan
+            const tdFact = document.createElement('td');
+            tdFact.innerText = fmtVal(dFact, m.key);
+            
+            if (!m.isCalc) {
+              const monPlan = getTotalVal(m.key, w.dates[0], 'plan');
+              if (monPlan > 0) {
+                let otherDaysHavePlan = false;
+                for (let i = 1; i < w.dates.length; i++) {
+                  if (getTotalVal(m.key, w.dates[i], 'plan') > 0) {
+                    otherDaysHavePlan = true;
+                    break;
+                  }
+                }
+                if (!otherDaysHavePlan) {
+                  const pctVal = (dFact / monPlan) * 100;
+                  tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
+                }
+              }
+            }
+            tr.appendChild(tdFact);
           });
 
           // Weekly totals
