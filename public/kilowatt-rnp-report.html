@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>КИЛОВАТТ — Маркетинговый RNP Дашборд (Excel Style)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      /* Yandex DataLens Colors */
+      --bg-main: #f2f3f7;
+      --bg-card: #ffffff;
+      --border-color: #dcdfe6;
+      --text-main: #1f2433;
+      --text-muted: #7f8a9e;
+      
+      --primary: #4b73ff;
+      --primary-light: #f0f4ff;
+      --accent: #2ca579;
+      --accent-light: #eaf7f2;
+      
+      --danger: #d94f5c;
+      --danger-light: #fdf3f4;
+      --warning: #f2994a;
+      
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      
+      --border-lens: 1px solid var(--border-color);
+      --shadow-lens: 0 1px 2px rgba(31, 36, 51, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      font-size: 13px;
+      line-height: 1.4;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--bg-card);
+      border-bottom: var(--border-lens);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-section h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-section h1::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .brand-section p {
+      color: var(--text-muted);
+      font-size: 13px;
+      border-left: 1px solid var(--border-color);
+      padding-left: 16px;
+      margin-left: 4px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .selector-group {
+      background: #fdfdfd;
+      border: var(--border-lens);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      display: flex;
+      align-items: center;
+    }
+
+    .selector-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      font-family: var(--font-family);
+    }
+
+    .selector-btn:hover {
+      background: #f0f1f4;
+    }
+
+    .selector-btn.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .selector-btn-green.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .live-status {
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(44, 165, 121, 0.2);
+      background: var(--accent-light);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-status.offline {
+      border: 1px solid rgba(242, 153, 74, 0.2);
+      background: #fff8f2;
+      color: var(--warning);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--accent);
+    }
+
+    .live-status.offline .status-dot {
+      background-color: var(--warning);
+    }
+
+    main {
+      flex: 1;
+      max-width: 100%;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Horizontal scroll container for the grid */
+    .grid-panel {
+      background: var(--bg-card);
+      border: var(--border-lens);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lens);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .grid-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eef0f3;
+    }
+
+    .grid-panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .grid-panel-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 12px;
+      background: var(--primary);
+    }
+
+    .grid-container {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      position: relative;
+      max-height: 70vh;
+    }
+
+    /* Make table header sticky vertically */
+    .rnp-grid thead {
+      position: sticky;
+      top: 0;
+      z-index: 9;
+    }
+
+    .rnp-grid thead th {
+      position: sticky;
+      top: 0;
+      z-index: 9;
+      background: #f4f5f8;
+      box-shadow: inset 0 -1px 0 var(--border-color), inset 0 1px 0 var(--border-color);
+    }
+
+    /* Make top-left sticky headers stay on top of other sticky headers when scrolling */
+    .rnp-grid thead th.sticky-left-1,
+    .rnp-grid thead th.sticky-left-2 {
+      z-index: 10;
+    }
+
+    /* Horizontal Grid Table Styles */
+    .rnp-grid {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .rnp-grid th, .rnp-grid td {
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 10px;
+      white-space: nowrap;
+      min-width: 80px;
+    }
+
+    /* Left-align text columns */
+    .rnp-grid th.col-text, .rnp-grid td.col-text {
+      text-align: left;
+    }
+
+    /* Sticky columns on the left */
+    .rnp-grid .sticky-left-1 {
+      position: sticky;
+      left: 0;
+      z-index: 8;
+      background: #f4f5f8;
+      border-right: 1px solid var(--border-color);
+      min-width: 140px;
+      max-width: 140px;
+      width: 140px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .rnp-grid .sticky-left-2 {
+      position: sticky;
+      left: 140px; /* Width of first column */
+      z-index: 8;
+      background: #f4f5f8;
+      border-right: 2px solid var(--border-color);
+      min-width: 200px;
+      max-width: 200px;
+      width: 200px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      font-weight: 600;
+      color: #0f121d !important;
+    }
+
+    /* Monthly Total column */
+    .rnp-grid .monthly-col {
+      background: #fdfdfd;
+      border-right: 1px solid var(--border-color);
+    }
+    .rnp-grid th.monthly-header {
+      background: #eaecef;
+      border-right: 2px solid var(--border-color);
+    }
+    .rnp-grid td.monthly-col-border {
+      border-right: 2px solid var(--border-color);
+    }
+
+    /* Cells highlighting */
+    .rnp-grid th {
+      background: #f4f5f8;
+      color: var(--text-main);
+      font-weight: 600;
+      text-align: center;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .rnp-grid td {
+      background: #ffffff;
+      color: var(--text-main);
+    }
+
+    /* Hover effect */
+    .rnp-grid tr:hover td {
+      background: #f8f9fc !important;
+    }
+
+    .rnp-grid tr:hover td.sticky-left-1,
+    .rnp-grid tr:hover td.sticky-left-2 {
+      background: #f0f1f5 !important;
+    }
+
+    /* Group Row Headers (Channels) */
+    .rnp-grid tr.channel-header-row td {
+      background: #eaecf0 !important;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-main);
+      text-align: left;
+      position: sticky;
+      left: 0;
+      z-index: 4;
+      border-bottom: 2px solid #ccd0db;
+      border-top: 1px solid #ccd0db;
+    }
+
+    /* Metric rows styling */
+    .rnp-grid tr.calc-row td {
+      color: #3b4252;
+      background: #fafafc;
+      font-style: normal;
+    }
+
+    /* Week divider columns */
+    .rnp-grid td.week-divider, .rnp-grid th.week-divider {
+      background: #e9ecf4 !important;
+      min-width: 12px;
+      max-width: 12px;
+      padding: 0;
+      border-right: 1px solid var(--border-color);
+    }
+
+    /* Week Summary Columns */
+    .rnp-grid td.week-sum-col, .rnp-grid th.week-sum-col {
+      background: #f0f4ff;
+    }
+    .rnp-grid td.week-sum-pct {
+      font-weight: 600;
+      background: #e6edff;
+    }
+
+    /* Editable planned metric cells */
+    .rnp-grid td.editable-cell {
+      background: #fffdf5; /* Warm highlight to show editability */
+      cursor: pointer;
+      font-weight: 500;
+      color: #3e502c;
+      transition: background-color 0.15s ease;
+    }
+    .rnp-grid td.editable-cell:hover {
+      background-color: #fffae0 !important;
+      box-shadow: inset 0 0 0 1px var(--warning);
+    }
+
+    /* Input inside cell */
+    .cell-input {
+      width: 100%;
+      height: 24px;
+      border: 1px solid var(--primary);
+      background: #ffffff;
+      font-family: var(--font-family);
+      font-size: 12px;
+      padding: 0 4px;
+      text-align: right;
+      outline: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Status indicators */
+    .pct-badge {
+      font-weight: 600;
+      font-size: 10px;
+      padding: 1px 3px;
+      border-radius: 3px;
+    }
+    .pct-good {
+      background-color: var(--accent-light);
+      color: var(--accent);
+    }
+    .pct-warn {
+      background-color: #fff3e6;
+      color: var(--warning);
+    }
+    .pct-bad {
+      background-color: var(--danger-light);
+      color: var(--danger);
+    }
+
+    /* Charts Row */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 1024px) {
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: var(--border-lens);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-lens);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 280px;
+    }
+
+    footer {
+      background: #ffffff;
+      border-top: var(--border-lens);
+      padding: 14px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Custom select and button styling in Yandex DataLens style */
+    .select-lens {
+      background: #ffffff;
+      border: var(--border-lens);
+      border-radius: var(--radius-sm);
+      padding: 5px 28px 5px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+      cursor: pointer;
+      font-family: var(--font-family);
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231f2433' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 12px;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .select-lens:hover {
+      border-color: #cdd1de;
+      background-color: #fcfcfc;
+    }
+    .select-lens:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    .btn-action {
+      background: #ffffff;
+      border: var(--border-lens);
+      color: var(--text-main);
+      border-radius: var(--radius-sm);
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font-family);
+      transition: background-color 0.1s, border-color 0.1s, color 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-action:hover {
+      background: #f8f9fa;
+      border-color: #cdd1de;
+    }
+
+    .btn-action:active {
+      background: #f0f1f4;
+    }
+
+    /* Modal dialog styling for adding a month */
+    .lens-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .lens-modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lens-modal {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 24px rgba(31, 36, 51, 0.12);
+      border: var(--border-lens);
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      transform: translateY(-20px);
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .lens-modal-overlay.active .lens-modal {
+      transform: translateY(0);
+    }
+
+    .lens-modal-header {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lens-modal-body {
+      margin-bottom: 20px;
+    }
+
+    .lens-modal-body label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .lens-modal-body input {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: var(--border-lens);
+      border-radius: var(--radius-sm);
+      outline: none;
+      font-family: var(--font-family);
+      transition: border-color 0.15s ease-in-out;
+    }
+
+    .lens-modal-body input:focus {
+      border-color: var(--primary);
+    }
+
+    .lens-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Beautiful visualization for plan completion percentage */
+    .pct-visual-container {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      padding: 2px 0;
+      width: 100%;
+    }
+
+    .pct-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .pct-text.good {
+      color: var(--accent);
+    }
+    .pct-text.warn {
+      color: var(--warning);
+    }
+    .pct-text.bad {
+      color: var(--danger);
+    }
+
+    .pct-bar-bg {
+      width: 50px;
+      height: 4px;
+      background: #eef0f3;
+      border-radius: 2px;
+      overflow: hidden;
+      display: block;
+    }
+
+    .pct-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease-in-out;
+    }
+
+    .pct-bar-fill.good {
+      background-color: var(--accent);
+    }
+    .pct-bar-fill.warn {
+      background-color: var(--warning);
+    }
+    .pct-bar-fill.bad {
+      background-color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-section">
+      <h1>КИЛОВАТТ</h1>
+      <p>Сквозной маркетинговый RNP дашборд (План / Факт / Формулы)</p>
+    </div>
+
+    <div class="controls">
+      <!-- Sync Status Indicator -->
+      <div id="connection-status" class="live-status offline">
+        <span class="status-dot"></span>
+        <span id="connection-text">Загрузка данных...</span>
+      </div>
+
+      <!-- Month select dropdown and add month button in DataLens style -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <select id="month-select" class="select-lens" onchange="switchMonth(this.value)">
+          <!-- Options loaded dynamically -->
+        </select>
+        <button class="btn-action" onclick="openAddMonthModal()">➕ Добавить месяц</button>
+      </div>
+
+      <span style="font-size: 12px; color: var(--text-muted); margin-left: 10px;">
+        💡 <i>Нажмите дважды на любую ячейку «План» (желтоватые ячейки), чтобы изменить план. Формулы пересчитаются мгновенно!</i>
+      </span>
+    </div>
+  </header>
+
+  <main>
+    <!-- RNP Daily and Weekly Grid -->
+    <div class="grid-panel">
+      <div class="grid-panel-header">
+        <div class="grid-panel-title">Сводный отчет RNP (План / Факт по дням и неделям)</div>
+        <div style="font-size: 11px; color: var(--text-muted);" id="last-update-indicator">
+          Синхронизировано: только что
+        </div>
+      </div>
+      
+      <div class="grid-container" id="grid-scroll-box">
+        <table class="rnp-grid" id="main-rnp-table">
+          <!-- Theader generated dynamically -->
+          <thead id="grid-header"></thead>
+          
+          <!-- Tbody generated dynamically -->
+          <tbody id="grid-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Charts area -->
+    <div class="charts-row">
+      <!-- Daily trend -->
+      <div class="panel">
+        <div class="grid-panel-header" style="padding: 0 0 10px 0; margin-bottom: 10px;">
+          <div class="grid-panel-title">Динамика по дням</div>
+          <div class="selector-group">
+            <button class="selector-btn active" onclick="switchTrendMetric('cost', this)">Бюджет</button>
+            <button class="selector-btn" onclick="switchTrendMetric('leads', this)">Заявки</button>
+            <button class="selector-btn" onclick="switchTrendMetric('sales', this)">Продажи</button>
+            <button class="selector-btn" onclick="switchTrendMetric('rev', this)">Выручка</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Share Doughnut -->
+      <div class="panel">
+        <div class="grid-panel-header" style="padding: 0 0 10px 0; margin-bottom: 10px;">
+          <div class="grid-panel-title">Доли источников (Заявки)</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="shareChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2026 КИЛОВАТТ RNP Дашборд. Интерактивная веб-копия Excel-отчета с автоинтеграцией Roistat.
+  </footer>
+
+  <script>
+    let selectedMonth = '2026-04'; // Default Month
+    let dashboardData = null; // raw API response
+    let dataModel = {}; // Frontend memory datastore: channel -> metric -> date -> { plan, fact }
+    let datesList = []; // sorted dates list in selected range
+    let weeksList = []; // grouped weeks list
+    
+    let trendChart = null;
+    let shareChart = null;
+    let currentTrendMetric = 'cost';
+
+    // RNP channels list
+    const CHANNELS = [
+      "Сайт, органика",
+      "Контекстная реклама",
+      "Телеграм",
+      "Вконтакте",
+      "МАХ",
+      "Статьи в СМИ",
+      "Специализированные выставки"
+    ];
+
+    // Ordered marketing metrics rows inside each channel group
+    const METRIC_ROWS = [
+      { key: 'drr', label: 'ДРР', type: 'percent', isCalc: true },
+      { key: 'cost', label: 'Затраты (Расход)', type: 'price', isCalc: false },
+      { key: 'visits', label: 'Трафик (Визиты)', type: 'integer', isCalc: false },
+      { key: 'leads', label: 'Всего лидов (Заявки)', type: 'integer', isCalc: false },
+      { key: 'cpl', label: 'Стоимость лида (CPL)', type: 'price', isCalc: true },
+      { key: 'crLeads', label: 'Конверсия в заявку', type: 'percent', isCalc: true },
+      { key: 'qual', label: 'Количество квал лидов', type: 'integer', isCalc: false },
+      { key: 'crQual', label: 'Конверсия в квал лид', type: 'percent', isCalc: true },
+      { key: 'cpql', label: 'Стоимость квал лида', type: 'price', isCalc: true },
+      { key: 'kp', label: 'КП отправлено', type: 'integer', isCalc: false },
+      { key: 'crKp', label: 'Конверсия в КП отпр.', type: 'percent', isCalc: true },
+      { key: 'sales', label: 'Количество продаж', type: 'integer', isCalc: false },
+      { key: 'rev', label: 'Сумма продаж (Выручка)', type: 'price', isCalc: false },
+      { key: 'crSale', label: 'Конверсия в продажу', type: 'percent', isCalc: true },
+      { key: 'cps', label: 'Стоимость продажи', type: 'price', isCalc: true }
+    ];
+
+    const METRIC_LABELS = {
+      cost: "Затраты",
+      leads: "Заявки",
+      sales: "Продажи",
+      rev: "Выручка"
+    };
+
+    // Dynamic month boundaries calculation
+    function getMonthBoundaries(monthStr) {
+      const parts = monthStr.split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const from = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const to = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      return { from, to };
+    }
+
+    const RUSSIAN_MONTH_NAMES = {
+      '01': 'Январь',
+      '02': 'Февраль',
+      '03': 'Март',
+      '04': 'Апрель',
+      '05': 'Май',
+      '06': 'Июнь',
+      '07': 'Июль',
+      '08': 'Август',
+      '09': 'Сентябрь',
+      '10': 'Октябрь',
+      '11': 'Ноябрь',
+      '12': 'Декабрь'
+    };
+
+    function formatMonthRussian(monthStr) {
+      const parts = monthStr.split('-');
+      const year = parts[0];
+      const monthNum = parts[1];
+      const monthName = RUSSIAN_MONTH_NAMES[monthNum] || monthNum;
+      return `${monthName} ${year}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initMonthsDropdown();
+      loadDashboard();
+      initGridEvents();
+    });
+
+    // Fetch and initialize
+    async function loadDashboard() {
+      const connStatus = document.getElementById('connection-status');
+      const connText = document.getElementById('connection-text');
+      
+      connStatus.className = 'live-status';
+      connStatus.querySelector('.status-dot').style.backgroundColor = 'var(--warning)';
+      connText.innerText = 'Загрузка данных...';
+
+      const bound = getMonthBoundaries(selectedMonth);
+
+      try {
+        const response = await fetch(`/api/rnp-data?from=${bound.from}&to=${bound.to}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          dashboardData = result.data;
+          
+          if (result.roistatConnected) {
+            connStatus.className = 'live-status';
+            connText.innerText = 'Roistat Live подключен';
+          } else {
+            connStatus.className = 'live-status offline';
+            connText.innerText = 'Roistat офлайн (Excel данные)';
+          }
+
+          document.getElementById('last-update-indicator').innerText = 'Синхронизировано: ' + new Date().toLocaleTimeString('ru-RU');
+
+          buildDataModel();
+          renderGrid();
+          renderCharts();
+        } else {
+          showError(result.message);
+        }
+      } catch (err) {
+        showError('Ошибка связи с сервером API');
+        console.error(err);
+      }
+    }
+
+    function showError(msg) {
+      const connStatus = document.getElementById('connection-status');
+      const connText = document.getElementById('connection-text');
+      connStatus.className = 'live-status offline';
+      connStatus.querySelector('.status-dot').style.backgroundColor = 'var(--danger)';
+      connText.innerText = 'Ошибка: ' + msg;
+    }
+
+    // Switch active month preset
+    function switchMonth(month) {
+      selectedMonth = month;
+      const select = document.getElementById('month-select');
+      if (select) {
+        select.value = month;
+      }
+      loadDashboard();
+    }
+
+    // Populate active months from server
+    async function initMonthsDropdown(forceSelectMonth = null) {
+      try {
+        const response = await fetch('/api/rnp-months');
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          const select = document.getElementById('month-select');
+          select.innerHTML = '';
+          
+          const months = result.months || [];
+          
+          // Determine currently selectedMonth
+          if (forceSelectMonth) {
+            selectedMonth = forceSelectMonth;
+          } else if (!months.includes(selectedMonth)) {
+            if (months.includes('2026-04')) {
+              selectedMonth = '2026-04';
+            } else if (months.length > 0) {
+              selectedMonth = months[0];
+            } else {
+              months.push('2026-04');
+              selectedMonth = '2026-04';
+            }
+          }
+          
+          months.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.innerText = formatMonthRussian(m);
+            if (m === selectedMonth) {
+              opt.selected = true;
+            }
+            select.appendChild(opt);
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load months list:', err);
+      }
+    }
+
+    // Modal UI Handlers
+    function openAddMonthModal() {
+      const modal = document.getElementById('add-month-modal');
+      modal.classList.add('active');
+      
+      // Auto-calculate next logical month
+      const select = document.getElementById('month-select');
+      const months = Array.from(select.options).map(o => o.value).sort();
+      if (months.length > 0) {
+        const lastMonth = months[months.length - 1];
+        const parts = lastMonth.split('-');
+        let year = parseInt(parts[0], 10);
+        let month = parseInt(parts[1], 10);
+        month++;
+        if (month > 12) {
+          month = 1;
+          year++;
+        }
+        document.getElementById('new-month-input').value = `${year}-${String(month).padStart(2, '0')}`;
+      } else {
+        document.getElementById('new-month-input').value = '2026-06';
+      }
+    }
+
+    function closeAddMonthModal() {
+      const modal = document.getElementById('add-month-modal');
+      modal.classList.remove('active');
+    }
+
+    async function submitAddMonth() {
+      const monthInput = document.getElementById('new-month-input').value;
+      if (!monthInput || !monthInput.match(/^\d{4}-\d{2}$/)) {
+        alert('Пожалуйста, выберите корректный месяц');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submit-month-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Добавление...';
+
+      try {
+        const res = await fetch('/api/add-month', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ month: monthInput })
+        });
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+          closeAddMonthModal();
+          await initMonthsDropdown(monthInput);
+          switchMonth(monthInput);
+        } else {
+          alert('Ошибка при добавлении: ' + result.message);
+        }
+      } catch (err) {
+        alert('Не удалось связаться с сервером');
+        console.error(err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Добавить';
+      }
+    }
+
+    // Build the frontend data model in memory
+    function buildDataModel() {
+      dataModel = {};
+      datesList = [];
+
+      // Sort dates chronologically
+      dashboardData.daily.forEach(d => {
+        datesList.push(d.date);
+      });
+      datesList.sort();
+
+      // Initialize structures
+      CHANNELS.forEach(ch => {
+        dataModel[ch] = {};
+        METRIC_ROWS.forEach(m => {
+          dataModel[ch][m.key] = {};
+        });
+      });
+
+      // Populate raw facts and plans
+      dashboardData.daily.forEach(d => {
+        const dateStr = d.date;
+        CHANNELS.forEach(ch => {
+          const chData = d.channels[ch];
+          if (chData) {
+            ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
+              dataModel[ch][m][dateStr] = {
+                plan: chData.plan[m] || 0,
+                fact: chData.fact[m] || 0
+              };
+            });
+          } else {
+            // Fill default zeroes
+            ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
+              dataModel[ch][m][dateStr] = { plan: 0, fact: 0 };
+            });
+          }
+        });
+      });
+
+      // Group days into weeks based on Monday boundaries (following Excel)
+      weeksList = [];
+      let currentWeek = null;
+
+      datesList.forEach(dateStr => {
+        const dateObj = new Date(dateStr + 'T00:00:00Z');
+        const dayOfWeek = dateObj.getUTCDay(); // 0 represents Sunday, 1 is Monday
+
+        // Excel starts weeks on Monday (or the first date of sheet).
+        if (dayOfWeek === 1 || !currentWeek) {
+          if (currentWeek) weeksList.push(currentWeek);
+          currentWeek = {
+            label: '',
+            dates: []
+          };
+        }
+        currentWeek.dates.push(dateStr);
+      });
+      if (currentWeek) weeksList.push(currentWeek);
+
+      // Label weeks matching Excel: "Неделя [StartDay] - [EndDay]"
+      weeksList.forEach(w => {
+        const first = new Date(w.dates[0]);
+        const last = new Date(w.dates[w.dates.length - 1]);
+        const pad = (n) => String(n).padStart(2, '0');
+        w.label = `Неделя ${first.getDate()} - ${last.getDate()}`;
+      });
+    }
+
+    // Formula calculation logic
+    function calculateFormulas(cost, visits, leads, qual, kp, sales, rev) {
+      return {
+        cpl: leads > 0 ? cost / leads : 0,
+        crLeads: visits > 0 ? leads / visits : 0,
+        crQual: leads > 0 ? qual / leads : 0,
+        cpql: qual > 0 ? cost / qual : 0,
+        crKp: (kp !== null && qual > 0) ? kp / qual : 0,
+        crSale: (kp > 0) ? sales / kp : (leads > 0 ? sales / leads : 0),
+        cps: sales > 0 ? cost / sales : 0,
+        romi: cost > 0 ? (rev - cost) / cost : 0,
+        drr: rev > 0 ? cost / rev : 0
+      };
+    }
+
+    // Retrieve cell value from frontend datastore
+    function getCellVal(channel, metric, dateStr, type) {
+      const isCalc = METRIC_ROWS.find(m => m.key === metric).isCalc;
+      if (!isCalc) {
+        return dataModel[channel][metric][dateStr]?.[type] || 0;
+      }
+
+      // Calculate formula value for single day
+      const cost = dataModel[channel]['cost'][dateStr]?.[type] || 0;
+      const visits = dataModel[channel]['visits'][dateStr]?.[type] || 0;
+      const leads = dataModel[channel]['leads'][dateStr]?.[type] || 0;
+      const qual = dataModel[channel]['qual'][dateStr]?.[type] || 0;
+      const kp = dataModel[channel]['kp'][dateStr]?.[type] || 0;
+      const sales = dataModel[channel]['sales'][dateStr]?.[type] || 0;
+      const rev = dataModel[channel]['rev'][dateStr]?.[type] || 0;
+
+      const calc = calculateFormulas(cost, visits, leads, qual, kp, sales, rev);
+      return calc[metric];
+    }
+
+    // Aggregate values for a list of dates (weeks/months)
+    function getAggVal(channel, metric, dates, type) {
+      const isCalc = METRIC_ROWS.find(m => m.key === metric).isCalc;
+      if (!isCalc) {
+        let sum = 0;
+        dates.forEach(d => {
+          sum += dataModel[channel][metric][d]?.[type] || 0;
+        });
+        return sum;
+      }
+
+      // Calculated sum totals
+      let cost = 0, visits = 0, leads = 0, qual = 0, kp = 0, sales = 0, rev = 0;
+      dates.forEach(d => {
+        cost += dataModel[channel]['cost'][d]?.[type] || 0;
+        visits += dataModel[channel]['visits'][d]?.[type] || 0;
+        leads += dataModel[channel]['leads'][d]?.[type] || 0;
+        qual += dataModel[channel]['qual'][d]?.[type] || 0;
+        kp += dataModel[channel]['kp'][d]?.[type] || 0;
+        sales += dataModel[channel]['sales'][d]?.[type] || 0;
+        rev += dataModel[channel]['rev'][d]?.[type] || 0;
+      });
+
+      const calc = calculateFormulas(cost, visits, leads, qual, kp, sales, rev);
+      return calc[metric];
+    }
+
+    // Get values for total row sums
+    function getTotalVal(metric, dateStr, type) {
+      const isCalc = METRIC_ROWS.find(m => m.key === metric).isCalc;
+      if (!isCalc) {
+        let sum = 0;
+        CHANNELS.forEach(ch => {
+          sum += dataModel[ch][metric][dateStr]?.[type] || 0;
+        });
+        return sum;
+      }
+
+      let cost = 0, visits = 0, leads = 0, qual = 0, kp = 0, sales = 0, rev = 0;
+      CHANNELS.forEach(ch => {
+        cost += dataModel[ch]['cost'][dateStr]?.[type] || 0;
+        visits += dataModel[ch]['visits'][dateStr]?.[type] || 0;
+        leads += dataModel[ch]['leads'][dateStr]?.[type] || 0;
+        qual += dataModel[ch]['qual'][dateStr]?.[type] || 0;
+        kp += dataModel[ch]['kp'][dateStr]?.[type] || 0;
+        sales += dataModel[ch]['sales'][dateStr]?.[type] || 0;
+        rev += dataModel[ch]['rev'][dateStr]?.[type] || 0;
+      });
+
+      const calc = calculateFormulas(cost, visits, leads, qual, kp, sales, rev);
+      return calc[metric];
+    }
+
+    // Get weekly/monthly sums for Total row
+    function getTotalAggVal(metric, dates, type) {
+      const isCalc = METRIC_ROWS.find(m => m.key === metric).isCalc;
+      if (!isCalc) {
+        let sum = 0;
+        dates.forEach(d => {
+          sum += getTotalVal(metric, d, type);
+        });
+        return sum;
+      }
+
+      let cost = 0, visits = 0, leads = 0, qual = 0, kp = 0, sales = 0, rev = 0;
+      dates.forEach(d => {
+        cost += getTotalVal('cost', d, type);
+        visits += getTotalVal('visits', d, type);
+        leads += getTotalVal('leads', d, type);
+        qual += getTotalVal('qual', d, type);
+        kp += getTotalVal('kp', d, type);
+        sales += getTotalVal('sales', d, type);
+        rev += getTotalVal('rev', d, type);
+      });
+
+      const calc = calculateFormulas(cost, visits, leads, qual, kp, sales, rev);
+      return calc[metric];
+    }
+
+    // Format grid cell values
+    function fmtVal(val, metric) {
+      if (val === null || val === undefined || isNaN(val)) return '—';
+      if (['drr', 'romi', 'crLeads', 'crQual', 'crKp', 'crSale'].includes(metric)) {
+        return (val * 100).toFixed(1) + '%';
+      }
+      if (['cost', 'rev', 'cpl', 'cpql', 'cps'].includes(metric)) {
+        return Math.round(val).toLocaleString('ru-RU') + ' ₽';
+      }
+      return Math.round(val).toLocaleString('ru-RU');
+    }
+
+    const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    function formatDayLabel(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00Z');
+      const dayName = dayNames[d.getUTCDay()];
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${dayName} ${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)}`;
+    }
+
+    // Render Grid Table
+    function renderGrid() {
+      const thead = document.getElementById('grid-header');
+      const tbody = document.getElementById('grid-body');
+
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      // --- 1. RENDER HEADER ---
+      const tr1 = document.createElement('tr');
+      const tr2 = document.createElement('tr');
+      const tr3 = document.createElement('tr');
+
+      // Top-Left Sticky header
+      tr1.innerHTML = `
+        <th rowspan="3" class="sticky-left-1 col-text">Источник</th>
+        <th rowspan="3" class="sticky-left-2 col-text">Показатель</th>
+      `;
+      tr1.innerHTML += `<th colspan="3" rowspan="2" class="monthly-header">Итого за месяц</th>`;
+      
+      tr2.innerHTML = ``;
+      tr3.innerHTML = `<th class="col-plan">План</th><th class="col-fact">Факт</th><th class="col-pct">%</th>`;
+
+      // Loop weeks
+      weeksList.forEach((w, wIdx) => {
+        if (wIdx > 0) {
+          // Divider column
+          tr1.innerHTML += `<th rowspan="3" class="week-divider"></th>`;
+        }
+
+        const daysSpan = w.dates.length * 2 + 3; // 2 cols per day, 3 cols for week totals
+        tr1.innerHTML += `<th colspan="${daysSpan}" class="week-header">${w.label}</th>`;
+
+        // Day headers
+        w.dates.forEach(dateStr => {
+          tr2.innerHTML += `<th colspan="2" class="day-header">${formatDayLabel(dateStr)}</th>`;
+          tr3.innerHTML += `<th class="col-plan">План</th><th class="col-fact">Факт</th>`;
+        });
+
+        // Week total headers
+        tr2.innerHTML += `<th colspan="3" class="week-total-header">Итог недели</th>`;
+        tr3.innerHTML += `<th class="col-plan">План</th><th class="col-fact">Факт</th><th class="col-pct">%</th>`;
+      });
+
+      thead.appendChild(tr1);
+      thead.appendChild(tr2);
+      thead.appendChild(tr3);
+
+      // --- 2. RENDER CHANNEL BLOCKS ROWS ---
+      CHANNELS.forEach(ch => {
+        // Channel block separator row
+        const trCh = document.createElement('tr');
+        trCh.className = 'channel-header-row';
+        
+        let colsCount = 2 + 3 + (weeksList.length - 1);
+        weeksList.forEach(w => {
+          colsCount += w.dates.length * 2 + 3;
+        });
+        
+        trCh.innerHTML = `<td colspan="${colsCount}" class="sticky-left-1">${ch}</td>`;
+        tbody.appendChild(trCh);
+
+        // Metric rows
+        METRIC_ROWS.forEach((m, mIdx) => {
+          const tr = document.createElement('tr');
+          if (m.isCalc) tr.className = 'calc-row';
+
+          // First cell represents Channel (merged visual style)
+          const tdCh = document.createElement('td');
+          tdCh.className = 'sticky-left-1 col-text';
+          if (mIdx === 0) {
+            tdCh.innerText = ch;
+            tdCh.style.fontWeight = '600';
+          } else {
+            tdCh.innerText = '';
+          }
+          tr.appendChild(tdCh);
+
+          // Second cell represents Metric Name
+          const tdLabel = document.createElement('td');
+          tdLabel.className = 'sticky-left-2 col-text';
+          tdLabel.innerText = m.label;
+          tr.appendChild(tdLabel);
+
+          // Monthly Total Columns
+          const mPlan = getAggVal(ch, m.key, datesList, 'plan');
+          const mFact = getAggVal(ch, m.key, datesList, 'fact');
+
+          tr.appendChild(createCell(mPlan, m.key));
+          tr.appendChild(createCell(mFact, m.key));
+          tr.appendChild(createPctCell(mPlan, mFact, m.key, true)); // True adds border-right
+
+          // Loop weeks
+          weeksList.forEach((w, wIdx) => {
+            if (wIdx > 0) {
+              // Divider column
+              const tdDiv = document.createElement('td');
+              tdDiv.className = 'week-divider';
+              tr.appendChild(tdDiv);
+            }
+
+            // Daily cells
+            w.dates.forEach(dateStr => {
+              const dPlan = getCellVal(ch, m.key, dateStr, 'plan');
+              const dFact = getCellVal(ch, m.key, dateStr, 'fact');
+
+              // Check if planned cell is raw (editable)
+              const isEditable = !m.isCalc && !( (ch === 'МАХ' || ch === 'Статьи в СМИ') && m.key === 'kp' );
+              
+              if (isEditable) {
+                const tdEdit = document.createElement('td');
+                tdEdit.className = 'editable-cell';
+                tdEdit.innerText = fmtVal(dPlan, m.key);
+                tdEdit.dataset.channel = ch;
+                tdEdit.dataset.metric = m.key;
+                tdEdit.dataset.date = dateStr;
+                tr.appendChild(tdEdit);
+              } else {
+                tr.appendChild(createCell(dPlan, m.key));
+              }
+
+              tr.appendChild(createCell(dFact, m.key));
+            });
+
+            // Weekly total columns
+            const wPlan = getAggVal(ch, m.key, w.dates, 'plan');
+            const wFact = getAggVal(ch, m.key, w.dates, 'fact');
+
+            const tdWp = createCell(wPlan, m.key);
+            tdWp.className = 'week-sum-col';
+            tr.appendChild(tdWp);
+
+            const tdWf = createCell(wFact, m.key);
+            tdWf.className = 'week-sum-col';
+            tr.appendChild(tdWf);
+
+            tr.appendChild(createPctCell(wPlan, wFact, m.key));
+          });
+
+          tbody.appendChild(tr);
+        });
+      });
+
+      // --- 3. RENDER TOTALS SUMMARY ROW BLOCK ---
+      const trTotHeader = document.createElement('tr');
+      trTotHeader.className = 'channel-header-row';
+      let totalsColsCount = 2 + 3 + (weeksList.length - 1);
+      weeksList.forEach(w => { totalsColsCount += w.dates.length * 2 + 3; });
+      trTotHeader.innerHTML = `<td colspan="${totalsColsCount}" class="sticky-left-1" style="background:#ccd0db !important;">ИТОГО (СУММАРНЫЙ МАРКЕТИНГ)</td>`;
+      tbody.appendChild(trTotHeader);
+
+      METRIC_ROWS.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.style.fontWeight = '600';
+        if (m.isCalc) tr.className = 'calc-row';
+
+        const tdCh = document.createElement('td');
+        tdCh.className = 'sticky-left-1 col-text';
+        tdCh.innerText = 'ИТОГО';
+        tr.appendChild(tdCh);
+
+        const tdLabel = document.createElement('td');
+        tdLabel.className = 'sticky-left-2 col-text';
+        tdLabel.innerText = m.label;
+        tr.appendChild(tdLabel);
+
+        // Monthly Total
+        const mPlan = getTotalAggVal(m.key, datesList, 'plan');
+        const mFact = getTotalAggVal(m.key, datesList, 'fact');
+
+        tr.appendChild(createCell(mPlan, m.key));
+        tr.appendChild(createCell(mFact, m.key));
+        tr.appendChild(createPctCell(mPlan, mFact, m.key, true));
+
+        // Loop weeks
+        weeksList.forEach((w, wIdx) => {
+          if (wIdx > 0) {
+            const tdDiv = document.createElement('td');
+            tdDiv.className = 'week-divider';
+            tr.appendChild(tdDiv);
+          }
+
+          // Daily totals
+          w.dates.forEach(dateStr => {
+            const dPlan = getTotalVal(m.key, dateStr, 'plan');
+            const dFact = getTotalVal(m.key, dateStr, 'fact');
+            tr.appendChild(createCell(dPlan, m.key));
+            tr.appendChild(createCell(dFact, m.key));
+          });
+
+          // Weekly totals
+          const wPlan = getTotalAggVal(m.key, w.dates, 'plan');
+          const wFact = getTotalAggVal(m.key, w.dates, 'fact');
+
+          const tdWp = createCell(wPlan, m.key);
+          tdWp.className = 'week-sum-col';
+          tr.appendChild(tdWp);
+
+          const tdWf = createCell(wFact, m.key);
+          tdWf.className = 'week-sum-col';
+          tr.appendChild(tdWf);
+
+          tr.appendChild(createPctCell(wPlan, wFact, m.key));
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Helper: Create standard grid cell
+    function createCell(val, metric) {
+      const td = document.createElement('td');
+      td.innerText = fmtVal(val, metric);
+      return td;
+    }
+
+    // Helper: Create percentage plan completion cell with color coding
+    function createPctCell(plan, fact, metric, addBorder = false) {
+      const td = document.createElement('td');
+      td.className = 'week-sum-pct';
+      if (addBorder) td.className += ' monthly-col-border';
+
+      if (['drr', 'cpl', 'cpql', 'cps', 'romi', 'crLeads', 'crQual', 'crKp', 'crSale'].includes(metric)) {
+        // Calculated conversion rates or cost averages do not show standard sums % completion
+        td.innerText = '—';
+        return td;
+      }
+
+      let pct = 0;
+      let pctStr = '0%';
+      let statusClass = 'warn';
+
+      if (plan === 0) {
+        if (fact > 0) {
+          pct = 1;
+          pctStr = '▲ 100%';
+          statusClass = 'good';
+        } else {
+          pct = 0;
+          pctStr = '0%';
+          statusClass = 'warn';
+        }
+      } else {
+        pct = fact / plan;
+        pctStr = (pct * 100).toFixed(0) + '%';
+        
+        if (metric === 'cost') {
+          // Budget spent: lower or close to 100% is better
+          statusClass = pct <= 1.05 ? 'good' : (pct <= 1.2 ? 'warn' : 'bad');
+        } else {
+          // Conversions, leads, sales: higher is better
+          statusClass = pct >= 0.95 ? 'good' : (pct >= 0.75 ? 'warn' : 'bad');
+        }
+      }
+
+      if (statusClass === 'good') {
+        td.style.backgroundColor = '#c6efce';
+        td.style.color = '#006100';
+      } else if (statusClass === 'warn') {
+        td.style.backgroundColor = '#ffeb9c';
+        td.style.color = '#9c6500';
+      } else if (statusClass === 'bad') {
+        td.style.backgroundColor = '#ffc7ce';
+        td.style.color = '#9c0006';
+      }
+      td.style.fontWeight = '600';
+      td.style.textAlign = 'center';
+      td.innerText = pctStr;
+      return td;
+    }
+
+    // --- 3. INLINE GRID CELL EDITING EVENTS ---
+    function initGridEvents() {
+      const tbody = document.getElementById('grid-body');
+      
+      tbody.addEventListener('dblclick', function(e) {
+        const cell = e.target.closest('.editable-cell');
+        if (!cell) return;
+
+        // If already editing, ignore
+        if (cell.querySelector('input')) return;
+
+        const channel = cell.dataset.channel;
+        const metric = cell.dataset.metric;
+        const date = cell.dataset.date;
+        const currentVal = dataModel[channel][metric][date].plan;
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'cell-input';
+        input.value = currentVal;
+        
+        cell.innerHTML = '';
+        cell.appendChild(input);
+        input.focus();
+        input.select();
+
+        const saveInline = async () => {
+          const newValStr = input.value;
+          const newVal = newValStr === '' ? 0 : parseFloat(newValStr);
+          
+          // 1. Update memory model
+          dataModel[channel][metric][date].plan = newVal;
+          
+          // 2. Render table with new calculations instantly!
+          renderGrid();
+          
+          // 3. Save to backend asynchronously
+          try {
+            await fetch('/api/save-daily-plan', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ date, channel, metric, val: newVal })
+            });
+            console.log(`Plan saved: ${channel} ${metric} on ${date} = ${newVal}`);
+          } catch(err) {
+            console.error('Failed to save plan override on the server:', err);
+          }
+        };
+
+        input.addEventListener('blur', saveInline);
+        input.addEventListener('keydown', function(evt) {
+          if (evt.key === 'Enter') {
+            input.blur(); // Triggers blur event and saves
+          }
+          if (evt.key === 'Escape') {
+            // Revert changes
+            renderGrid();
+          }
+        });
+      });
+    }
+
+    // --- 4. RENDER CHARTS ---
+    function renderCharts() {
+      renderTrendChart();
+      renderShareChart();
+    }
+
+    function renderTrendChart() {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      const labels = datesList.map(d => {
+        const pts = d.split('-');
+        return `${pts[2]}.${pts[1]}`;
+      });
+
+      const factData = [];
+      const planData = [];
+
+      datesList.forEach(d => {
+        factData.push(Math.round(getTotalVal(currentTrendMetric, d, 'fact')));
+        planData.push(Math.round(getTotalVal(currentTrendMetric, d, 'plan')));
+      });
+
+      if (trendChart) {
+        trendChart.destroy();
+      }
+
+      trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Факт (' + METRIC_LABELS[currentTrendMetric] + ')',
+              data: factData,
+              borderColor: 'rgba(75, 115, 255, 1)',
+              backgroundColor: 'rgba(75, 115, 255, 0.05)',
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.15,
+              fill: true
+            },
+            {
+              label: 'План (' + METRIC_LABELS[currentTrendMetric] + ')',
+              data: planData,
+              borderColor: 'rgba(127, 138, 158, 0.6)',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: 0.1,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                boxWidth: 12,
+                font: { family: 'Inter', size: 11 }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: '#eef0f3' },
+              ticks: {
+                font: { family: 'Inter', size: 10 },
+                callback: function(value) {
+                  return currentTrendMetric === 'cost' || currentTrendMetric === 'rev' 
+                    ? value.toLocaleString('ru-RU') + ' ₽' 
+                    : value.toLocaleString('ru-RU');
+                }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { family: 'Inter', size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    function switchTrendMetric(metric, btn) {
+      currentTrendMetric = metric;
+      const btns = btn.parentNode.querySelectorAll('button');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTrendChart();
+    }
+
+    function renderShareChart() {
+      const ctx = document.getElementById('shareChart').getContext('2d');
+      const labels = [];
+      const data = [];
+      
+      const colors = [
+        '#4b73ff', // blue
+        '#2ca579', // green
+        '#f2994a', // orange
+        '#7928ca', // purple
+        '#d94f5c', // red
+        '#00cfd5', // cyan
+        '#ffc107'  // amber
+      ];
+
+      CHANNELS.forEach(chName => {
+        const leads = getAggVal(chName, 'leads', datesList, 'fact');
+        if (leads > 0) {
+          labels.push(chName);
+          data.push(leads);
+        }
+      });
+
+      if (shareChart) {
+        shareChart.destroy();
+      }
+
+      if (data.length === 0) {
+        labels.push("Нет данных");
+        data.push(1);
+      }
+
+      shareChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors.slice(0, data.length),
+            borderWidth: 1,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 10,
+                font: { family: 'Inter', size: 10 }
+              }
+            }
+          },
+          cutout: '60%'
+        }
+      });
+    }
+  </script>
+  <!-- Premium Month Modal Dialog -->
+  <div id="add-month-modal" class="lens-modal-overlay">
+    <div class="lens-modal">
+      <div class="lens-modal-header">
+        <span>➕ Добавление нового месяца</span>
+      </div>
+      <div class="lens-modal-body">
+        <label for="new-month-input">Выберите месяц и год</label>
+        <input type="month" id="new-month-input" min="2026-01" max="2028-12" value="2026-06">
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+          Будет сгенерирована календарная сетка на выбранный месяц в памяти сервера. Вы сможете заполнять плановые значения ячеек.
+        </p>
+      </div>
+      <div class="lens-modal-footer">
+        <button class="btn-action" onclick="closeAddMonthModal()">Отмена</button>
+        <button class="btn-action" id="submit-month-btn" style="background: var(--primary); color: #ffffff; border-color: var(--primary);" onclick="submitAddMonth()">Добавить</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
