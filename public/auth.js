@@ -1,5 +1,12 @@
 // kilowatt-auth.js - Client-side authentication for static/dynamic hosting
 (function() {
+  // Automatically redirect incorrect /public/ URLs to root level
+  if (window.location.pathname.includes('/public/')) {
+    const cleanPath = window.location.pathname.replace('/public/', '/');
+    window.location.href = window.location.origin + cleanPath + window.location.search + window.location.hash;
+    return;
+  }
+
   // Prevent Flash of Unprotected Content (FOUC)
   const hasSession = localStorage.getItem('kilowatt_auth_session');
   if (!hasSession) {
