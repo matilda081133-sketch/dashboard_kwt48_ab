@@ -883,7 +883,7 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       await initMonthsDropdown();
-      loadDashboard();
+      await loadDashboard();
       initGridEvents();
     });
 
@@ -900,6 +900,9 @@
 
       try {
         const response = await fetch(`/api/rnp-data?from=${bound.from}&to=${bound.to}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
         const result = await response.json();
         
         if (result.status === 'success') {
@@ -920,19 +923,205 @@
           renderCharts();
         } else {
           showError(result.message);
+          await loadLocalFallbackData();
         }
       } catch (err) {
-        showError('Ошибка связи с сервером API');
+        showError('Режим офлайн / Демо-реверс');
         console.error(err);
+        await loadLocalFallbackData();
       }
     }
 
     function showError(msg) {
       const connStatus = document.getElementById('connection-status');
       const connText = document.getElementById('connection-text');
-      connStatus.className = 'live-status offline';
-      connStatus.querySelector('.status-dot').style.backgroundColor = 'var(--danger)';
-      connText.innerText = 'Ошибка: ' + msg;
+      if (connStatus && connText) {
+        connStatus.className = 'live-status offline';
+        connStatus.querySelector('.status-dot').style.backgroundColor = 'var(--danger)';
+        connText.innerText = msg;
+      }
+    }
+
+    async function loadLocalFallbackData() {
+      // Set status to offline (mock mode)
+      const connStatus = document.getElementById('connection-status');
+      const connText = document.getElementById('connection-text');
+      if (connStatus && connText) {
+        connStatus.className = 'live-status offline';
+        connStatus.querySelector('.status-dot').style.backgroundColor = 'var(--warning)';
+        connText.innerText = 'Демо-режим (офлайн)';
+      }
+      
+      const bound = getMonthBoundaries(selectedMonth);
+      const from = new Date(bound.from);
+      const to = new Date(bound.to);
+      const diffTime = Math.abs(to - from);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      // Try to fetch active plans and mock facts from static files if available
+      let staticPlans = {};
+      try {
+        const plansRes = await fetch('../plans.json');
+        if (plansRes.ok) {
+          staticPlans = await plansRes.json();
+        }
+      } catch(e) {
+        console.warn('Failed to load static plans.json:', e);
+      }
+
+      let staticAprilMock = null;
+      if (selectedMonth === '2026-04') {
+        try {
+          const mockRes = await fetch('../roistat_april_mock.json');
+          if (mockRes.ok) {
+            staticAprilMock = await mockRes.json();
+          }
+        } catch(e) {
+          console.warn('Failed to load static roistat_april_mock.json:', e);
+        }
+      }
+
+      const aprilMockMap = {};
+      if (staticAprilMock && Array.isArray(staticAprilMock)) {
+        staticAprilMock.forEach(d => {
+          aprilMockMap[d.date] = d.channels;
+        });
+      }
+      
+      const daily = [];
+      let curr = new Date(from);
+      
+      for (let i = 0; i < diffDays; i++) {
+        const pad = (n) => String(n).padStart(2, '0');
+        const dateStr = `${curr.getFullYear()}-${pad(curr.getMonth() + 1)}-${pad(curr.getDate())}`;
+        
+        const dayItem = {
+          date: dateStr,
+          channels: {}
+        };
+        
+        CHANNELS.forEach(ch => {
+          let baseCost = 0, baseVisits = 0, baseLeads = 0, baseQual = 0, baseSales = 0, baseRev = 0;
+          if (ch === 'Сайт, органика') { baseCost = 0; baseVisits = 120; baseLeads = 6; baseQual = 3; baseSales = 1; baseRev = 45000; }
+          else if (ch === 'Контекстная реклама') { baseCost = 4500; baseVisits = 150; baseLeads = 8; baseQual = 4; baseSales = 1; baseRev = 50000; }
+          else if (ch === 'Телеграм') { baseCost = 2000; baseVisits = 80; baseLeads = 4; baseQual = 2; baseSales = 0.5; baseRev = 20000; }
+          else if (ch === 'Вконтакте') { baseCost = 1500; baseVisits = 50; baseLeads = 2; baseQual = 1; baseSales = 0.2; baseRev = 10000; }
+          else if (ch === 'МАХ') { baseCost = 1000; baseVisits = 30; baseLeads = 1; baseQual = 0.5; baseSales = 0.1; baseRev = 5000; }
+          else { baseCost = 500; baseVisits = 10; baseLeads = 0.5; baseQual = 0.2; baseSales = 0.05; baseRev = 2000; }
+          
+          const rand = 0.85 + Math.random() * 0.3;
+
+          // Determine the plan value
+          let chPlan = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
+          if (staticPlans[dateStr] && staticPlans[dateStr][ch]) {
+            const p = staticPlans[dateStr][ch];
+            ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
+              if (p[m] !== undefined && p[m] !== null) chPlan[m] = p[m];
+            });
+          } else if (staticPlans[selectedMonth] && staticPlans[selectedMonth][ch]) {
+            const p = staticPlans[selectedMonth][ch];
+            const daysInMonth = new Date(curr.getFullYear(), curr.getMonth() + 1, 0).getDate();
+            ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
+              if (p[m] !== undefined && p[m] !== null) chPlan[m] = Math.round(p[m] / daysInMonth);
+            });
+          } else {
+            const planRand = 0.9 + Math.random() * 0.2;
+            chPlan = {
+              cost: Math.round(baseCost * planRand),
+              visits: Math.round(baseVisits * planRand),
+              leads: Math.round(baseLeads * planRand),
+              qual: Math.round(baseQual * planRand),
+              kp: Math.round(baseQual * planRand * 0.8),
+              sales: Math.round(baseSales * planRand),
+              rev: Math.round(baseRev * planRand)
+            };
+          }
+
+          // Determine the fact value
+          let chFact = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
+          if (aprilMockMap[dateStr] && aprilMockMap[dateStr][ch]) {
+            chFact = aprilMockMap[dateStr][ch];
+          } else {
+            chFact = {
+              cost: Math.round(baseCost * rand),
+              visits: Math.round(baseVisits * rand),
+              leads: Math.round(baseLeads * rand),
+              qual: Math.round(baseQual * rand),
+              kp: Math.round(baseQual * rand * 0.8),
+              sales: Math.round(baseSales * rand),
+              rev: Math.round(baseRev * rand)
+            };
+          }
+          
+          dayItem.channels[ch] = {
+            plan: chPlan,
+            fact: chFact
+          };
+        });
+        
+        daily.push(dayItem);
+        curr.setDate(curr.getDate() + 1);
+      }
+      
+      const summary = {};
+      const total = {
+        plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
+        fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
+      };
+      
+      CHANNELS.forEach(ch => {
+        summary[ch] = {
+          plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
+          fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
+        };
+      });
+      
+      daily.forEach(d => {
+        CHANNELS.forEach(ch => {
+          const dayCh = d.channels[ch];
+          ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
+            summary[ch].plan[m] += dayCh.plan[m] || 0;
+            summary[ch].fact[m] += dayCh.fact[m] || 0;
+            total.plan[m] += dayCh.plan[m] || 0;
+            total.fact[m] += dayCh.fact[m] || 0;
+          });
+        });
+      });
+      
+      function computeFormulasLocal(metrics) {
+        const { cost, visits, leads, qual, kp, sales, rev } = metrics;
+        return {
+          cpl: leads > 0 ? cost / leads : 0,
+          crLeads: visits > 0 ? leads / visits : 0,
+          crQual: leads > 0 ? qual / leads : 0,
+          cpql: qual > 0 ? cost / qual : 0,
+          crKp: (kp !== null && qual > 0) ? kp / qual : 0,
+          crSale: (kp > 0) ? sales / kp : (leads > 0 ? sales / leads : 0),
+          cps: sales > 0 ? cost / sales : 0,
+          romi: cost > 0 ? (rev - cost) / cost : 0,
+          drr: rev > 0 ? cost / rev : 0
+        };
+      }
+      
+      CHANNELS.forEach(ch => {
+        summary[ch].plan.calculated = computeFormulasLocal(summary[ch].plan);
+        summary[ch].fact.calculated = computeFormulasLocal(summary[ch].fact);
+      });
+      
+      total.plan.calculated = computeFormulasLocal(total.plan);
+      total.fact.calculated = computeFormulasLocal(total.fact);
+      
+      const city = [
+        { city: 'Москва', leads: Math.round(total.fact.leads * 0.4), kp: Math.round(total.fact.leads * 0.2), sales: Math.round(total.fact.sales * 0.4) },
+        { city: 'Санкт-Петербург', leads: Math.round(total.fact.leads * 0.25), kp: Math.round(total.fact.leads * 0.12), sales: Math.round(total.fact.sales * 0.25) },
+        { city: 'Краснодар', leads: Math.round(total.fact.leads * 0.15), kp: Math.round(total.fact.leads * 0.08), sales: Math.round(total.fact.sales * 0.15) }
+      ];
+      
+      dashboardData = { daily, summary, total, city };
+      
+      buildDataModel();
+      renderGrid();
+      renderCharts();
     }
 
     // Switch active month preset
@@ -945,44 +1134,78 @@
       loadDashboard();
     }
 
-    // Populate active months from server
+    // Populate active months from server or local fallback
     async function initMonthsDropdown(forceSelectMonth = null) {
+      let months = [];
       try {
         const response = await fetch('/api/rnp-months');
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-          const select = document.getElementById('month-select');
-          select.innerHTML = '';
-          
-          const months = result.months || [];
-          
-          // Determine currently selectedMonth
-          if (forceSelectMonth) {
-            selectedMonth = forceSelectMonth;
-          } else if (!months.includes(selectedMonth)) {
-            if (months.includes('2026-04')) {
-              selectedMonth = '2026-04';
-            } else if (months.length > 0) {
-              selectedMonth = months[0];
-            } else {
-              months.push('2026-04');
-              selectedMonth = '2026-04';
-            }
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === 'success') {
+            months = result.months || [];
           }
-          
-          months.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m;
-            opt.innerText = formatMonthRussian(m);
-            if (m === selectedMonth) {
-              opt.selected = true;
-            }
-            select.appendChild(opt);
-          });
         }
       } catch (err) {
-        console.error('Failed to load months list:', err);
+        console.warn('API /api/rnp-months failed, using client-side fallback:', err);
+      }
+
+      // If months is empty (e.g., API failed or static hosting), construct local fallback list
+      if (months.length === 0) {
+        const fallbackSet = new Set(['2026-03', '2026-04', '2026-05', '2026-06', '2026-08']);
+        
+        // Try to fetch custom_months.json as a static file
+        try {
+          const staticMonthsRes = await fetch('../custom_months.json');
+          if (staticMonthsRes.ok) {
+            const staticMonths = await staticMonthsRes.json();
+            if (Array.isArray(staticMonths)) {
+              staticMonths.forEach(m => fallbackSet.add(m));
+            }
+          }
+        } catch(e) {
+          console.warn('Failed to load custom_months.json as static file:', e);
+        }
+
+        // Add user custom months from localStorage
+        try {
+          const localCustom = JSON.parse(localStorage.getItem('kilowatt_custom_months'));
+          if (Array.isArray(localCustom)) {
+            localCustom.forEach(m => fallbackSet.add(m));
+          }
+        } catch (e) {
+          console.warn('Failed to load custom months from localStorage:', e);
+        }
+
+        months = Array.from(fallbackSet).sort();
+      }
+
+      const select = document.getElementById('month-select');
+      if (select) {
+        select.innerHTML = '';
+        
+        // Determine currently selectedMonth
+        if (forceSelectMonth) {
+          selectedMonth = forceSelectMonth;
+        } else if (!months.includes(selectedMonth)) {
+          if (months.includes('2026-04')) {
+            selectedMonth = '2026-04';
+          } else if (months.length > 0) {
+            selectedMonth = months[0];
+          } else {
+            months.push('2026-04');
+            selectedMonth = '2026-04';
+          }
+        }
+        
+        months.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m;
+          opt.innerText = formatMonthRussian(m);
+          if (m === selectedMonth) {
+            opt.selected = true;
+          }
+          select.appendChild(opt);
+        });
       }
     }
 
@@ -1026,28 +1249,46 @@
       submitBtn.disabled = true;
       submitBtn.innerText = 'Добавление...';
 
+      let success = false;
       try {
         const res = await fetch('/api/add-month', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ month: monthInput })
         });
-        const result = await res.json();
-        
-        if (result.status === 'success') {
-          closeAddMonthModal();
-          await initMonthsDropdown(monthInput);
-          switchMonth(monthInput);
-        } else {
-          alert('Ошибка при добавлении: ' + result.message);
+        if (res.ok) {
+          const result = await res.json();
+          if (result.status === 'success') {
+            success = true;
+          }
         }
       } catch (err) {
-        alert('Не удалось связаться с сервером');
-        console.error(err);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'Добавить';
+        console.warn('POST /api/add-month failed, falling back to localStorage:', err);
       }
+
+      if (!success) {
+        try {
+          let localCustom = JSON.parse(localStorage.getItem('kilowatt_custom_months')) || [];
+          if (!localCustom.includes(monthInput)) {
+            localCustom.push(monthInput);
+            localStorage.setItem('kilowatt_custom_months', JSON.stringify(localCustom));
+          }
+          success = true;
+        } catch (e) {
+          console.error('Failed to save custom month to localStorage:', e);
+        }
+      }
+
+      if (success) {
+        closeAddMonthModal();
+        await initMonthsDropdown(monthInput);
+        switchMonth(monthInput);
+      } else {
+        alert('Ошибка при добавлении нового месяца');
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Добавить';
     }
 
     // Build the frontend data model in memory
@@ -1089,6 +1330,29 @@
           }
         });
       });
+
+      // Apply local plans overrides from localStorage
+      try {
+        const localPlans = JSON.parse(localStorage.getItem('kilowatt_plans_override'));
+        if (localPlans) {
+          Object.keys(localPlans).forEach(dStr => {
+            if (datesList.includes(dStr)) {
+              const dailyOver = localPlans[dStr];
+              CHANNELS.forEach(ch => {
+                if (dailyOver[ch]) {
+                  Object.keys(dailyOver[ch]).forEach(mKey => {
+                    if (dataModel[ch][mKey] && dataModel[ch][mKey][dStr]) {
+                      dataModel[ch][mKey][dStr].plan = dailyOver[ch][mKey];
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to apply local plans overrides from localStorage:', e);
+      }
 
       // Group days into weeks based on Monday boundaries (following Excel)
       weeksList = [];
@@ -1614,8 +1878,19 @@
           
           // 2. Render table with new calculations instantly!
           renderGrid();
+
+          // 3. Save to localStorage override cache
+          try {
+            let localPlans = JSON.parse(localStorage.getItem('kilowatt_plans_override')) || {};
+            if (!localPlans[date]) localPlans[date] = {};
+            if (!localPlans[date][channel]) localPlans[date][channel] = {};
+            localPlans[date][channel][metric] = newVal;
+            localStorage.setItem('kilowatt_plans_override', JSON.stringify(localPlans));
+          } catch(e) {
+            console.error('Failed to save plan override to localStorage:', e);
+          }
           
-          // 3. Save to backend asynchronously
+          // 4. Save to backend asynchronously
           try {
             await fetch('/api/save-daily-plan', {
               method: 'POST',
@@ -1624,7 +1899,7 @@
             });
             console.log(`Plan saved: ${channel} ${metric} on ${date} = ${newVal}`);
           } catch(err) {
-            console.error('Failed to save plan override on the server:', err);
+            console.warn('Failed to save plan override on the server (might be static hosting):', err);
           }
         };
 

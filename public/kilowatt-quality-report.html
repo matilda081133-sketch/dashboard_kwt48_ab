@@ -1849,10 +1849,33 @@
               rsyCampaigns
             }
           };
+
+          // Style Metrika button to show live connection
+          const liveBtn = document.querySelector('.live-api-btn');
+          const liveText = document.getElementById('live-btn-text');
+          if (liveBtn && liveText) {
+            liveBtn.style.background = 'var(--primary-light)';
+            liveBtn.style.color = 'var(--primary)';
+            liveBtn.style.borderColor = 'rgba(75, 115, 255, 0.2)';
+            const indicator = liveBtn.querySelector('.status-indicator');
+            if (indicator) indicator.style.backgroundColor = 'var(--primary)';
+            liveText.innerText = 'Яндекс Метрика Live';
+          }
           
         } catch (err) {
-          console.error("Metrika Live Fetch Error:", err.message);
-          alert(`⚠️ Яндекс.Метрика: не удалось получить данные.\nПричина: ${err.message}.`);
+          console.warn("Metrika Live Fetch Error:", err.message);
+          
+          // Style Metrika button to show offline status
+          const liveBtn = document.querySelector('.live-api-btn');
+          const liveText = document.getElementById('live-btn-text');
+          if (liveBtn && liveText) {
+            liveBtn.style.background = 'var(--danger-light)';
+            liveBtn.style.color = 'var(--danger)';
+            liveBtn.style.borderColor = 'rgba(217, 79, 92, 0.2)';
+            const indicator = liveBtn.querySelector('.status-indicator');
+            if (indicator) indicator.style.backgroundColor = 'var(--danger)';
+            liveText.innerText = 'Метрика офлайн';
+          }
           
           if (!highFidelityData[activeLP]) {
             // Generate mock data for custom LPs so they don't appear blank
