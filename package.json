@@ -1,0 +1,17 @@
+{
+  "name": "dashboard-kilovatt-rnp",
+  "version": "1.0.0",
+  "description": "Unified Analytical Portal for Kilovatt Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
