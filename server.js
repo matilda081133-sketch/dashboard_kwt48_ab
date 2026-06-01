@@ -4,7 +4,7 @@ const path = require('path');
 const url = require('url');
 const https = require('https');
 
-const PORT = parseInt(process.env.PORT, 10) || 8080;
+const PORT = parseInt(process.env.PORT, 10) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PLANS_FILE = path.join(__dirname, 'plans.json');
 const DB_FILE = path.join(__dirname, 'database.json');
