@@ -7,6 +7,49 @@ const https = require('https');
 const PORT = process.env.PORT || 5000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PLANS_FILE = path.join(__dirname, 'plans.json');
+const DB_FILE = path.join(__dirname, 'database.json');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// Database setup
+let dbData = {
+  users: {
+    "admin": "kilowatt2026"
+  },
+  projects: {}, // projectId -> { id, name, owner, settings: { roistatId, roistatKey, metrikaCounterId, metrikaToken, aiApiKey, aiEndpoint, aiModel, aiProvider }, dashboards: [] }
+  dashboardsData: {} // dashId -> { plans: {}, changes: [], abTests: [] }
+};
+
+function loadDB() {
+  if (fs.existsSync(DB_FILE)) {
+    try {
+      dbData = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    } catch (e) {
+      console.error('Error loading database.json:', e);
+    }
+  } else {
+    saveDB();
+  }
+}
+
+function saveDB() {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(dbData, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Error saving database.json:', e);
+  }
+}
+
+loadDB();
+
+function getSessionUser(req) {
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/session_user=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 // Dynamically check parent directory or current directory for the Excel template
 let excelPath = path.join(__dirname, '..', 'rnp_template.xlsx');
@@ -88,18 +131,40 @@ function getGroup(title) {
   var t = (title || "").toLowerCase().trim();
   t = t.replace(/\u00A0/g, " ");
 
-  // 1. МЕССЕНДЖЕРЫ (высший приоритет в dashboard_kilovatt.gs) -> Телеграм в РНП
+  // Explicitly exclude offline/direct non-marketing channels from RNP
+  if (t.indexOf("от руководителя") !== -1 || t.indexOf("существующий клиент") !== -1) {
+    return null;
+  }
+
+  // 1. МЕССЕНДЖЕРЫ & TELEGRAM -> Телеграм в РНП
   if (
     t.indexOf("tgapi") !== -1 ||
     t.indexOf("whatsapp") !== -1 ||
+    t.indexOf("telegram") !== -1 ||
+    t.indexOf("tg ") !== -1 ||
+    t.indexOf("tg/") !== -1 ||
+    t.indexOf(" tg") !== -1 ||
+    t.startsWith("tg") ||
     t === "телеграм" ||
+    t === "тг" ||
     ((t.indexOf("max") !== -1 || t.indexOf("макс") !== -1) && /7\d{9}/.test(t)) ||
     /79\d{9}/.test(t)
   ) {
     return "Телеграм";
   }
 
-  // 2. ЯНДЕКС КАРТЫ -> Сайт, органика в РНП
+  // 2. Вконтакте & Соцсети
+  if (
+    t.indexOf("vk") !== -1 ||
+    t.indexOf("вк") !== -1 ||
+    t.indexOf("vkontakte") !== -1 ||
+    t.indexOf("соц. сетей") !== -1 ||
+    t.indexOf("соцсети") !== -1
+  ) {
+    return "Вконтакте";
+  }
+
+  // 3. ЯНДЕКС КАРТЫ -> Сайт, органика в РНП
   if (
     t.indexOf("ya_maps") !== -1 ||
     t.indexOf("yandex_maps") !== -1 ||
@@ -116,7 +181,7 @@ function getGroup(title) {
     return "Сайт, органика";
   }
 
-  // 3. ДИРЕКТ -> Контекстная реклама в РНП
+  // 4. ДИРЕКТ -> Контекстная реклама в РНП
   if (
     t.indexOf("direct") !== -1 ||
     t.indexOf("директ") !== -1 ||
@@ -125,24 +190,23 @@ function getGroup(title) {
     return "Контекстная реклама";
   }
 
-  // 4. КАНАЛ MAX (без номера телефона) -> МАХ в РНП
+  // 5. КАНАЛ MAX (без номера телефона) -> МАХ в РНП
   if (
-    t === "max" ||
-    t === "макс" ||
-    t === "мах" ||
-    t === "макс канал" ||
-    t === "max канал"
+    t.indexOf("max") !== -1 ||
+    t.indexOf("макс") !== -1 ||
+    t.indexOf("мах") !== -1
   ) {
     return "МАХ";
   }
 
-  // 5. SEO -> Сайт, органика в РНП
+  // 6. SEO & General Calls -> Сайт, органика в РНП
   if (
     t.indexOf("seo") !== -1 ||
     t.indexOf("сео") !== -1 ||
     t.indexOf("веб-сайт") !== -1 ||
     t === "веб сайт" ||
     t.indexOf("звонок с сайта") !== -1 ||
+    t.indexOf("звонок") !== -1 ||
     t === "yandex" ||
     t === "ya" ||
     t === "yandex.ru" ||
@@ -155,30 +219,12 @@ function getGroup(title) {
     return "Сайт, органика";
   }
 
-  // 6. ВЫСТАВКА -> Специализированные выставки в РНП
+  // 7. ВЫСТАВКА -> Специализированные выставки в РНП
   if (t.indexOf("выставк") !== -1) {
     return "Специализированные выставки";
   }
 
-  // 7. ВК -> Вконтакте в РНП
-  if (
-    t.indexOf("vk") !== -1 ||
-    t.indexOf("вк") !== -1 ||
-    t.indexOf("vkontakte") !== -1
-  ) {
-    return "Вконтакте";
-  }
-
-  // 8. ТГ КАНАЛ -> Телеграм в РНП
-  if (
-    t.indexOf("telegram") !== -1 ||
-    t === "tg" ||
-    t === "тг"
-  ) {
-    return "Телеграм";
-  }
-
-  // 9. СТАТЬИ В СМИ -> Статьи в СМИ в РНП (не зафиксировано в getGroup киловатт, но нужно для РНП)
+  // 8. СТАТЬИ В СМИ -> Статьи в СМИ в РНП
   if (
     t.indexOf("сми") !== -1 ||
     t.indexOf("статьи") !== -1 ||
@@ -222,17 +268,18 @@ function writePlans(plans) {
 }
 
 // Parse excel file to extract daily plan and fact values
-function getExcelData(fromStr, toStr) {
+function getExcelData(fromStr, toStr, customExcelPath) {
   if (!XLSX) {
     console.warn('⚠️ XLSX module is not loaded yet. Returning empty array.');
     return [];
   }
-  if (!fs.existsSync(excelPath)) {
-    console.error('❌ Spreadsheet rnp_template.xlsx not found at:', excelPath);
+  const targetPath = customExcelPath || excelPath;
+  if (!fs.existsSync(targetPath)) {
+    console.error('❌ Spreadsheet not found at:', targetPath);
     return [];
   }
 
-  const fileBuffer = fs.readFileSync(excelPath);
+  const fileBuffer = fs.readFileSync(targetPath);
   const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
   const dates = {}; // dateStr -> { sheetName, colIdx }
 
@@ -500,8 +547,413 @@ function parseBody(req) {
 }
 
 // Handle API endpoints
+// Helper to parse query parameters or URL params from paths
+const getUrlParams = (pathPattern, requestPath) => {
+  const patternParts = pathPattern.split('/');
+  const pathParts = requestPath.split('/');
+  if (patternParts.length !== pathParts.length) return null;
+  const params = {};
+  for (let i = 0; i < patternParts.length; i++) {
+    if (patternParts[i].startsWith(':')) {
+      params[patternParts[i].substring(1)] = pathParts[i];
+    } else if (patternParts[i] !== pathParts[i]) {
+      return null;
+    }
+  }
+  return params;
+};
+
 async function handleApi(req, res, pathname, query) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  // POST /api/auth/register
+  if (pathname === '/api/auth/register' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { username, password, email } = body;
+      if (!username || !password) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ status: 'error', message: 'Логин и пароль обязательны' }));
+        return;
+      }
+      if (dbData.users[username]) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ status: 'error', message: 'Пользователь уже существует' }));
+        return;
+      }
+      dbData.users[username] = password;
+      
+      // Auto-create a default project for the new user
+      const projId = 'proj_' + Math.floor(Math.random() * 1000000);
+      dbData.projects[projId] = {
+        id: projId,
+        name: 'Мой первый проект',
+        owner: username,
+        settings: {
+          roistatId: '',
+          roistatKey: '',
+          metrikaCounterId: '',
+          metrikaToken: '',
+          aiApiKey: '',
+          aiEndpoint: '',
+          aiModel: '',
+          aiProvider: ''
+        },
+        dashboards: []
+      };
+      
+      saveDB();
+      res.setHeader('Set-Cookie', `session_user=${encodeURIComponent(username)}; Path=/; HttpOnly`);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', username }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // POST /api/auth/login
+  if (pathname === '/api/auth/login' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { username, password } = body;
+      if (dbData.users[username] && dbData.users[username] === password) {
+        res.setHeader('Set-Cookie', `session_user=${encodeURIComponent(username)}; Path=/; HttpOnly`);
+        res.statusCode = 200;
+        res.end(JSON.stringify({ status: 'success', username }));
+      } else {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ status: 'error', message: 'Неверное имя пользователя или пароль' }));
+      }
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // POST /api/auth/logout
+  if (pathname === '/api/auth/logout' && req.method === 'POST') {
+    res.setHeader('Set-Cookie', `session_user=; Path=/; HttpOnly; Max-Age=0`);
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: 'success' }));
+    return;
+  }
+
+  // GET /api/auth/me
+  if (pathname === '/api/auth/me' && req.method === 'GET') {
+    const user = getSessionUser(req);
+    res.statusCode = 200;
+    res.end(JSON.stringify({ authenticated: !!user, username: user }));
+    return;
+  }
+
+  // Auth Guard
+  const currentUser = getSessionUser(req);
+  if (!currentUser) {
+    res.statusCode = 401;
+    res.end(JSON.stringify({ status: 'error', message: 'Unauthorized' }));
+    return;
+  }
+
+  // GET /api/projects
+  if (pathname === '/api/projects' && req.method === 'GET') {
+    const userProjects = Object.values(dbData.projects).filter(p => p.owner === currentUser);
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: 'success', projects: userProjects }));
+    return;
+  }
+
+  // POST /api/projects
+  if (pathname === '/api/projects' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { name } = body;
+      if (!name) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ status: 'error', message: 'Название проекта обязательно' }));
+        return;
+      }
+      const projId = 'proj_' + Math.floor(Math.random() * 1000000);
+      dbData.projects[projId] = {
+        id: projId,
+        name,
+        owner: currentUser,
+        settings: {
+          roistatId: '',
+          roistatKey: '',
+          metrikaCounterId: '',
+          metrikaToken: '',
+          aiApiKey: '',
+          aiEndpoint: '',
+          aiModel: '',
+          aiProvider: ''
+        },
+        dashboards: []
+      };
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', project: dbData.projects[projId] }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // PUT /api/projects/:id
+  const projectPutParams = getUrlParams('/api/projects/:id', pathname);
+  if (projectPutParams && req.method === 'PUT') {
+    try {
+      const body = await parseBody(req);
+      const projId = projectPutParams.id;
+      const proj = dbData.projects[projId];
+      if (!proj || proj.owner !== currentUser) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+        return;
+      }
+      proj.name = body.name || proj.name;
+      proj.settings = { ...proj.settings, ...body.settings };
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', project: proj }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // DELETE /api/projects/:id
+  const projectDelParams = getUrlParams('/api/projects/:id', pathname);
+  if (projectDelParams && req.method === 'DELETE') {
+    const projId = projectDelParams.id;
+    const proj = dbData.projects[projId];
+    if (proj && proj.owner === currentUser) {
+      delete dbData.projects[projId];
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success' }));
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+    }
+    return;
+  }
+
+  // GET /api/projects/:id/dashboards
+  const dashListParams = getUrlParams('/api/projects/:id/dashboards', pathname);
+  if (dashListParams && req.method === 'GET') {
+    const projId = dashListParams.id;
+    const proj = dbData.projects[projId];
+    if (proj && proj.owner === currentUser) {
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', dashboards: proj.dashboards }));
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+    }
+    return;
+  }
+
+  // POST /api/projects/:id/dashboards
+  if (dashListParams && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const projId = dashListParams.id;
+      const proj = dbData.projects[projId];
+      if (!proj || proj.owner !== currentUser) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+        return;
+      }
+      const { name, type } = body;
+      if (!name || !type) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ status: 'error', message: 'Имя и тип обязательны' }));
+        return;
+      }
+      const dashId = 'dash_' + Math.floor(Math.random() * 1000000);
+      const newDash = { id: dashId, name, type, created_at: new Date().toISOString() };
+      proj.dashboards.push(newDash);
+      dbData.dashboardsData[dashId] = {
+        plans: {},
+        changes: [],
+        abTests: []
+      };
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', dashboard: newDash }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // DELETE /api/projects/:id/dashboards/:dashId
+  const dashDelParams = getUrlParams('/api/projects/:id/dashboards/:dashId', pathname);
+  if (dashDelParams && req.method === 'DELETE') {
+    const { id: projId, dashId } = dashDelParams;
+    const proj = dbData.projects[projId];
+    if (proj && proj.owner === currentUser) {
+      proj.dashboards = proj.dashboards.filter(d => d.id !== dashId);
+      delete dbData.dashboardsData[dashId];
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success' }));
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+    }
+    return;
+  }
+
+  // POST /api/projects/:id/dashboards/:dashId/upload
+  const dashUploadParams = getUrlParams('/api/projects/:id/dashboards/:dashId/upload', pathname);
+  if (dashUploadParams && req.method === 'POST') {
+    const { id: projId, dashId } = dashUploadParams;
+    const proj = dbData.projects[projId];
+    if (proj && proj.owner === currentUser) {
+      const filePath = path.join(UPLOADS_DIR, `${projId}_${dashId}.xlsx`);
+      const fileStream = fs.createWriteStream(filePath);
+      req.pipe(fileStream);
+      fileStream.on('finish', () => {
+        res.statusCode = 200;
+        res.end(JSON.stringify({ status: 'success', message: 'Файл успешно загружен' }));
+      });
+      fileStream.on('error', (err) => {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ status: 'error', message: err.message }));
+      });
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+    }
+    return;
+  }
+
+  // POST /api/ai-programmer/chat
+  if (pathname === '/api/ai-programmer/chat' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { message, projectId } = body;
+      
+      const proj = dbData.projects[projectId];
+      const aiApiKey = proj?.settings?.aiApiKey || '';
+      const aiEndpoint = proj?.settings?.aiEndpoint || 'https://api.openai.com/v1';
+      const aiModel = proj?.settings?.aiModel || 'gpt-4o-mini';
+      const aiProvider = proj?.settings?.aiProvider || 'openai';
+
+      let promptText = "Ты — ИИ-программист, специализирующийся на интеграции Roistat и Яндекс.Метрики. Помогай отлаживать запросы и решать технические проблемы. Отвечай кратко, профессионально на русском языке.";
+
+      if (aiApiKey) {
+        const axios = require('axios');
+        let reply = '';
+        if (aiProvider === 'openai') {
+          const response = await axios.post(`${aiEndpoint}/chat/completions`, {
+            model: aiModel,
+            messages: [
+              { role: "system", content: promptText },
+              { role: "user", content: message }
+            ]
+          }, {
+            headers: { 'Authorization': `Bearer ${aiApiKey}`, 'Content-Type': 'application/json' }
+          });
+          reply = response.data.choices[0].message.content;
+        } else if (aiProvider === 'gemini') {
+          const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiApiKey}`, {
+            contents: [{ parts: [{ text: `${promptText}\n\nПользователь: ${message}` }] }]
+          });
+          reply = response.data.candidates[0].content.parts[0].text;
+        }
+        res.statusCode = 200;
+        res.end(JSON.stringify({ status: 'success', response: reply }));
+      } else {
+        let reply = "Привет! Я твой ИИ-инженер по интеграциям. Похоже, в этом проекте не настроен API-ключ ИИ.\n\nРекомендации по Roistat:\n- Ошибка 403: неверный API-ключ или ID проекта.\n- Ошибка 400/404: неверные эндпоинты или несовпадающие параметры.";
+        res.statusCode = 200;
+        res.end(JSON.stringify({ status: 'success', response: reply }));
+      }
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // GET /api/dashboards/:dashId/data
+  const dashDataParams = getUrlParams('/api/dashboards/:dashId/data', pathname);
+  if (dashDataParams && req.method === 'GET') {
+    const { dashId } = dashDataParams;
+    const dashData = dbData.dashboardsData[dashId] || { plans: {}, changes: [], abTests: [] };
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: 'success', data: dashData }));
+    return;
+  }
+
+  // POST /api/dashboards/:dashId/changes
+  const dashChangesParams = getUrlParams('/api/dashboards/:dashId/changes', pathname);
+  if (dashChangesParams && req.method === 'POST') {
+    try {
+      const { dashId } = dashChangesParams;
+      const body = await parseBody(req);
+      if (!dbData.dashboardsData[dashId]) dbData.dashboardsData[dashId] = { plans: {}, changes: [], abTests: [] };
+      dbData.dashboardsData[dashId].changes.push(body);
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success' }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // DELETE /api/dashboards/:dashId/changes/:changeId
+  const dashChangeDelParams = getUrlParams('/api/dashboards/:dashId/changes/:changeId', pathname);
+  if (dashChangeDelParams && req.method === 'DELETE') {
+    const { dashId, changeId } = dashChangeDelParams;
+    if (dbData.dashboardsData[dashId]) {
+      dbData.dashboardsData[dashId].changes = dbData.dashboardsData[dashId].changes.filter(c => c.id !== changeId);
+      saveDB();
+    }
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: 'success' }));
+    return;
+  }
+
+  // POST /api/dashboards/:dashId/abtests
+  const dashAbParams = getUrlParams('/api/dashboards/:dashId/abtests', pathname);
+  if (dashAbParams && req.method === 'POST') {
+    try {
+      const { dashId } = dashAbParams;
+      const body = await parseBody(req);
+      if (!dbData.dashboardsData[dashId]) dbData.dashboardsData[dashId] = { plans: {}, changes: [], abTests: [] };
+      dbData.dashboardsData[dashId].abTests.push(body);
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success' }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // DELETE /api/dashboards/:dashId/abtests/:testId
+  const dashAbDelParams = getUrlParams('/api/dashboards/:dashId/abtests/:testId', pathname);
+  if (dashAbDelParams && req.method === 'DELETE') {
+    const { dashId, testId } = dashAbDelParams;
+    if (dbData.dashboardsData[dashId]) {
+      dbData.dashboardsData[dashId].abTests = dbData.dashboardsData[dashId].abTests.filter(t => t.id !== testId);
+      saveDB();
+    }
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: 'success' }));
+    return;
+  }
 
   // GET /api/rnp-months
   if (pathname === '/api/rnp-months' && req.method === 'GET') {
@@ -516,43 +968,12 @@ async function handleApi(req, res, pathname, query) {
     return;
   }
 
-  // POST /api/add-month
-  if (pathname === '/api/add-month' && req.method === 'POST') {
-    try {
-      const body = await parseBody(req);
-      const { month } = body;
-      
-      if (!month || !month.match(/^\d{4}-\d{2}$/)) {
-        res.statusCode = 400;
-        res.end(JSON.stringify({ status: 'error', message: 'Parameter month is required in YYYY-MM format' }));
-        return;
-      }
-      
-      const customMonthsFile = path.join(__dirname, 'custom_months.json');
-      let custom = [];
-      if (fs.existsSync(customMonthsFile)) {
-        try {
-          custom = JSON.parse(fs.readFileSync(customMonthsFile, 'utf8'));
-        } catch (e) {}
-      }
-      if (!custom.includes(month)) {
-        custom.push(month);
-        fs.writeFileSync(customMonthsFile, JSON.stringify(custom, null, 2), 'utf8');
-      }
-      
-      res.statusCode = 200;
-      res.end(JSON.stringify({ status: 'success', message: `Month ${month} added successfully` }));
-    } catch (err) {
-      res.statusCode = 500;
-      res.end(JSON.stringify({ status: 'error', message: err.message }));
-    }
-    return;
-  }
-
   // GET /api/rnp-data
   if (pathname === '/api/rnp-data' && req.method === 'GET') {
     const fromStr = query.from;
     const toStr = query.to;
+    const projId = query.projectId;
+    const dashId = query.dashboardId;
 
     if (!fromStr || !toStr) {
       res.statusCode = 400;
@@ -562,29 +983,75 @@ async function handleApi(req, res, pathname, query) {
 
     try {
       // 1. Get base data from Excel (both Plan and Fact)
-      let mergedData = getExcelData(fromStr, toStr);
+      const customPath = (projId && dashId) ? path.join(UPLOADS_DIR, `${projId}_${dashId}.xlsx`) : null;
+      let mergedData = getExcelData(fromStr, toStr, (customPath && fs.existsSync(customPath)) ? customPath : null);
 
-      // 2. Fetch from Roistat
+      // 2. Fetch from Roistat using Project specific integrations
       let roistatSuccess = false;
+      const proj = dbData.projects[projId];
+      const roistatProjectId = proj?.settings?.roistatId || '294460';
+      const roistatKey = proj?.settings?.roistatKey || '87ed258c066c98668b595bafa0365e56';
+
       try {
-        const roistatItems = await fetchRoistat(fromStr, toStr);
-        console.log(`🌐 Fetched ${roistatItems.length} items from Roistat API.`);
-        
+        // Implement project roistat settings load
+        const roistatItems = await new Promise((resolve, reject) => {
+          const fromIso = `${fromStr}T00:00:00+03:00`;
+          const toIso = `${toStr}T23:59:59+03:00`;
+          const payload = {
+            "dimensions": ["date", "marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
+            "metrics": [
+              { "metric": "visits", "attribution": "default" },
+              { "metric": "leads", "attribution": "default" },
+              { "metric": "leadCount", "attribution": "default" },
+              { "metric": "sales", "attribution": "default" },
+              { "metric": "paidLeadCount", "attribution": "default" },
+              { "metric": "revenue", "attribution": "default" },
+              { "metric": "paidLeadsPrice", "attribution": "default" },
+              { "metric": "marketing_cost", "attribution": "default" },
+              { "metric": "visitsCost", "attribution": "default" },
+              { "metric": "custom_2", "attribution": "default" },
+              { "metric": "custom_5", "attribution": "default" }
+            ],
+            "period": { "from": fromIso, "to": toIso }
+          };
+          const dataStr = JSON.stringify(payload);
+          const options = {
+            hostname: 'cloud.roistat.com',
+            port: 443,
+            path: `/api/v1/project/analytics/data?project=${roistatProjectId}`,
+            method: 'POST',
+            headers: {
+              'Api-key': roistatKey,
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(dataStr)
+            },
+            rejectUnauthorized: false
+          };
+          const reqPost = https.request(options, (resPost) => {
+            let body = '';
+            resPost.setEncoding('utf8');
+            resPost.on('data', (chunk) => { body += chunk; });
+            resPost.on('end', () => {
+              try {
+                const parsed = JSON.parse(body);
+                if (parsed.status === 'error') reject(new Error(parsed.description));
+                else resolve((parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : []);
+              } catch (e) { reject(e); }
+            });
+          });
+          reqPost.on('error', (e) => reject(e));
+          reqPost.write(dataStr);
+          reqPost.end();
+        });
+
         if (roistatItems.length > 0) {
           roistatSuccess = true;
           const roistatByDate = {};
-          
           roistatItems.forEach(item => {
             const d = item.dimensions || {};
             if (!d.date || !d.date.title) return;
             const dateStr = d.date.title.split('T')[0];
-            
-            const t1 = d.marker_level_1 ? d.marker_level_1.title || "" : "";
-            const t2 = d.marker_level_2 ? d.marker_level_2.title || "" : "";
-            const t3 = d.marker_level_3 ? d.marker_level_3.title || "" : "";
-            const t4 = d.marker_level_4 ? d.marker_level_4.title || "" : "";
-            const title = [t1, t2, t3, t4].join(" ").trim();
-            
+            const title = [d.marker_level_1?.title || "", d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
             const group = getGroup(title);
             if (!group) return;
 
@@ -593,111 +1060,62 @@ async function handleApi(req, res, pathname, query) {
 
             const cost = m.visitsCost || m.marketing_cost || 0;
             const visits = m.visitCount || m.visits || 0;
-            const isCall = title.toLowerCase().indexOf("звонок") !== -1;
-            const leads = isCall ? 0 : (m.leadCount || m.leads || 0);
+            const leads = title.toLowerCase().includes("звонок") ? 0 : (m.leadCount || m.leads || 0);
             const qual = m.custom_2 || 0;
             const kp = m.custom_5 || 0;
             const sales = m.paidLeadCount || m.sales || 0;
             const rev = m.paidLeadsPrice || m.revenue || 0;
 
             if (!roistatByDate[dateStr]) roistatByDate[dateStr] = {};
-            if (!roistatByDate[dateStr][group]) {
-              roistatByDate[dateStr][group] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
-            }
+            if (!roistatByDate[dateStr][group]) roistatByDate[dateStr][group] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
 
             const g = roistatByDate[dateStr][group];
-            g.cost += cost;
-            g.visits += visits;
-            g.leads += leads;
-            g.qual += qual;
-            g.kp += kp;
-            g.sales += sales;
-            g.rev += rev;
+            g.cost += cost; g.visits += visits; g.leads += leads; g.qual += qual; g.kp += kp; g.sales += sales; g.rev += rev;
           });
 
-          // Overwrite Fact data
           mergedData.forEach(dayItem => {
             const rDay = roistatByDate[dayItem.date];
             if (rDay) {
               for (const channelName of Object.keys(GROUPS_ROWS)) {
-                const rCh = rDay[channelName];
-                if (rCh) {
-                  dayItem.channels[channelName].fact = rCh;
-                } else {
-                  dayItem.channels[channelName].fact = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
-                }
+                dayItem.channels[channelName].fact = rDay[channelName] || { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
               }
             }
           });
         }
       } catch (err) {
-        console.warn('⚠️ Roistat API connection bypassed/failed. Reason:', err.message);
-        
-        // Local fallback to mock Roistat data for April 2026 if available
+        // Fallback: mock data
         const mockFile = path.join(__dirname, 'roistat_april_mock.json');
         if (fs.existsSync(mockFile)) {
           try {
             const mockData = JSON.parse(fs.readFileSync(mockFile, 'utf8'));
             const mockMap = {};
             mockData.forEach(d => { mockMap[d.date] = d.channels; });
-            
-            let mockApplied = false;
             mergedData.forEach(dayItem => {
-              const dateStr = dayItem.date;
-              if (mockMap[dateStr]) {
-                mockApplied = true;
-                const mockChs = mockMap[dateStr];
+              if (mockMap[dayItem.date]) {
+                roistatSuccess = true;
                 for (const channelName of Object.keys(GROUPS_ROWS)) {
-                  if (mockChs[channelName]) {
-                    dayItem.channels[channelName].fact = mockChs[channelName];
+                  if (mockMap[dayItem.date][channelName]) {
+                    dayItem.channels[channelName].fact = mockMap[dayItem.date][channelName];
                   }
                 }
               }
             });
-            if (mockApplied) {
-              console.log('✓ Successfully loaded mock Roistat facts for April 2026 from roistat_april_mock.json');
-              roistatSuccess = true;
-            }
-          } catch (e) {
-            console.error('Error loading mock Roistat facts:', e);
-          }
+          } catch (e) {}
         }
       }
 
-      // 3. Apply custom daily plans overrides from plans.json
-      const plans = readPlans();
+      // 3. Apply custom daily plans overrides (from project database)
+      const dashPlans = dbData.dashboardsData[dashId]?.plans || {};
       mergedData.forEach(dayItem => {
         const dateStr = dayItem.date;
-        
-        // 3a. Check if there are daily overrides for this specific date
-        if (plans[dateStr]) {
-          const dailyOver = plans[dateStr];
+        if (dashPlans[dateStr]) {
+          const dailyOver = dashPlans[dateStr];
           for (const channelName of Object.keys(GROUPS_ROWS)) {
             if (dailyOver[channelName]) {
               const ch = dayItem.channels[channelName];
               for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
                 if (dailyOver[channelName][metric] !== undefined && dailyOver[channelName][metric] !== null) {
                   ch.plan[metric] = dailyOver[channelName][metric];
-                }
-              }
-            }
-          }
-        }
-        
-        // 3b. Check if there are monthly plan overrides (legacy fallback)
-        const monthStr = dateStr.slice(0, 7); // "YYYY-MM"
-        if (plans[monthStr] && !plans[dateStr]) {
-          const monthlyPlan = plans[monthStr];
-          const year = parseInt(dateStr.split('-')[0]);
-          const month = parseInt(dateStr.split('-')[1]);
-          const daysInMonth = new Date(year, month, 0).getDate();
-
-          for (const channelName of Object.keys(GROUPS_ROWS)) {
-            if (monthlyPlan[channelName]) {
-              const chPlan = monthlyPlan[channelName];
-              for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
-                if (chPlan[metric] !== undefined) {
-                  dayItem.channels[channelName].plan[metric] = (chPlan[metric] || 0) / daysInMonth;
                 }
               }
             }
@@ -724,28 +1142,22 @@ async function handleApi(req, res, pathname, query) {
           for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
             summary[channelName].plan[metric] += ch.plan[metric] || 0;
             summary[channelName].fact[metric] += ch.fact[metric] || 0;
-
             total.plan[metric] += ch.plan[metric] || 0;
             total.fact[metric] += ch.fact[metric] || 0;
           }
         }
       });
 
-      // Format summary and add calculations
       for (const channelName of Object.keys(GROUPS_ROWS)) {
         const ch = summary[channelName];
-        
-        // Round raw totals
         for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
           ch.plan[metric] = Math.round(ch.plan[metric] * 100) / 100;
           ch.fact[metric] = Math.round(ch.fact[metric] * 100) / 100;
         }
-
         ch.plan.calculated = computeFormulas(ch.plan);
         ch.fact.calculated = computeFormulas(ch.fact);
       }
 
-      // Round total raw metrics
       for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
         total.plan[metric] = Math.round(total.plan[metric] * 100) / 100;
         total.fact[metric] = Math.round(total.fact[metric] * 100) / 100;
@@ -753,30 +1165,25 @@ async function handleApi(req, res, pathname, query) {
       total.plan.calculated = computeFormulas(total.plan);
       total.fact.calculated = computeFormulas(total.fact);
 
-      // 5. Generate City data
       const cityData = getMockCityData(total.fact.leads, total.fact.sales);
 
       res.statusCode = 200;
       res.end(JSON.stringify({
         status: 'success',
         roistatConnected: roistatSuccess,
-        data: {
-          daily: mergedData,
-          summary,
-          total,
-          city: cityData
-        }
+        data: { daily: mergedData, summary, total, city: cityData }
       }));
     } catch (err) {
       res.statusCode = 500;
-      res.end(JSON.stringify({ status: 'error', message: err.message, stack: err.stack }));
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
     }
     return;
   }
 
   // GET /api/rnp-plans?month=YYYY-MM
   if (pathname === '/api/rnp-plans' && req.method === 'GET') {
-    const monthStr = query.month; // e.g. "2026-04"
+    const monthStr = query.month;
+    const dashId = query.dashboardId;
     if (!monthStr) {
       res.statusCode = 400;
       res.end(JSON.stringify({ status: 'error', message: 'Parameter month is required (YYYY-MM)' }));
@@ -784,27 +1191,24 @@ async function handleApi(req, res, pathname, query) {
     }
 
     try {
-      const plans = readPlans();
-      if (plans[monthStr]) {
+      const dashPlans = dbData.dashboardsData[dashId]?.plans || {};
+      if (dashPlans[monthStr]) {
         res.statusCode = 200;
-        res.end(JSON.stringify({ status: 'success', month: monthStr, plans: plans[monthStr] }));
+        res.end(JSON.stringify({ status: 'success', month: monthStr, plans: dashPlans[monthStr] }));
         return;
       }
 
-      // Fallback: sum from Excel
-      console.log(`Summing plans for ${monthStr} from Excel...`);
+      // Sum plans from excel
       const [year, month] = monthStr.split('-').map(Number);
       const fromStr = `${year}-${String(month).padStart(2, '0')}-01`;
       const lastDay = new Date(year, month, 0).getDate();
       const toStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-
       const excelData = getExcelData(fromStr, toStr);
 
       const sumPlans = {};
       for (const channelName of Object.keys(GROUPS_ROWS)) {
         sumPlans[channelName] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
       }
-
       excelData.forEach(dayItem => {
         for (const [channelName, ch] of Object.entries(dayItem.channels)) {
           for (const metric of Object.keys(sumPlans[channelName])) {
@@ -812,8 +1216,6 @@ async function handleApi(req, res, pathname, query) {
           }
         }
       });
-
-      // Round sums
       for (const channelName of Object.keys(GROUPS_ROWS)) {
         for (const metric of Object.keys(sumPlans[channelName])) {
           sumPlans[channelName][metric] = Math.round(sumPlans[channelName][metric]);
@@ -833,20 +1235,14 @@ async function handleApi(req, res, pathname, query) {
   if (pathname === '/api/rnp-plans' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
-      const { month, plans } = body;
-
-      if (!month || !plans) {
-        res.statusCode = 400;
-        res.end(JSON.stringify({ status: 'error', message: 'Parameters month (YYYY-MM) and plans are required' }));
-        return;
+      const { month, plans, dashboardId } = body;
+      if (!dbData.dashboardsData[dashboardId]) {
+        dbData.dashboardsData[dashboardId] = { plans: {}, changes: [], abTests: [] };
       }
-
-      const allPlans = readPlans();
-      allPlans[month] = plans;
-      writePlans(allPlans);
-
+      dbData.dashboardsData[dashboardId].plans[month] = plans;
+      saveDB();
       res.statusCode = 200;
-      res.end(JSON.stringify({ status: 'success', message: `Plans for ${month} saved successfully` }));
+      res.end(JSON.stringify({ status: 'success', message: 'Plans saved successfully' }));
     } catch (err) {
       res.statusCode = 500;
       res.end(JSON.stringify({ status: 'error', message: err.message }));
@@ -858,26 +1254,20 @@ async function handleApi(req, res, pathname, query) {
   if (pathname === '/api/save-daily-plan' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
-      const { date, channel, metric, val } = body;
-
-      if (!date || !channel || !metric) {
-        res.statusCode = 400;
-        res.end(JSON.stringify({ status: 'error', message: 'Parameters date (YYYY-MM-DD), channel, and metric are required' }));
-        return;
+      const { date, channel, metric, val, dashboardId } = body;
+      if (!dbData.dashboardsData[dashboardId]) {
+        dbData.dashboardsData[dashboardId] = { plans: {}, changes: [], abTests: [] };
       }
-
-      const allPlans = readPlans();
-      if (!allPlans[date]) {
-        allPlans[date] = {};
+      if (!dbData.dashboardsData[dashboardId].plans[date]) {
+        dbData.dashboardsData[dashboardId].plans[date] = {};
       }
-      if (!allPlans[date][channel]) {
-        allPlans[date][channel] = {};
+      if (!dbData.dashboardsData[dashboardId].plans[date][channel]) {
+        dbData.dashboardsData[dashboardId].plans[date][channel] = {};
       }
-      allPlans[date][channel][metric] = val === null ? null : parseFloat(val);
-      writePlans(allPlans);
-
+      dbData.dashboardsData[dashboardId].plans[date][channel][metric] = val === null ? null : parseFloat(val);
+      saveDB();
       res.statusCode = 200;
-      res.end(JSON.stringify({ status: 'success', message: `Plan for ${channel} on ${date} saved successfully` }));
+      res.end(JSON.stringify({ status: 'success' }));
     } catch (err) {
       res.statusCode = 500;
       res.end(JSON.stringify({ status: 'error', message: err.message }));

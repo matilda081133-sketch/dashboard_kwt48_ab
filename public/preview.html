@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Превью доработок платформы КИЛОВАТТ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #4b73ff;
+      --accent: #2ca579;
+      --radius: 12px;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(75, 115, 255, 0.08);
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-top: 6px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+    ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    li {
+      position: relative;
+      padding-left: 24px;
+      font-size: 13.5px;
+      color: #334155;
+    }
+    li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    @media (max-width: 600px) {
+      .btn-group {
+        grid-template-columns: 1fr;
+      }
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #365de0;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .alert {
+      background: #f0f4ff;
+      border: 1px solid rgba(75, 115, 255, 0.15);
+      border-radius: var(--radius);
+      padding: 20px;
+      font-size: 13.5px;
+      color: #1e3a8a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Информационная панель</span>
+      <h1>Превью доработок платформы</h1>
+      <p class="subtitle">Интерфейс полностью обновлен: удалено стороннее брендирование, заменены иконки и реализован новый функционал.</p>
+    </header>
+
+    <div class="card">
+      <h2>Что было сделано</h2>
+      <ul>
+        <li><b>Ребрендинг</b>: Полностью удалены любые упоминания Yandex DataLens. Платформа переведена на нейтральный премиальный корпоративный стиль.</li>
+        <li><b>Минималистичные иконки</b>: Эмодзи и игровые значки заменены на профессиональные векторные SVG-иконки.</li>
+        <li><b>Мультипроектность</b>: Возможность регистрировать аккаунты, создавать проекты и настраивать интеграции (Roistat, Метрика, ИИ) для каждого проекта отдельно.</li>
+        <li><b>ИИ-Программист</b>: Разработан интерактивный чат-ассистент для быстрой отладки интеграций и автоматического исправления ошибок API на лету.</li>
+        <li><b>Кастомные Excel-шаблоны</b>: Каждый дашборд теперь поддерживает загрузку своего собственного файла <code>rnp_template.xlsx</code>.</li>
+      </ul>
+    </div>
+
+    <div class="alert">
+      <strong>Режим демонстрации:</strong> Для быстрого тестирования на бэкенде уже настроен демо-аккаунт. Вы можете нажать кнопку ниже, чтобы перейти к работе с проектами без необходимости заполнять базы данных вручную.
+    </div>
+
+    <div class="btn-group">
+      <a href="index.html" class="btn btn-primary">Перейти на главную страницу</a>
+      <a href="kilowatt-rnp-report.html?projectId=demo&dashboardId=demo" class="btn btn-secondary">Превью RNP дашборда (Demo)</a>
+    </div>
+  </div>
+</body>
+</html>

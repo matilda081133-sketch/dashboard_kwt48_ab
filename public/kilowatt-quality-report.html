@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>КИЛОВАТТ — Мониторинг Эффективности Лендингов (Yandex DataLens Style)</title>
+  <title>КИЛОВАТТ — Мониторинг Эффективности Лендингов</title>
   
   <!-- Auth Protection -->
   <script src="auth.js"></script>
@@ -1451,7 +1451,12 @@
     const defaultAbTests = [];
 
     // Load persisted or default logs
-    let lpChanges = JSON.parse(localStorage.getItem('kilowatt_changes')) || defaultChanges;
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId') || '';
+    const dashboardId = urlParams.get('dashboardId') || '';
+
+    // Load persisted or default logs
+    let lpChanges = defaultChanges;
     let abTests = defaultAbTests;
 
 
@@ -1473,17 +1478,18 @@
       // Prefill OAuth Token in field
       document.getElementById('oauth-token').value = oauthToken;
       
-      // Load real A/B test data collected by the script
+      // Load real dashboard data from server
       try {
-        const response = await fetch('/real_ab_data.json');
+        const response = await fetch(`/api/dashboards/${dashboardId}/data`);
         if (response.ok) {
-          abTests = await response.json();
-          console.log('Loaded real A/B test data:', abTests);
-        } else {
-          console.warn('Failed to load real A/B test data from JSON');
+          const result = await response.json();
+          if (result.status === 'success') {
+            lpChanges = result.data.changes.length > 0 ? result.data.changes : defaultChanges;
+            abTests = result.data.abTests.length > 0 ? result.data.abTests : defaultAbTests;
+          }
         }
       } catch (err) {
-        console.error('Error loading real A/B test data:', err);
+        console.error('Error loading dashboard data:', err);
       }
       
       // Initial render
@@ -2366,7 +2372,7 @@
     }
 
     // Add Landing Change
-    function addLandingChange() {
+    async function addLandingChange() {
       const date = document.getElementById('change-date').value;
       const title = document.getElementById('change-title').value.trim();
       const desc = document.getElementById('change-desc').value.trim();
@@ -2384,8 +2390,17 @@
         desc: desc || 'Описание деталей не указано.'
       };
 
+      try {
+        await fetch(`/api/dashboards/${dashboardId}/changes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newChange)
+        });
+      } catch (err) {
+        console.error(err);
+      }
+
       lpChanges.push(newChange);
-      localStorage.setItem('kilowatt_changes', JSON.stringify(lpChanges));
       
       document.getElementById('change-title').value = '';
       document.getElementById('change-desc').value = '';
@@ -2401,9 +2416,16 @@
     }
 
     // Delete Change
-    function deleteChange(id) {
+    async function deleteChange(id) {
+      try {
+        await fetch(`/api/dashboards/${dashboardId}/changes/${id}`, {
+          method: 'DELETE'
+        });
+      } catch (err) {
+        console.error(err);
+      }
+
       lpChanges = lpChanges.filter(c => c.id !== id);
-      localStorage.setItem('kilowatt_changes', JSON.stringify(lpChanges));
       renderChangesLog();
     }
 
@@ -2546,8 +2568,16 @@
         interpretation
       };
 
+      try {
+        await fetch(`/api/dashboards/${dashboardId}/abtests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTest)
+        });
+      } catch (err) {
+        console.error(err);
+      }
       abTests.push(newTest);
-      localStorage.setItem('kilowatt_abtests', JSON.stringify(abTests));
 
       // Clean inputs
       document.getElementById('ab-hypothesis').value = '';
@@ -2569,9 +2599,15 @@
     }
 
     // Delete A/B Test
-    function deleteAbTest(id) {
+    async function deleteAbTest(id) {
+      try {
+        await fetch(`/api/dashboards/${dashboardId}/abtests/${id}`, {
+          method: 'DELETE'
+        });
+      } catch (err) {
+        console.error(err);
+      }
       abTests = abTests.filter(t => t.id !== id);
-      localStorage.setItem('kilowatt_abtests', JSON.stringify(abTests));
       renderAbTestsTable();
     }
 

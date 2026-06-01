@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>КИЛОВАТТ — Маркетинговый RNP Дашборд (Excel Style)</title>
+  <title>КИЛОВАТТ — Маркетинговый RNP Дашборд</title>
   
   <!-- Auth Protection -->
   <script src="auth.js"></script>
@@ -739,6 +739,8 @@
           <!-- Options loaded dynamically -->
         </select>
         <button class="btn-action" onclick="openAddMonthModal()">➕ Добавить месяц</button>
+        <input type="file" id="xls-file-input" style="display: none;" onchange="uploadXlsTemplate(this.files[0])" accept=".xlsx">
+        <button class="btn-action" onclick="document.getElementById('xls-file-input').click()">📁 Загрузить XLS шаблон</button>
       </div>
 
       <span style="font-size: 12px; color: var(--text-muted); margin-left: 10px;">
@@ -812,6 +814,10 @@
   </footer>
 
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId') || '';
+    const dashboardId = urlParams.get('dashboardId') || '';
+
     let selectedMonth = '2026-04'; // Default Month
     let dashboardData = null; // raw API response
     let dataModel = {}; // Frontend memory datastore: channel -> metric -> date -> { plan, fact }
@@ -911,7 +917,7 @@
       const bound = getMonthBoundaries(selectedMonth);
 
       try {
-        const response = await fetch(`/api/rnp-data?from=${bound.from}&to=${bound.to}`);
+        const response = await fetch(`/api/rnp-data?from=${bound.from}&to=${bound.to}&projectId=${projectId}&dashboardId=${dashboardId}`);
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
@@ -1263,10 +1269,10 @@
 
       let success = false;
       try {
-        const res = await fetch('/api/add-month', {
+        const res = await fetch('/api/rnp-plans', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ month: monthInput })
+          body: JSON.stringify({ month: monthInput, plans: {}, dashboardId })
         });
         if (res.ok) {
           const result = await res.json();
@@ -1275,7 +1281,7 @@
           }
         }
       } catch (err) {
-        console.warn('POST /api/add-month failed, falling back to localStorage:', err);
+        console.warn('POST /api/rnp-plans failed, falling back to localStorage:', err);
       }
 
       if (!success) {
@@ -1907,7 +1913,7 @@
             await fetch('/api/save-daily-plan', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ date, channel, metric, val: newVal })
+              body: JSON.stringify({ date, channel, metric, val: newVal, dashboardId })
             });
             console.log(`Plan saved: ${channel} ${metric} on ${date} = ${newVal}`);
           } catch(err) {
@@ -2080,6 +2086,34 @@
           cutout: '60%'
         }
       });
+    }
+
+    async function uploadXlsTemplate(file) {
+      if (!file) return;
+      
+      const connStatus = document.getElementById('connection-status');
+      const connText = document.getElementById('connection-text');
+      connStatus.className = 'live-status';
+      connStatus.querySelector('.status-dot').style.backgroundColor = 'var(--warning)';
+      connText.innerText = 'Загрузка шаблона...';
+
+      try {
+        const res = await fetch(`/api/projects/${projectId}/dashboards/${dashboardId}/upload`, {
+          method: 'POST',
+          body: file
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          alert('Файл Excel успешно загружен и применен в качестве шаблона для этого дашборда!');
+          window.location.reload();
+        } else {
+          alert('Ошибка при загрузке файла: ' + result.message);
+          loadDashboard();
+        }
+      } catch (err) {
+        alert('Не удалось загрузить файл на сервер: ' + err.message);
+        loadDashboard();
+      }
     }
   </script>
   <!-- Premium Month Modal Dialog -->

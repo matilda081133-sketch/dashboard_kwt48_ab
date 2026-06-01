@@ -7,36 +7,44 @@
     return;
   }
 
+  // Check login state via API on page load (excluding preview page)
+  if (window.location.pathname.includes('preview.html')) {
+    return;
+  }
+
   // Prevent Flash of Unprotected Content (FOUC)
-  const hasSession = localStorage.getItem('kilowatt_auth_session');
-  if (!hasSession) {
+  const isDemo = window.location.search.includes('projectId=demo');
+  if (!isDemo) {
     document.documentElement.style.display = 'none';
   }
 
-  // Prepopulate default user if user database doesn't exist
-  if (!localStorage.getItem('kilowatt_users')) {
-    const defaultUsers = {
-      'admin': 'kilowatt2026'
-    };
-    localStorage.setItem('kilowatt_users', JSON.stringify(defaultUsers));
-  }
+  async function checkAuth() {
+    if (isDemo) {
+      document.documentElement.style.display = '';
+      return;
+    }
 
-  function init() {
-    const currentSession = localStorage.getItem('kilowatt_auth_session');
-    if (!currentSession) {
+    try {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      if (!data.authenticated) {
+        showLoginScreen();
+      } else {
+        localStorage.setItem('kilowatt_auth_session', data.username);
+        setupAuthenticatedUI();
+      }
+    } catch (err) {
+      // Offline / Server down fallback to preview
       showLoginScreen();
-    } else {
-      setupAuthenticatedUI();
     }
   }
 
   if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('DOMContentLoaded', checkAuth);
   } else {
-    init();
+    checkAuth();
   }
 
-  // Handle back-forward cache (bfcache)
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
       window.location.reload();
@@ -51,7 +59,7 @@
         margin: 0;
         padding: 0;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #f2f3f7;
+        background-color: #f4f6fa;
         height: 100vh;
         display: flex;
         align-items: center;
@@ -63,7 +71,7 @@
         background: #ffffff;
         border: 1px solid #dcdfe6;
         border-radius: 8px;
-        box-shadow: 0 4px 16px rgba(31, 36, 51, 0.06);
+        box-shadow: 0 4px 16px rgba(31, 36, 51, 0.04);
         padding: 28px 32px;
         box-sizing: border-box;
       }
@@ -182,8 +190,8 @@
     document.body.innerHTML = `
       <div class="auth-container">
         <div class="auth-header">
-          <div class="auth-logo">КИЛОВАТТ</div>
-          <div class="auth-subtitle">Система сквозной аналитики</div>
+          <div class="auth-logo">Аналитика</div>
+          <div class="auth-subtitle">Управление проектами и дашбордами</div>
         </div>
         <div class="auth-tabs">
           <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Вход</div>
@@ -191,7 +199,7 @@
         </div>
         <form id="auth-form" onsubmit="handleAuthSubmit(event)">
           <div class="auth-form-group">
-            <label for="auth-username">Имя пользователя (Логин)</label>
+            <label for="auth-username">Логин</label>
             <input type="text" id="auth-username" required class="auth-input" autocomplete="username">
           </div>
           <div class="auth-form-group">
@@ -202,12 +210,11 @@
           <div class="auth-error" id="auth-error-msg"></div>
         </form>
         <div class="auth-hint" id="auth-hint-text">
-          Используйте стандартный вход:<br>Логин: <b>admin</b> | Пароль: <b>kilowatt2026</b>
+          Стандартный вход:<br>Логин: <b>admin</b> | Пароль: <b>kilowatt2026</b>
         </div>
       </div>
     `;
 
-    // Expose helpers globally so HTML onclicks/onsubmits function correctly
     let currentTab = 'login';
     window.switchAuthTab = (tab) => {
       currentTab = tab;
@@ -231,7 +238,7 @@
       }
     };
 
-    window.handleAuthSubmit = (e) => {
+    window.handleAuthSubmit = async (e) => {
       e.preventDefault();
       const usernameInput = document.getElementById('auth-username').value.trim();
       const passwordInput = document.getElementById('auth-password').value;
@@ -243,26 +250,26 @@
         return;
       }
 
-      const users = JSON.parse(localStorage.getItem('kilowatt_users')) || {};
-
-      if (currentTab === 'login') {
-        if (users[usernameInput] && users[usernameInput] === passwordInput) {
+      const endpoint = currentTab === 'login' ? '/api/auth/login' : '/api/auth/register';
+      
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: usernameInput, password: passwordInput })
+        });
+        const data = await res.json();
+        
+        if (res.ok && data.status === 'success') {
           localStorage.setItem('kilowatt_auth_session', usernameInput);
           window.location.reload();
         } else {
-          errMsg.innerText = 'Неверное имя пользователя или пароль';
+          errMsg.innerText = data.message || 'Ошибка авторизации';
           errMsg.style.display = 'block';
         }
-      } else {
-        if (users[usernameInput]) {
-          errMsg.innerText = 'Пользователь с таким именем уже существует';
-          errMsg.style.display = 'block';
-        } else {
-          users[usernameInput] = passwordInput;
-          localStorage.setItem('kilowatt_users', JSON.stringify(users));
-          localStorage.setItem('kilowatt_auth_session', usernameInput);
-          window.location.reload();
-        }
+      } catch (err) {
+        errMsg.innerText = 'Не удалось соединиться с сервером';
+        errMsg.style.display = 'block';
       }
     };
 
@@ -271,53 +278,15 @@
   }
 
   function setupAuthenticatedUI() {
-    // Show page content
     document.documentElement.style.display = '';
 
-    const username = localStorage.getItem('kilowatt_auth_session');
+    const username = localStorage.getItem('kilowatt_auth_session') || 'admin';
     
-    // Update avatar and username display in the header
+    // Update avatars and user profile panels
     const userNames = document.querySelectorAll('.user-name');
-    userNames.forEach(el => {
-      el.innerText = username;
-    });
+    userNames.forEach(el => { el.innerText = username; });
 
     const userAvatars = document.querySelectorAll('.avatar');
-    userAvatars.forEach(el => {
-      el.innerText = username.charAt(0).toUpperCase();
-    });
-
-    // Create Logout Button
-    const logoutBtn = document.createElement('button');
-    logoutBtn.className = 'btn-action';
-    logoutBtn.style.padding = '4px 8px';
-    logoutBtn.style.fontSize = '12px';
-    logoutBtn.style.marginLeft = '12px';
-    logoutBtn.style.color = '#d94f5c';
-    logoutBtn.style.borderColor = 'rgba(217, 79, 92, 0.2)';
-    logoutBtn.style.height = '28px';
-    logoutBtn.style.display = 'inline-flex';
-    logoutBtn.style.alignItems = 'center';
-    logoutBtn.style.gap = '4px';
-    logoutBtn.innerHTML = '🚪 Выйти';
-    logoutBtn.onclick = () => {
-      localStorage.removeItem('kilowatt_auth_session');
-      window.location.reload();
-    };
-
-    // Try to append Logout Button to different layout places
-    const topBarActions = document.querySelector('.topbar-actions');
-    const controls = document.querySelector('.controls');
-    const userProfile = document.querySelector('.user-profile');
-
-    if (userProfile && topBarActions) {
-      // In main index page, place it next to user profile
-      topBarActions.appendChild(logoutBtn);
-    } else if (userProfile && controls) {
-      // In dashboards, place it next to the profile block we injected
-      userProfile.parentNode.insertBefore(logoutBtn, userProfile.nextSibling);
-    } else if (controls) {
-      controls.appendChild(logoutBtn);
-    }
+    userAvatars.forEach(el => { el.innerText = username.charAt(0).toUpperCase(); });
   }
 })();
