@@ -813,8 +813,8 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const projectId = urlParams.get('projectId') || '';
-    const dashboardId = urlParams.get('dashboardId') || '';
+    const projectId = urlParams.get('projectId') || 'proj_kilowatt';
+    const dashboardId = urlParams.get('dashboardId') || 'dash_rnp_kwt';
 
     let selectedMonth = '2026-04'; // Default Month
     let dashboardData = null; // raw API response
