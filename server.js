@@ -195,7 +195,7 @@ function getGroup(title) {
   // 2. Вконтакте & Соцсети
   if (
     t.indexOf("vk") !== -1 ||
-    t.indexOf("вк") !== -1 ||
+    /(?:^|\s|_|-)вк(?:$|\s|_|-)/.test(t) ||
     t.indexOf("vkontakte") !== -1 ||
     t.indexOf("соц. сетей") !== -1 ||
     t.indexOf("соцсети") !== -1
