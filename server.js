@@ -91,7 +91,7 @@ function getSessionUser(req) {
 }
 
 // Dynamically check parent directory or current directory for the Excel template
-let excelPath = path.join(__dirname, '..', 'rnp_template.xlsx');
+let excelPath = path.join(__dirname, 'rnp_template.xlsx');
 if (!fs.existsSync(excelPath)) {
   const localPath = path.join(__dirname, 'rnp_template.xlsx');
   if (fs.existsSync(localPath)) {
