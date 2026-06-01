@@ -10,8 +10,12 @@ const PLANS_FILE = path.join(__dirname, 'plans.json');
 const DB_FILE = path.join(__dirname, 'database.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+} catch (e) {
+  console.error('Error creating uploads directory:', e);
 }
 
 // Database setup
