@@ -9,14 +9,8 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const PLANS_FILE = path.join(__dirname, 'plans.json');
 const DB_FILE = path.join(__dirname, 'database.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
+// Uploads directory is created lazily on demand
 
-try {
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-  }
-} catch (e) {
-  console.error('Error creating uploads directory:', e);
-}
 
 // Database setup
 let dbData = {
@@ -863,6 +857,13 @@ async function handleApi(req, res, pathname, query) {
     const proj = dbData.projects[projId];
     if (proj && proj.owner === currentUser) {
       const filePath = path.join(UPLOADS_DIR, `${projId}_${dashId}.xlsx`);
+      try {
+        if (!fs.existsSync(UPLOADS_DIR)) {
+          fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+        }
+      } catch (e) {
+        console.error('Lazy directory creation failed:', e);
+      }
       const fileStream = fs.createWriteStream(filePath);
       req.pipe(fileStream);
       fileStream.on('finish', () => {
