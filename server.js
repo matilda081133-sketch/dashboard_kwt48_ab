@@ -1045,18 +1045,13 @@ async function handleApi(req, res, pathname, query) {
         const endDate = new Date(toStr);
         
         while (currentStart <= endDate) {
-          let currentEnd = new Date(currentStart);
-          currentEnd.setDate(currentEnd.getDate() + 6); // 7 day chunk
-          if (currentEnd > endDate) currentEnd = endDate;
-          
           const chunkFromStr = currentStart.toISOString().split('T')[0];
-          const chunkToStr = currentEnd.toISOString().split('T')[0];
           
           const itemsChunk = await new Promise((resolve, reject) => {
             const fromIso = `${chunkFromStr}T00:00:00+03:00`;
-            const toIso = `${chunkToStr}T23:59:59+03:00`;
+            const toIso = `${chunkFromStr}T23:59:59+03:00`;
             const payload = {
-              "dimensions": ["date", "marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
+              "dimensions": ["marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
               "metrics": [
                 { "metric": "visits", "attribution": "default" },
                 { "metric": "leads", "attribution": "default" },
@@ -1093,7 +1088,11 @@ async function handleApi(req, res, pathname, query) {
                 try {
                   const parsed = JSON.parse(body);
                   if (parsed.status === 'error') reject(new Error(parsed.description));
-                  else resolve((parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : []);
+                  else {
+                    const items = (parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : [];
+                    items.forEach(i => i.dimensions.date = { title: chunkFromStr });
+                    resolve(items);
+                  }
                 } catch (e) { reject(e); }
               });
             });
@@ -1103,7 +1102,7 @@ async function handleApi(req, res, pathname, query) {
           });
           
           roistatItems.push(...itemsChunk);
-          currentStart.setDate(currentStart.getDate() + 7);
+          currentStart.setDate(currentStart.getDate() + 1);
         }
 
         if (roistatItems.length > 0) {
