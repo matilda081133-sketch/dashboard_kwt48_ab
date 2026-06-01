@@ -1040,55 +1040,71 @@ async function handleApi(req, res, pathname, query) {
 
       try {
         // Implement project roistat settings load
-        const roistatItems = await new Promise((resolve, reject) => {
-          const fromIso = `${fromStr}T00:00:00+03:00`;
-          const toIso = `${toStr}T23:59:59+03:00`;
-          const payload = {
-            "dimensions": ["date", "marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
-            "metrics": [
-              { "metric": "visits", "attribution": "default" },
-              { "metric": "leads", "attribution": "default" },
-              { "metric": "leadCount", "attribution": "default" },
-              { "metric": "sales", "attribution": "default" },
-              { "metric": "paidLeadCount", "attribution": "default" },
-              { "metric": "revenue", "attribution": "default" },
-              { "metric": "paidLeadsPrice", "attribution": "default" },
-              { "metric": "marketing_cost", "attribution": "default" },
-              { "metric": "visitsCost", "attribution": "default" },
-              { "metric": "custom_2", "attribution": "default" },
-              { "metric": "custom_5", "attribution": "default" }
-            ],
-            "period": { "from": fromIso, "to": toIso }
-          };
-          const dataStr = JSON.stringify(payload);
-          const options = {
-            hostname: 'cloud.roistat.com',
-            port: 443,
-            path: `/api/v1/project/analytics/data?project=${roistatProjectId}`,
-            method: 'POST',
-            headers: {
-              'Api-key': roistatKey,
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(dataStr)
-            },
-            rejectUnauthorized: false
-          };
-          const reqPost = https.request(options, (resPost) => {
-            let body = '';
-            resPost.setEncoding('utf8');
-            resPost.on('data', (chunk) => { body += chunk; });
-            resPost.on('end', () => {
-              try {
-                const parsed = JSON.parse(body);
-                if (parsed.status === 'error') reject(new Error(parsed.description));
-                else resolve((parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : []);
-              } catch (e) { reject(e); }
+        const roistatItems = [];
+        let currentStart = new Date(fromStr);
+        const endDate = new Date(toStr);
+        
+        while (currentStart <= endDate) {
+          let currentEnd = new Date(currentStart);
+          currentEnd.setDate(currentEnd.getDate() + 6); // 7 day chunk
+          if (currentEnd > endDate) currentEnd = endDate;
+          
+          const chunkFromStr = currentStart.toISOString().split('T')[0];
+          const chunkToStr = currentEnd.toISOString().split('T')[0];
+          
+          const itemsChunk = await new Promise((resolve, reject) => {
+            const fromIso = `${chunkFromStr}T00:00:00+03:00`;
+            const toIso = `${chunkToStr}T23:59:59+03:00`;
+            const payload = {
+              "dimensions": ["date", "marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
+              "metrics": [
+                { "metric": "visits", "attribution": "default" },
+                { "metric": "leads", "attribution": "default" },
+                { "metric": "leadCount", "attribution": "default" },
+                { "metric": "sales", "attribution": "default" },
+                { "metric": "paidLeadCount", "attribution": "default" },
+                { "metric": "revenue", "attribution": "default" },
+                { "metric": "paidLeadsPrice", "attribution": "default" },
+                { "metric": "marketing_cost", "attribution": "default" },
+                { "metric": "visitsCost", "attribution": "default" },
+                { "metric": "custom_2", "attribution": "default" },
+                { "metric": "custom_5", "attribution": "default" }
+              ],
+              "period": { "from": fromIso, "to": toIso }
+            };
+            const dataStr = JSON.stringify(payload);
+            const options = {
+              hostname: 'cloud.roistat.com',
+              port: 443,
+              path: `/api/v1/project/analytics/data?project=${roistatProjectId}`,
+              method: 'POST',
+              headers: {
+                'Api-key': roistatKey,
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(dataStr)
+              },
+              rejectUnauthorized: false
+            };
+            const reqPost = https.request(options, (resPost) => {
+              let body = '';
+              resPost.setEncoding('utf8');
+              resPost.on('data', (chunk) => { body += chunk; });
+              resPost.on('end', () => {
+                try {
+                  const parsed = JSON.parse(body);
+                  if (parsed.status === 'error') reject(new Error(parsed.description));
+                  else resolve((parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : []);
+                } catch (e) { reject(e); }
+              });
             });
+            reqPost.on('error', (e) => reject(e));
+            reqPost.write(dataStr);
+            reqPost.end();
           });
-          reqPost.on('error', (e) => reject(e));
-          reqPost.write(dataStr);
-          reqPost.end();
-        });
+          
+          roistatItems.push(...itemsChunk);
+          currentStart.setDate(currentStart.getDate() + 7);
+        }
 
         if (roistatItems.length > 0) {
           roistatSuccess = true;
