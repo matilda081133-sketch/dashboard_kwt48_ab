@@ -19,8 +19,49 @@ let dbData = {
   users: {
     "admin": "kilowatt2026"
   },
-  projects: {}, // projectId -> { id, name, owner, settings: { roistatId, roistatKey, metrikaCounterId, metrikaToken, aiApiKey, aiEndpoint, aiModel, aiProvider }, dashboards: [] }
-  dashboardsData: {} // dashId -> { plans: {}, changes: [], abTests: [] }
+  projects: {
+    "proj_kilowatt": {
+      "id": "proj_kilowatt",
+      "name": "Проект Киловатт",
+      "owner": "admin",
+      "settings": {
+        "roistatId": "294460",
+        "roistatKey": "87ed258c066c98668b595bafa0365e56",
+        "metrikaCounterId": "",
+        "metrikaToken": "",
+        "aiApiKey": "",
+        "aiEndpoint": "https://api.openai.com/v1",
+        "aiModel": "gpt-4o-mini",
+        "aiProvider": "openai"
+      },
+      "dashboards": [
+        {
+          "id": "dash_rnp_kwt",
+          "name": "Маркетинговый RNP (Киловатт)",
+          "type": "rnp",
+          "created_at": "2026-06-01T00:00:00.000Z"
+        },
+        {
+          "id": "dash_landing_kwt",
+          "name": "Эффективность лендингов (Киловатт)",
+          "type": "landing",
+          "created_at": "2026-06-01T00:00:00.000Z"
+        }
+      ]
+    }
+  },
+  dashboardsData: {
+    "dash_rnp_kwt": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_landing_kwt": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    }
+  }
 };
 
 function loadDB() {
