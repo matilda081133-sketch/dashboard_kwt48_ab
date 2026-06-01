@@ -4,11 +4,11 @@ const path = require('path');
 const url = require('url');
 const https = require('https');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
-const PLANS_FILE = path.join(__dirname, 'plans.json');
-const DB_FILE = path.join(__dirname, 'database.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const PLANS_FILE = process.env.PORT ? '/tmp/plans.json' : path.join(__dirname, 'plans.json');
+const DB_FILE = process.env.PORT ? '/tmp/database.json' : path.join(__dirname, 'database.json');
+const UPLOADS_DIR = process.env.PORT ? '/tmp/uploads' : path.join(__dirname, 'uploads');
 // Uploads directory is created lazily on demand
 
 
