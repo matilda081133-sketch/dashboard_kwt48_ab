@@ -1366,7 +1366,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n==================================================`);
   console.log(`🚀 Showcase Server is successfully running!`);
   console.log(`🔗 Localhost link: http://localhost:${PORT}`);
