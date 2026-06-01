@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>КИЛОВАТТ — Маркетинговый RNP Дашборд</title>
+  <title>КИЛОВАТТ — Маркетинговый RNP Дашборд (Excel Style)</title>
   
   <!-- Auth Protection -->
   <script src="auth.js"></script>
@@ -739,8 +739,6 @@
           <!-- Options loaded dynamically -->
         </select>
         <button class="btn-action" onclick="openAddMonthModal()">➕ Добавить месяц</button>
-        <input type="file" id="xls-file-input" style="display: none;" onchange="uploadXlsTemplate(this.files[0])" accept=".xlsx">
-        <button class="btn-action" onclick="document.getElementById('xls-file-input').click()">📁 Загрузить XLS шаблон</button>
       </div>
 
       <span style="font-size: 12px; color: var(--text-muted); margin-left: 10px;">
@@ -2086,34 +2084,6 @@
           cutout: '60%'
         }
       });
-    }
-
-    async function uploadXlsTemplate(file) {
-      if (!file) return;
-      
-      const connStatus = document.getElementById('connection-status');
-      const connText = document.getElementById('connection-text');
-      connStatus.className = 'live-status';
-      connStatus.querySelector('.status-dot').style.backgroundColor = 'var(--warning)';
-      connText.innerText = 'Загрузка шаблона...';
-
-      try {
-        const res = await fetch(`/api/projects/${projectId}/dashboards/${dashboardId}/upload`, {
-          method: 'POST',
-          body: file
-        });
-        const result = await res.json();
-        if (result.status === 'success') {
-          alert('Файл Excel успешно загружен и применен в качестве шаблона для этого дашборда!');
-          window.location.reload();
-        } else {
-          alert('Ошибка при загрузке файла: ' + result.message);
-          loadDashboard();
-        }
-      } catch (err) {
-        alert('Не удалось загрузить файл на сервер: ' + err.message);
-        loadDashboard();
-      }
     }
   </script>
   <!-- Premium Month Modal Dialog -->
