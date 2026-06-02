@@ -2384,6 +2384,9 @@
         desc: desc || 'Описание деталей не указано.'
       };
 
+      if (!Array.isArray(lpChanges)) {
+        lpChanges = [];
+      }
       lpChanges.push(newChange);
       localStorage.setItem('kilowatt_changes', JSON.stringify(lpChanges));
       
@@ -2393,9 +2396,11 @@
       renderChangesLog();
       
       // Spark chart effect on local stats
-      const data = highFidelityData[activeLP][activePeriod];
-      if (data && data.chart) {
-        data.chart.conversions[data.chart.conversions.length - 1] += 2;
+      if (highFidelityData && highFidelityData[activeLP] && highFidelityData[activeLP][activePeriod]) {
+        const data = highFidelityData[activeLP][activePeriod];
+        if (data && data.chart && data.chart.conversions && data.chart.conversions.length > 0) {
+          data.chart.conversions[data.chart.conversions.length - 1] += 2;
+        }
       }
       updateDashboardData();
     }
