@@ -245,7 +245,6 @@ function getGroup(title) {
     t.indexOf("веб-сайт") !== -1 ||
     t === "веб сайт" ||
     t.indexOf("звонок с сайта") !== -1 ||
-    t.indexOf("звонок") !== -1 ||
     t === "yandex" ||
     t === "ya" ||
     t === "yandex.ru" ||
