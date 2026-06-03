@@ -1039,7 +1039,7 @@
             connText.innerText = 'Roistat Live подключен';
           } else {
             connStatus.className = 'live-status offline';
-            connText.innerText = 'Roistat офлайн (Excel данные)';
+            connText.innerText = 'Данные Roistat не получены (по нулям)';
           }
 
           document.getElementById('last-update-indicator').innerText = 'Синхронизировано: ' + new Date().toLocaleTimeString('ru-RU');

@@ -1250,14 +1250,16 @@ async function handleApi(req, res, pathname, query) {
           });
         }
       } catch (err) {
-        // Fallback: mock data
-        const mockFile = path.join(__dirname, 'roistat_april_mock.json');
-        if (fs.existsSync(mockFile)) {
-          try {
-            const mockData = JSON.parse(fs.readFileSync(mockFile, 'utf8'));
-            const mockMap = {};
-            mockData.forEach(d => { mockMap[d.date] = d.channels; });
-            mergedData.forEach(dayItem => {
+        console.error("Roistat fetch error:", err.message);
+        if (isDemo) {
+          // Fallback: mock data for demo project
+          const mockFile = path.join(__dirname, 'roistat_april_mock.json');
+          if (fs.existsSync(mockFile)) {
+            try {
+              const mockData = JSON.parse(fs.readFileSync(mockFile, 'utf8'));
+              const mockMap = {};
+              mockData.forEach(d => { mockMap[d.date] = d.channels; });
+              mergedData.forEach(dayItem => {
               if (mockMap[dayItem.date]) {
                 roistatSuccess = true;
                 for (const channelName of Object.keys(GROUPS_ROWS)) {
