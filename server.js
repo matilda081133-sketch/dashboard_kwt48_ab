@@ -127,6 +127,10 @@ try {
   tryImport();
 }
 
+
+const KILOWATT_CHANNELS = ['Контекстная реклама', 'Сайт, органика', 'Телеграм', 'Вконтакте', 'МАХ', 'Выставки', 'Авито', 'Другое'];
+const DEFAULT_CHANNELS = ['Контекстная реклама', 'SEO', 'SMM', 'Другое'];
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
