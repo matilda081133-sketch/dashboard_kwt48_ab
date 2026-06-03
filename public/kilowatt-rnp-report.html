@@ -59,6 +59,10 @@
       --danger-light: rgba(248, 113, 113, 0.15);
       --warning: #fbbf24;
     }
+    [data-theme="dark"] header h1,
+    [data-theme="dark"] header p {
+      color: var(--text-main);
+    }
 
     * {
       box-sizing: border-box;
@@ -285,7 +289,7 @@
       border-collapse: separate;
       border-spacing: 0;
       width: 100%;
-      font-size: 11px; /* Slightly smaller text for compact view */
+      font-size: 12.5px; /* Restored size */
       text-align: right;
     }
 
@@ -826,7 +830,7 @@
               </div>
             </div>
             
-            <div class="grid-container" id="grid-scroll-box" style="flex:1; overflow:auto;">
+            <div class="grid-container" id="grid-scroll-box" style="flex:1; overflow-x:auto; overflow-y:auto; padding-bottom: 8px;">
               <table class="rnp-grid" id="main-rnp-table">
                 <!-- Theader generated dynamically -->
                 <thead id="grid-header"></thead>
@@ -886,6 +890,13 @@
   <script>
     let grid = null;
     document.addEventListener("DOMContentLoaded", () => {
+      // Update header links to preserve query params
+      const q = window.location.search;
+      document.querySelectorAll('.selector-group a').forEach(a => {
+        const base = a.getAttribute('href').split('?')[0];
+        a.setAttribute('href', base + q);
+      });
+
       grid = GridStack.init({
         margin: 16,
         cellHeight: 100,
@@ -895,11 +906,15 @@
       });
     });
     
+    let isEditMode = false;
     function toggleEditDashboard() {
-      const isEdit = grid.getGridItems()[0].gridstackNode.grid.opts.disableDrag;
-      grid.enableMove(isEdit);
-      grid.enableResize(isEdit);
-      document.getElementById('edit-dashboard-btn').classList.toggle('active');
+      isEditMode = !isEditMode;
+      if (isEditMode) {
+        grid.enable();
+      } else {
+        grid.disable();
+      }
+      document.getElementById('edit-dashboard-btn').classList.toggle('active', isEditMode);
     }
   </script>
   <script>
