@@ -748,7 +748,10 @@
         </div>
         <div class="form-group">
           <label for="settings-roistat-key">API Ключ Roistat</label>
-          <input type="password" id="settings-roistat-key" class="input-field">
+          <div style="position: relative;">
+            <input type="password" id="settings-roistat-key" class="input-field" style="padding-right: 36px;">
+            <button type="button" onclick="const i = document.getElementById('settings-roistat-key'); i.type = i.type === 'password' ? 'text' : 'password';" style="position: absolute; right: 8px; top: 8px; background: none; border: none; cursor: pointer; color: var(--text-muted);">👁️</button>
+          </div>
         </div>
       </div>
 
