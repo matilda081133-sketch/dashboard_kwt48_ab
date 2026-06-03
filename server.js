@@ -312,29 +312,35 @@ function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true) {
     console.warn('⚡ XLSX module is not loaded yet. Returning empty array.');
     return [];
   }
+  
   const targetPath = customExcelPath || (allowFallback ? excelPath : null);
-  if (!targetPath || !fs.existsSync(targetPath)) {
-    console.error('❌ Spreadsheet not found at:', targetPath);
-    return [];
+  const hasFile = targetPath && fs.existsSync(targetPath);
+  
+  if (!hasFile) {
+    console.warn('Spreadsheet not found at:', targetPath, '- generating empty skeleton.');
   }
 
-  const fileBuffer = fs.readFileSync(targetPath);
-  const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
   const dates = {}; // dateStr -> { sheetName, colIdx }
+  let workbook = null;
 
-  for (const sheetName of workbook.SheetNames) {
-    const sheet = workbook.Sheets[sheetName];
-    if (!sheet) continue;
-    const ref = sheet['!ref'];
-    if (!ref) continue;
-    const range = XLSX.utils.decode_range(ref);
+  if (hasFile) {
+    const fileBuffer = fs.readFileSync(targetPath);
+    workbook = XLSX.read(fileBuffer, { type: 'buffer' });
 
-    // Row 10 (index 9) contains dates
-    for (let c = 10; c <= range.e.c; c++) {
-      const cell = sheet[XLSX.utils.encode_cell({ r: 9, c })];
-      if (cell && typeof cell.v === 'number' && cell.v > 40000) {
-        const dateStr = excelDateToDateString(cell.v);
-        dates[dateStr] = { sheetName, colIdx: c };
+    for (const sheetName of workbook.SheetNames) {
+      const sheet = workbook.Sheets[sheetName];
+      if (!sheet) continue;
+      const ref = sheet['!ref'];
+      if (!ref) continue;
+      const range = XLSX.utils.decode_range(ref);
+
+      // Row 10 (index 9) contains dates
+      for (let c = 10; c <= range.e.c; c++) {
+        const cell = sheet[XLSX.utils.encode_cell({ r: 9, c })];
+        if (cell && typeof cell.v === 'number' && cell.v > 40000) {
+          const dateStr = excelDateToDateString(cell.v);
+          dates[dateStr] = { sheetName, colIdx: c };
+        }
       }
     }
   }
