@@ -1272,6 +1272,7 @@ async function handleApi(req, res, pathname, query) {
           } catch (e) {}
         }
       }
+    }
 
       // 3. Apply custom daily plans overrides (from project database)
       const dashPlans = dbData.dashboardsData[dashId]?.plans || {};
