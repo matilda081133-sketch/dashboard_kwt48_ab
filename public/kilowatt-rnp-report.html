@@ -756,6 +756,7 @@
       <div class="selector-group" style="margin-left: 12px; margin-right: 12px;">
         <a href="kilowatt-quality-report.html" class="selector-btn" style="text-decoration: none;">Эффективность лендингов</a>
         <a href="kilowatt-rnp-report.html" class="selector-btn active" style="text-decoration: none;">Маркетинговый RNP</a>
+        <button id="edit-dashboard-btn" class="selector-btn" style="margin-left: 16px; border-style: dashed;" onclick="toggleEditDashboard()">📐 Редактировать</button>
       </div>
       <p>Сквозной маркетинговый RNP дашборд (План / Факт / Формулы)</p>
     </div>
@@ -813,54 +814,62 @@
     </div>
 
     <!-- RNP Daily and Weekly Grid -->
-    <div id="dashboard-content" style="display: block;">
-      <div class="grid-panel">
-      <div class="grid-panel-header">
-        <div class="grid-panel-title">Сводный отчет RNP (План / Факт по дням и неделям)</div>
-        <div style="font-size: 11px; color: var(--text-muted);" id="last-update-indicator">
-          Синхронизировано: только что
-        </div>
-      </div>
+    <div id="dashboard-content" class="grid-stack" style="display: block;">
       
-      <div class="grid-container" id="grid-scroll-box">
-        <table class="rnp-grid" id="main-rnp-table">
-          <!-- Theader generated dynamically -->
-          <thead id="grid-header"></thead>
-          
-          <!-- Tbody generated dynamically -->
-          <tbody id="grid-body"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Charts area -->
-    <div class="charts-row">
-      <!-- Daily trend -->
-      <div class="panel">
-        <div class="grid-panel-header" style="padding: 0 0 10px 0; margin-bottom: 10px;">
-          <div class="grid-panel-title">Динамика по дням</div>
-          <div class="selector-group">
-            <button class="selector-btn active" onclick="switchTrendMetric('cost', this)">Бюджет</button>
-            <button class="selector-btn" onclick="switchTrendMetric('leads', this)">Заявки</button>
-            <button class="selector-btn" onclick="switchTrendMetric('sales', this)">Продажи</button>
-            <button class="selector-btn" onclick="switchTrendMetric('rev', this)">Выручка</button>
+      <div class="grid-stack-item" gs-w="12" gs-h="6" gs-x="0" gs-y="0">
+        <div class="grid-stack-item-content">
+          <div class="grid-panel" style="height:100%; display:flex; flex-direction:column; margin:0;">
+            <div class="grid-panel-header" style="flex-shrink:0;">
+              <div class="grid-panel-title">🗓 План Факт RNP (по дням и неделям)</div>
+              <div style="font-size: 11px; color: var(--text-muted);" id="last-update-indicator">
+                Обновлено: только что
+              </div>
+            </div>
+            
+            <div class="grid-container" id="grid-scroll-box" style="flex:1; overflow:auto;">
+              <table class="rnp-grid" id="main-rnp-table">
+                <!-- Theader generated dynamically -->
+                <thead id="grid-header"></thead>
+                <!-- Tbody generated dynamically -->
+                <tbody id="grid-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <div class="chart-container">
-          <canvas id="trendChart"></canvas>
+      </div>
+
+      <div class="grid-stack-item" gs-w="8" gs-h="4" gs-x="0" gs-y="6">
+        <div class="grid-stack-item-content">
+          <div class="panel" style="height:100%; margin:0;">
+            <div class="grid-panel-header" style="padding: 0 0 10px 0; margin-bottom: 10px;">
+              <div class="grid-panel-title">📈 Динамика</div>
+              <div class="selector-group">
+                <button class="selector-btn active" onclick="switchTrendMetric('cost', this)">Бюджет</button>
+                <button class="selector-btn" onclick="switchTrendMetric('leads', this)">Лиды</button>
+                <button class="selector-btn" onclick="switchTrendMetric('sales', this)">Продажи</button>
+                <button class="selector-btn" onclick="switchTrendMetric('rev', this)">Выручка</button>
+              </div>
+            </div>
+            <div class="chart-container" style="flex:1;">
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Share Doughnut -->
-      <div class="panel">
-        <div class="grid-panel-header" style="padding: 0 0 10px 0; margin-bottom: 10px;">
-          <div class="grid-panel-title">Доли источников (Заявки)</div>
-        </div>
-        <div class="chart-container">
-          <canvas id="shareChart"></canvas>
+      <div class="grid-stack-item" gs-w="4" gs-h="4" gs-x="8" gs-y="6">
+        <div class="grid-stack-item-content">
+          <div class="panel" style="height:100%; margin:0;">
+            <div class="grid-panel-header" style="padding: 0 0 10px 0; margin-bottom: 10px;">
+              <div class="grid-panel-title">🍩 Распределение (Лиды)</div>
+            </div>
+            <div class="chart-container" style="flex:1;">
+              <canvas id="shareChart"></canvas>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
     </div>
   </main>
 
@@ -872,6 +881,25 @@
     const savedTheme = localStorage.getItem('app-theme') || 'light';
     if (savedTheme === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
+  <script>
+    let grid = null;
+    document.addEventListener("DOMContentLoaded", () => {
+      grid = GridStack.init({
+        margin: 16,
+        cellHeight: 100,
+        disableResize: true,
+        disableDrag: true,
+        animate: true,
+      });
+    });
+    
+    function toggleEditDashboard() {
+      const isEdit = grid.getGridItems()[0].gridstackNode.grid.opts.disableDrag;
+      grid.enableMove(isEdit);
+      grid.enableResize(isEdit);
+      document.getElementById('edit-dashboard-btn').classList.toggle('active');
     }
   </script>
   <script>
