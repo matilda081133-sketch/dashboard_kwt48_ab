@@ -358,7 +358,7 @@ function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true) {
       channels: {}
     };
 
-    for (const channelName of Object.keys(GROUPS_ROWS)) {
+    for (const channelName of activeChannels) {
       dayItem.channels[channelName] = {
         plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
         fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
@@ -1207,20 +1207,35 @@ async function handleApi(req, res, pathname, query) {
           currentStart.setDate(currentStart.getDate() + 1);
         }
 
+        
+        let activeChannels = isDemo ? [...KILOWATT_CHANNELS] : [...DEFAULT_CHANNELS];
+        
         if (roistatItems.length > 0) {
           roistatSuccess = true;
-          const roistatByDate = {};
+          const roistatByDate = {}; // dateStr -> group -> source -> metrics
+
           roistatItems.forEach(item => {
             const d = item.dimensions || {};
             if (!d.date || !d.date.title) return;
             const dateStr = d.date.title.split('T')[0];
-            const titleRaw = [d.marker_level_1?.title || "", d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
+            const marker1 = d.marker_level_1?.title || "";
+            const titleRaw = [marker1, d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
             const titleLower = titleRaw.toLowerCase();
 
             if (sourceFilter && !titleLower.includes(sourceFilter.toLowerCase())) return;
 
-            const group = getGroup(titleRaw);
+            const group = getGroup(titleRaw, isDemo);
             if (!group) return;
+            
+            // Add group to active channels if not exists
+            if (!activeChannels.includes(group)) {
+              activeChannels.push(group);
+              mergedData.forEach(dayItem => {
+                if (!dayItem.channels[group]) dayItem.channels[group] = { plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }, fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }, sources: {} };
+              });
+            }
+
+            const sourceName = marker1 || "Неизвестно";
 
             const m = {};
             item.metrics.forEach(x => { m[x.metric_name] = x.value; });
@@ -1234,21 +1249,29 @@ async function handleApi(req, res, pathname, query) {
             const rev = m.paidLeadsPrice || m.revenue || 0;
 
             if (!roistatByDate[dateStr]) roistatByDate[dateStr] = {};
-            if (!roistatByDate[dateStr][group]) roistatByDate[dateStr][group] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
+            if (!roistatByDate[dateStr][group]) roistatByDate[dateStr][group] = { fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }, sources: {} };
+            if (!roistatByDate[dateStr][group].sources[sourceName]) roistatByDate[dateStr][group].sources[sourceName] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
 
-            const g = roistatByDate[dateStr][group];
-            g.cost += cost; g.visits += visits; g.leads += leads; g.qual += qual; g.kp += kp; g.sales += sales; g.rev += rev;
+            const gFact = roistatByDate[dateStr][group].fact;
+            gFact.cost += cost; gFact.visits += visits; gFact.leads += leads; gFact.qual += qual; gFact.kp += kp; gFact.sales += sales; gFact.rev += rev;
+            
+            const sFact = roistatByDate[dateStr][group].sources[sourceName];
+            sFact.cost += cost; sFact.visits += visits; sFact.leads += leads; sFact.qual += qual; sFact.kp += kp; sFact.sales += sales; sFact.rev += rev;
           });
 
           mergedData.forEach(dayItem => {
             const rDay = roistatByDate[dayItem.date];
             if (rDay) {
-              for (const channelName of Object.keys(GROUPS_ROWS)) {
-                dayItem.channels[channelName].fact = rDay[channelName] || { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
+              for (const channelName of activeChannels) {
+                if (rDay[channelName]) {
+                  dayItem.channels[channelName].fact = rDay[channelName].fact;
+                  dayItem.channels[channelName].sources = rDay[channelName].sources;
+                }
               }
             }
           });
         }
+        
       } catch (err) {
         console.error("Roistat fetch error:", err.message);
         if (isDemo) {
@@ -1262,7 +1285,7 @@ async function handleApi(req, res, pathname, query) {
               mergedData.forEach(dayItem => {
               if (mockMap[dayItem.date]) {
                 roistatSuccess = true;
-                for (const channelName of Object.keys(GROUPS_ROWS)) {
+                for (const channelName of activeChannels) {
                   if (mockMap[dayItem.date][channelName]) {
                     dayItem.channels[channelName].fact = mockMap[dayItem.date][channelName];
                   }
@@ -1280,7 +1303,7 @@ async function handleApi(req, res, pathname, query) {
         const dateStr = dayItem.date;
         if (dashPlans[dateStr]) {
           const dailyOver = dashPlans[dateStr];
-          for (const channelName of Object.keys(GROUPS_ROWS)) {
+          for (const channelName of activeChannels) {
             if (dailyOver[channelName]) {
               const ch = dayItem.channels[channelName];
               for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
@@ -1300,7 +1323,7 @@ async function handleApi(req, res, pathname, query) {
         fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
       };
 
-      for (const channelName of Object.keys(GROUPS_ROWS)) {
+      for (const channelName of activeChannels) {
         summary[channelName] = {
           plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
           fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
@@ -1318,7 +1341,7 @@ async function handleApi(req, res, pathname, query) {
         }
       });
 
-      for (const channelName of Object.keys(GROUPS_ROWS)) {
+      for (const channelName of activeChannels) {
         const ch = summary[channelName];
         for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
           ch.plan[metric] = Math.round(ch.plan[metric] * 100) / 100;
@@ -1341,7 +1364,7 @@ async function handleApi(req, res, pathname, query) {
       res.end(JSON.stringify({
         status: 'success',
         roistatConnected: roistatSuccess,
-        data: { daily: mergedData, summary, total, city: cityData }
+        data: { channels: activeChannels, daily: mergedData, summary, total, city: cityData }
       }));
     } catch (err) {
       res.statusCode = 500;
@@ -1376,7 +1399,7 @@ async function handleApi(req, res, pathname, query) {
       const excelData = getExcelData(fromStr, toStr);
 
       const sumPlans = {};
-      for (const channelName of Object.keys(GROUPS_ROWS)) {
+      for (const channelName of activeChannels) {
         sumPlans[channelName] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
       }
       excelData.forEach(dayItem => {
@@ -1386,7 +1409,7 @@ async function handleApi(req, res, pathname, query) {
           }
         }
       });
-      for (const channelName of Object.keys(GROUPS_ROWS)) {
+      for (const channelName of activeChannels) {
         for (const metric of Object.keys(sumPlans[channelName])) {
           sumPlans[channelName][metric] = Math.round(sumPlans[channelName][metric]);
         }

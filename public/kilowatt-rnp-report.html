@@ -1044,6 +1044,7 @@
           document.getElementById('dashboard-content').style.display = 'block';
           
           dashboardData = result.data;
+      activeChannels = dashboardData.channels || ["Контекстная реклама", "SEO", "SMM", "Другое"];
           
           if (result.roistatConnected) {
             connStatus.className = 'live-status';
@@ -1146,7 +1147,7 @@
           channels: {}
         };
         
-        CHANNELS.forEach(ch => {
+        activeChannels.forEach(ch => {
           let baseCost = 0, baseVisits = 0, baseLeads = 0, baseQual = 0, baseSales = 0, baseRev = 0;
           if (ch === 'Сайт, органика') { baseCost = 0; baseVisits = 120; baseLeads = 6; baseQual = 3; baseSales = 1; baseRev = 45000; }
           else if (ch === 'Контекстная реклама') { baseCost = 4500; baseVisits = 150; baseLeads = 8; baseQual = 4; baseSales = 1; baseRev = 50000; }
@@ -1215,7 +1216,7 @@
         fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
       };
       
-      CHANNELS.forEach(ch => {
+      activeChannels.forEach(ch => {
         summary[ch] = {
           plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
           fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
@@ -1223,7 +1224,7 @@
       });
       
       daily.forEach(d => {
-        CHANNELS.forEach(ch => {
+        activeChannels.forEach(ch => {
           const dayCh = d.channels[ch];
           ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
             summary[ch].plan[m] += dayCh.plan[m] || 0;
@@ -1249,7 +1250,7 @@
         };
       }
       
-      CHANNELS.forEach(ch => {
+      activeChannels.forEach(ch => {
         summary[ch].plan.calculated = computeFormulasLocal(summary[ch].plan);
         summary[ch].fact.calculated = computeFormulasLocal(summary[ch].fact);
       });
@@ -1448,53 +1449,59 @@
       dataModel = {};
       datesList = [];
 
-      // Sort dates chronologically
-      dashboardData.daily.forEach(d => {
-        datesList.push(d.date);
-      });
+      dashboardData.daily.forEach(d => { datesList.push(d.date); });
       datesList.sort();
 
-      // Initialize structures
-      CHANNELS.forEach(ch => {
-        dataModel[ch] = {};
+      activeChannels.forEach(ch => {
+        dataModel[ch] = { metrics: {}, sources: {} };
         METRIC_ROWS.forEach(m => {
-          dataModel[ch][m.key] = {};
+          dataModel[ch].metrics[m.key] = {};
         });
       });
 
-      // Populate raw facts and plans
       dashboardData.daily.forEach(d => {
         const dateStr = d.date;
-        CHANNELS.forEach(ch => {
+        activeChannels.forEach(ch => {
           const chData = d.channels[ch];
           if (chData) {
             ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
-              dataModel[ch][m][dateStr] = {
+              dataModel[ch].metrics[m][dateStr] = {
                 plan: chData.plan[m] || 0,
                 fact: chData.fact[m] || 0
               };
             });
+            // Handle sources
+            if (chData.sources) {
+              Object.keys(chData.sources).forEach(src => {
+                if (!dataModel[ch].sources[src]) {
+                  dataModel[ch].sources[src] = {};
+                  METRIC_ROWS.forEach(m => { dataModel[ch].sources[src][m.key] = {}; });
+                }
+                ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
+                  dataModel[ch].sources[src][m][dateStr] = { plan: 0, fact: chData.sources[src][m] || 0 };
+                });
+              });
+            }
           } else {
-            // Fill default zeroes
             ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
-              dataModel[ch][m][dateStr] = { plan: 0, fact: 0 };
+              dataModel[ch].metrics[m][dateStr] = { plan: 0, fact: 0 };
             });
           }
         });
       });
 
-      // Apply local plans overrides from localStorage
+      // Apply localStorage overrides (omitted for brevity, or simplified)
       try {
         const localPlans = JSON.parse(localStorage.getItem('kilowatt_plans_override'));
         if (localPlans) {
           Object.keys(localPlans).forEach(dStr => {
             if (datesList.includes(dStr)) {
               const dailyOver = localPlans[dStr];
-              CHANNELS.forEach(ch => {
+              activeChannels.forEach(ch => {
                 if (dailyOver[ch]) {
                   Object.keys(dailyOver[ch]).forEach(mKey => {
-                    if (dataModel[ch][mKey] && dataModel[ch][mKey][dStr]) {
-                      dataModel[ch][mKey][dStr].plan = dailyOver[ch][mKey];
+                    if (dataModel[ch].metrics[mKey] && dataModel[ch].metrics[mKey][dStr]) {
+                      dataModel[ch].metrics[mKey][dStr].plan = dailyOver[ch][mKey];
                     }
                   });
                 }
@@ -1502,40 +1509,28 @@
             }
           });
         }
-      } catch (e) {
-        console.warn('Failed to apply local plans overrides from localStorage:', e);
-      }
+      } catch (e) {}
 
-      // Group days into weeks based on Monday boundaries (following Excel)
       weeksList = [];
       let currentWeek = null;
-
       datesList.forEach(dateStr => {
         const dateObj = new Date(dateStr + 'T00:00:00Z');
-        const dayOfWeek = dateObj.getUTCDay(); // 0 represents Sunday, 1 is Monday
-
-        // Excel starts weeks on Monday (or the first date of sheet).
+        const dayOfWeek = dateObj.getUTCDay();
         if (dayOfWeek === 1 || !currentWeek) {
           if (currentWeek) weeksList.push(currentWeek);
-          currentWeek = {
-            label: '',
-            dates: []
-          };
+          currentWeek = { label: '', dates: [] };
         }
         currentWeek.dates.push(dateStr);
       });
       if (currentWeek) weeksList.push(currentWeek);
 
-      // Label weeks matching Excel: "Неделя [StartDay] - [EndDay]"
       weeksList.forEach(w => {
         const first = new Date(w.dates[0]);
         const last = new Date(w.dates[w.dates.length - 1]);
-        const pad = (n) => String(n).padStart(2, '0');
         w.label = `Неделя ${first.getDate()} - ${last.getDate()}`;
       });
     }
 
-    // Formula calculation logic
     function calculateFormulas(cost, visits, leads, qual, kp, sales, rev) {
       return {
         cpl: leads > 0 ? cost / leads : 0,
@@ -1602,21 +1597,21 @@
       const isCalc = METRIC_ROWS.find(m => m.key === metric).isCalc;
       if (!isCalc) {
         let sum = 0;
-        CHANNELS.forEach(ch => {
-          sum += dataModel[ch][metric][dateStr]?.[type] || 0;
+        activeChannels.forEach(ch => {
+          sum += dataModel[ch].metrics[metric][dateStr]?.[type] || 0;
         });
         return sum;
       }
 
       let cost = 0, visits = 0, leads = 0, qual = 0, kp = 0, sales = 0, rev = 0;
-      CHANNELS.forEach(ch => {
-        cost += dataModel[ch]['cost'][dateStr]?.[type] || 0;
-        visits += dataModel[ch]['visits'][dateStr]?.[type] || 0;
-        leads += dataModel[ch]['leads'][dateStr]?.[type] || 0;
-        qual += dataModel[ch]['qual'][dateStr]?.[type] || 0;
-        kp += dataModel[ch]['kp'][dateStr]?.[type] || 0;
-        sales += dataModel[ch]['sales'][dateStr]?.[type] || 0;
-        rev += dataModel[ch]['rev'][dateStr]?.[type] || 0;
+      activeChannels.forEach(ch => {
+        cost += dataModel[ch].metrics['cost'][dateStr]?.[type] || 0;
+        visits += dataModel[ch].metrics['visits'][dateStr]?.[type] || 0;
+        leads += dataModel[ch].metrics['leads'][dateStr]?.[type] || 0;
+        qual += dataModel[ch].metrics['qual'][dateStr]?.[type] || 0;
+        kp += dataModel[ch].metrics['kp'][dateStr]?.[type] || 0;
+        sales += dataModel[ch].metrics['sales'][dateStr]?.[type] || 0;
+        rev += dataModel[ch].metrics['rev'][dateStr]?.[type] || 0;
       });
 
       const calc = calculateFormulas(cost, visits, leads, qual, kp, sales, rev);
@@ -1670,6 +1665,18 @@
     }
 
     // Render Grid Table
+    
+    function toggleSource(channelIdx) {
+      const rows = document.querySelectorAll('.source-row-ch' + channelIdx);
+      const btn = document.getElementById('toggle-btn-' + channelIdx);
+      let isHidden = true;
+      if (rows.length > 0) {
+        isHidden = rows[0].style.display === 'none';
+        rows.forEach(r => { r.style.display = isHidden ? 'table-row' : 'none'; });
+        btn.innerText = isHidden ? '[-]' : '[+]';
+      }
+    }
+
     function renderGrid() {
       const thead = document.getElementById('grid-header');
       const tbody = document.getElementById('grid-body');
@@ -1677,170 +1684,123 @@
       thead.innerHTML = '';
       tbody.innerHTML = '';
 
-      // --- 1. RENDER HEADER ---
       const tr1 = document.createElement('tr');
       const tr2 = document.createElement('tr');
       const tr3 = document.createElement('tr');
 
-      // Top-Left Sticky header
-      tr1.innerHTML = `
-        <th rowspan="3" class="sticky-left-1 col-text">Источник</th>
-        <th rowspan="3" class="sticky-left-2 col-text">Показатель</th>
-      `;
-      tr1.innerHTML += `<th colspan="3" rowspan="2" class="monthly-header">Итого за месяц</th>`;
-      
-      tr2.innerHTML = ``;
+      tr1.innerHTML = `<th rowspan="3" class="sticky-left-1 col-text">Источник</th><th rowspan="3" class="sticky-left-2 col-text">Показатель</th><th colspan="3" rowspan="2" class="monthly-header">Итого за месяц</th>`;
+      tr2.innerHTML = '';
       tr3.innerHTML = `<th class="col-plan">План</th><th class="col-fact">Факт</th><th class="col-pct">%</th>`;
 
-      // Loop weeks
       weeksList.forEach((w, wIdx) => {
-        if (wIdx > 0) {
-          // Divider column
-          tr1.innerHTML += `<th rowspan="3" class="week-divider"></th>`;
-        }
-
-        const daysSpan = w.dates.length * 2 + 3; // 2 cols per day, 3 cols for week totals
-        tr1.innerHTML += `<th colspan="${daysSpan}" class="week-header">${w.label}</th>`;
-
-        // Day headers
+        if (wIdx > 0) tr1.innerHTML += `<th rowspan="3" class="week-divider"></th>`;
+        tr1.innerHTML += `<th colspan="${w.dates.length * 2 + 3}" class="week-header">${w.label}</th>`;
         w.dates.forEach(dateStr => {
           tr2.innerHTML += `<th colspan="2" class="day-header">${formatDayLabel(dateStr)}</th>`;
           tr3.innerHTML += `<th class="col-plan">План</th><th class="col-fact">Факт</th>`;
         });
-
-        // Week total headers
         tr2.innerHTML += `<th colspan="3" class="week-total-header">Итог недели</th>`;
         tr3.innerHTML += `<th class="col-plan">План</th><th class="col-fact">Факт</th><th class="col-pct">%</th>`;
       });
+      thead.appendChild(tr1); thead.appendChild(tr2); thead.appendChild(tr3);
 
-      thead.appendChild(tr1);
-      thead.appendChild(tr2);
-      thead.appendChild(tr3);
-
-      // --- 2. RENDER CHANNEL BLOCKS ROWS ---
-      CHANNELS.forEach(ch => {
-        // Channel block separator row
+      activeChannels.forEach((ch, chIdx) => {
         const trCh = document.createElement('tr');
         trCh.className = 'channel-header-row';
-        
         let colsCount = 2 + 3 + (weeksList.length - 1);
-        weeksList.forEach(w => {
-          colsCount += w.dates.length * 2 + 3;
-        });
+        weeksList.forEach(w => { colsCount += w.dates.length * 2 + 3; });
         
-        trCh.innerHTML = `<td colspan="${colsCount}" class="sticky-left-1">${ch}</td>`;
+        const hasSources = Object.keys(dataModel[ch].sources).length > 0;
+        const toggleHtml = hasSources ? `<span id="toggle-btn-${chIdx}" class="toggle-btn" onclick="toggleSource(${chIdx})" style="cursor:pointer; font-family:monospace; margin-right:5px;">[+]</span>` : '';
+        
+        trCh.innerHTML = `<td colspan="${colsCount}" class="sticky-left-1">${toggleHtml}${ch}</td>`;
         tbody.appendChild(trCh);
 
-        // Metric rows
-        METRIC_ROWS.forEach((m, mIdx) => {
-          const tr = document.createElement('tr');
-          if (m.isCalc) tr.className = 'calc-row';
-
-          // First cell represents Channel (merged visual style)
-          const tdCh = document.createElement('td');
-          tdCh.className = 'sticky-left-1 col-text';
-          if (mIdx === 0) {
-            tdCh.innerText = ch;
-            tdCh.style.fontWeight = '600';
-          } else {
-            tdCh.innerText = '';
-          }
-          tr.appendChild(tdCh);
-
-          // Second cell represents Metric Name
-          const tdLabel = document.createElement('td');
-          tdLabel.className = 'sticky-left-2 col-text';
-          tdLabel.innerText = m.label;
-          tr.appendChild(tdLabel);
-
-          // Monthly Total Columns
-          const mPlan = getAggVal(ch, m.key, datesList, 'plan');
-          const mFact = getAggVal(ch, m.key, datesList, 'fact');
-
-          const tdMPlan = createCell(mPlan, m.key);
-          tdMPlan.className = 'monthly-col';
-          tr.appendChild(tdMPlan);
-
-          const tdMFact = createCell(mFact, m.key);
-          tdMFact.className = 'monthly-col';
-          tr.appendChild(tdMFact);
-
-          tr.appendChild(createPctCell(mPlan, mFact, m.key, true)); // True adds border-right
-
-          // Loop weeks
-          weeksList.forEach((w, wIdx) => {
-            if (wIdx > 0) {
-              // Divider column
-              const tdDiv = document.createElement('td');
-              tdDiv.className = 'week-divider';
-              tr.appendChild(tdDiv);
+        const renderRows = (sourceName = null) => {
+          METRIC_ROWS.forEach((m, mIdx) => {
+            const tr = document.createElement('tr');
+            if (m.isCalc) tr.className = 'calc-row';
+            if (sourceName) {
+              tr.className += ` source-row-ch${chIdx}`;
+              tr.style.display = 'none';
+              tr.style.background = '#fdfdfd';
             }
 
-            // Daily cells
-            w.dates.forEach(dateStr => {
-              const dPlan = getCellVal(ch, m.key, dateStr, 'plan');
-              const dFact = getCellVal(ch, m.key, dateStr, 'fact');
+            const tdCh = document.createElement('td');
+            tdCh.className = 'sticky-left-1 col-text';
+            if (mIdx === 0) {
+              tdCh.innerHTML = sourceName ? `<div style="padding-left:16px; font-size:11px; color:#555;">↳ ${sourceName}</div>` : `<div style="font-weight:600;">${ch}</div>`;
+            }
+            tr.appendChild(tdCh);
 
-              // Check if planned cell is raw (editable)
-              const isEditable = !m.isCalc && !( (ch === 'МАХ' || ch === 'Статьи в СМИ') && m.key === 'kp' );
-              
-              if (isEditable) {
-                const tdEdit = document.createElement('td');
-                tdEdit.className = 'editable-cell';
-                tdEdit.innerText = fmtVal(dPlan, m.key);
-                tdEdit.dataset.channel = ch;
-                tdEdit.dataset.metric = m.key;
-                tdEdit.dataset.date = dateStr;
-                tr.appendChild(tdEdit);
-              } else {
-                tr.appendChild(createCell(dPlan, m.key));
+            const tdLabel = document.createElement('td');
+            tdLabel.className = 'sticky-left-2 col-text';
+            tdLabel.innerText = m.label;
+            if (sourceName) Object.assign(tdLabel.style, { fontSize: '11px', color: '#555', fontStyle: 'italic' });
+            tr.appendChild(tdLabel);
+
+            const mPlan = getAggVal(ch, m.key, datesList, 'plan', sourceName);
+            const mFact = getAggVal(ch, m.key, datesList, 'fact', sourceName);
+
+            const tdMPlan = createCell(mPlan, m.key); tdMPlan.className = 'monthly-col'; tr.appendChild(tdMPlan);
+            const tdMFact = createCell(mFact, m.key); tdMFact.className = 'monthly-col'; tr.appendChild(tdMFact);
+            tr.appendChild(createPctCell(mPlan, mFact, m.key, true));
+
+            weeksList.forEach((w, wIdx) => {
+              if (wIdx > 0) {
+                const tdDiv = document.createElement('td'); tdDiv.className = 'week-divider'; tr.appendChild(tdDiv);
               }
+              w.dates.forEach(dateStr => {
+                const dPlan = getCellVal(ch, m.key, dateStr, 'plan', sourceName);
+                const dFact = getCellVal(ch, m.key, dateStr, 'fact', sourceName);
 
-              // Create Fact cell with potential % of weekly plan
-              const tdFact = document.createElement('td');
-              tdFact.innerText = fmtVal(dFact, m.key);
-              
-              // Apply special weekly plan correlation if applicable (for raw metrics only)
-              if (!m.isCalc) {
-                const monPlan = getCellVal(ch, m.key, w.dates[0], 'plan');
-                if (monPlan > 0) {
-                  // Check if plans for other days (Tue-Sun) are all 0
-                  let otherDaysHavePlan = false;
-                  for (let i = 1; i < w.dates.length; i++) {
-                    if (getCellVal(ch, m.key, w.dates[i], 'plan') > 0) {
-                      otherDaysHavePlan = true;
-                      break;
+                const isEditable = !m.isCalc && !( (ch === 'МАХ' || ch === 'Статьи в СМИ') && m.key === 'kp' ) && !sourceName;
+                if (isEditable) {
+                  const tdEdit = document.createElement('td');
+                  tdEdit.className = 'editable-cell';
+                  tdEdit.innerText = fmtVal(dPlan, m.key);
+                  tdEdit.dataset.channel = ch; tdEdit.dataset.metric = m.key; tdEdit.dataset.date = dateStr;
+                  tr.appendChild(tdEdit);
+                } else {
+                  tr.appendChild(createCell(dPlan, m.key));
+                }
+
+                const tdFact = document.createElement('td');
+                tdFact.innerText = fmtVal(dFact, m.key);
+                if (!m.isCalc && !sourceName) {
+                  const monPlan = getCellVal(ch, m.key, w.dates[0], 'plan', sourceName);
+                  if (monPlan > 0) {
+                    let otherDaysHavePlan = false;
+                    for (let i = 1; i < w.dates.length; i++) {
+                      if (getCellVal(ch, m.key, w.dates[i], 'plan', sourceName) > 0) { otherDaysHavePlan = true; break; }
+                    }
+                    if (!otherDaysHavePlan) {
+                      const pctVal = (dFact / monPlan) * 100;
+                      tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
                     }
                   }
-                  if (!otherDaysHavePlan) {
-                    const pctVal = (dFact / monPlan) * 100;
-                    tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
-                  }
                 }
-              }
-              tr.appendChild(tdFact);
+                tr.appendChild(tdFact);
+              });
+
+              const wPlan = getAggVal(ch, m.key, w.dates, 'plan', sourceName);
+              const wFact = getAggVal(ch, m.key, w.dates, 'fact', sourceName);
+
+              const tdWp = createCell(wPlan, m.key); tdWp.className = 'week-sum-col'; tr.appendChild(tdWp);
+              const tdWf = createCell(wFact, m.key); tdWf.className = 'week-sum-col'; tr.appendChild(tdWf);
+              tr.appendChild(createPctCell(wPlan, wFact, m.key));
             });
-
-            // Weekly total columns
-            const wPlan = getAggVal(ch, m.key, w.dates, 'plan');
-            const wFact = getAggVal(ch, m.key, w.dates, 'fact');
-
-            const tdWp = createCell(wPlan, m.key);
-            tdWp.className = 'week-sum-col';
-            tr.appendChild(tdWp);
-
-            const tdWf = createCell(wFact, m.key);
-            tdWf.className = 'week-sum-col';
-            tr.appendChild(tdWf);
-
-            tr.appendChild(createPctCell(wPlan, wFact, m.key));
+            tbody.appendChild(tr);
           });
+        };
 
-          tbody.appendChild(tr);
-        });
+        // Render main channel
+        renderRows(null);
+        // Render sources
+        Object.keys(dataModel[ch].sources).forEach(src => renderRows(src));
       });
 
-      // --- 3. RENDER TOTALS SUMMARY ROW BLOCK ---
+      // Totals
       const trTotHeader = document.createElement('tr');
       trTotHeader.className = 'channel-header-row';
       let totalsColsCount = 2 + 3 + (weeksList.length - 1);
@@ -1853,149 +1813,35 @@
         tr.style.fontWeight = '600';
         if (m.isCalc) tr.className = 'calc-row';
 
-        const tdCh = document.createElement('td');
-        tdCh.className = 'sticky-left-1 col-text';
-        tdCh.innerText = 'ИТОГО';
-        tr.appendChild(tdCh);
+        const tdCh = document.createElement('td'); tdCh.className = 'sticky-left-1 col-text'; tdCh.innerText = 'ИТОГО'; tr.appendChild(tdCh);
+        const tdLabel = document.createElement('td'); tdLabel.className = 'sticky-left-2 col-text'; tdLabel.innerText = m.label; tr.appendChild(tdLabel);
 
-        const tdLabel = document.createElement('td');
-        tdLabel.className = 'sticky-left-2 col-text';
-        tdLabel.innerText = m.label;
-        tr.appendChild(tdLabel);
-
-        // Monthly Total
         const mPlan = getTotalAggVal(m.key, datesList, 'plan');
         const mFact = getTotalAggVal(m.key, datesList, 'fact');
 
-        const tdMPlan = createCell(mPlan, m.key);
-        tdMPlan.className = 'monthly-col';
-        tr.appendChild(tdMPlan);
-
-        const tdMFact = createCell(mFact, m.key);
-        tdMFact.className = 'monthly-col';
-        tr.appendChild(tdMFact);
-
+        const tdMPlan = createCell(mPlan, m.key); tdMPlan.className = 'monthly-col'; tr.appendChild(tdMPlan);
+        const tdMFact = createCell(mFact, m.key); tdMFact.className = 'monthly-col'; tr.appendChild(tdMFact);
         tr.appendChild(createPctCell(mPlan, mFact, m.key, true));
 
-        // Loop weeks
         weeksList.forEach((w, wIdx) => {
-          if (wIdx > 0) {
-            const tdDiv = document.createElement('td');
-            tdDiv.className = 'week-divider';
-            tr.appendChild(tdDiv);
-          }
-
-          // Daily totals
+          if (wIdx > 0) { const tdDiv = document.createElement('td'); tdDiv.className = 'week-divider'; tr.appendChild(tdDiv); }
           w.dates.forEach(dateStr => {
             const dPlan = getTotalVal(m.key, dateStr, 'plan');
             const dFact = getTotalVal(m.key, dateStr, 'fact');
             tr.appendChild(createCell(dPlan, m.key));
-            
-            // Create Fact cell with potential % of weekly plan
-            const tdFact = document.createElement('td');
-            tdFact.innerText = fmtVal(dFact, m.key);
-            
-            if (!m.isCalc) {
-              const monPlan = getTotalVal(m.key, w.dates[0], 'plan');
-              if (monPlan > 0) {
-                let otherDaysHavePlan = false;
-                for (let i = 1; i < w.dates.length; i++) {
-                  if (getTotalVal(m.key, w.dates[i], 'plan') > 0) {
-                    otherDaysHavePlan = true;
-                    break;
-                  }
-                }
-                if (!otherDaysHavePlan) {
-                  const pctVal = (dFact / monPlan) * 100;
-                  tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
-                }
-              }
-            }
+            const tdFact = document.createElement('td'); tdFact.innerText = fmtVal(dFact, m.key);
             tr.appendChild(tdFact);
           });
-
-          // Weekly totals
           const wPlan = getTotalAggVal(m.key, w.dates, 'plan');
           const wFact = getTotalAggVal(m.key, w.dates, 'fact');
-
-          const tdWp = createCell(wPlan, m.key);
-          tdWp.className = 'week-sum-col';
-          tr.appendChild(tdWp);
-
-          const tdWf = createCell(wFact, m.key);
-          tdWf.className = 'week-sum-col';
-          tr.appendChild(tdWf);
-
+          const tdWp = createCell(wPlan, m.key); tdWp.className = 'week-sum-col'; tr.appendChild(tdWp);
+          const tdWf = createCell(wFact, m.key); tdWf.className = 'week-sum-col'; tr.appendChild(tdWf);
           tr.appendChild(createPctCell(wPlan, wFact, m.key));
         });
-
         tbody.appendChild(tr);
       });
     }
 
-    // Helper: Create standard grid cell
-    function createCell(val, metric) {
-      const td = document.createElement('td');
-      td.innerText = fmtVal(val, metric);
-      return td;
-    }
-
-    // Helper: Create percentage plan completion cell with color coding
-    function createPctCell(plan, fact, metric, addBorder = false) {
-      const td = document.createElement('td');
-      td.className = 'week-sum-pct';
-      if (addBorder) td.className += ' monthly-col-border';
-
-      if (['drr', 'cpl', 'cpql', 'cps', 'romi', 'crLeads', 'crQual', 'crKp', 'crSale'].includes(metric)) {
-        // Calculated conversion rates or cost averages do not show standard sums % completion
-        td.innerText = '—';
-        return td;
-      }
-
-      let pct = 0;
-      let pctStr = '0%';
-      let statusClass = 'warn';
-
-      if (plan === 0) {
-        if (fact > 0) {
-          pct = 1;
-          pctStr = '▲ 100%';
-          statusClass = 'good';
-        } else {
-          pct = 0;
-          pctStr = '0%';
-          statusClass = 'warn';
-        }
-      } else {
-        pct = fact / plan;
-        pctStr = (pct * 100).toFixed(0) + '%';
-        
-        if (metric === 'cost') {
-          // Budget spent: lower or close to 100% is better
-          statusClass = pct <= 1.05 ? 'good' : (pct <= 1.2 ? 'warn' : 'bad');
-        } else {
-          // Conversions, leads, sales: higher is better
-          statusClass = pct >= 0.95 ? 'good' : (pct >= 0.75 ? 'warn' : 'bad');
-        }
-      }
-
-      if (statusClass === 'good') {
-        td.style.backgroundColor = '#c6efce';
-        td.style.color = '#006100';
-      } else if (statusClass === 'warn') {
-        td.style.backgroundColor = '#ffeb9c';
-        td.style.color = '#9c6500';
-      } else if (statusClass === 'bad') {
-        td.style.backgroundColor = '#ffc7ce';
-        td.style.color = '#9c0006';
-      }
-      td.style.fontWeight = '600';
-      td.style.textAlign = 'center';
-      td.innerText = pctStr;
-      return td;
-    }
-
-    // --- 3. INLINE GRID CELL EDITING EVENTS ---
     function initGridEvents() {
       const tbody = document.getElementById('grid-body');
       
@@ -2009,7 +1855,7 @@
         const channel = cell.dataset.channel;
         const metric = cell.dataset.metric;
         const date = cell.dataset.date;
-        const currentVal = dataModel[channel][metric][date].plan;
+        const currentVal = dataModel[channel].metrics[metric][date].plan;
 
         const input = document.createElement('input');
         input.type = 'number';
@@ -2026,7 +1872,7 @@
           const newVal = newValStr === '' ? 0 : parseFloat(newValStr);
           
           // 1. Update memory model
-          dataModel[channel][metric][date].plan = newVal;
+          dataModel[channel].metrics[metric][date].plan = newVal;
           
           // 2. Render table with new calculations instantly!
           renderGrid();
@@ -2177,7 +2023,7 @@
         '#ffc107'  // amber
       ];
 
-      CHANNELS.forEach(chName => {
+      activeChannels.forEach(chName => {
         const leads = getAggVal(chName, 'leads', datesList, 'fact');
         if (leads > 0) {
           labels.push(chName);
