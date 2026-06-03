@@ -358,7 +358,7 @@ function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true) {
       channels: {}
     };
 
-    for (const channelName of activeChannels) {
+    for (const channelName of Object.keys(GROUPS_ROWS)) {
       dayItem.channels[channelName] = {
         plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
         fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
@@ -1399,7 +1399,7 @@ async function handleApi(req, res, pathname, query) {
       const excelData = getExcelData(fromStr, toStr);
 
       const sumPlans = {};
-      for (const channelName of activeChannels) {
+      for (const channelName of Object.keys(GROUPS_ROWS)) {
         sumPlans[channelName] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
       }
       excelData.forEach(dayItem => {
@@ -1409,7 +1409,7 @@ async function handleApi(req, res, pathname, query) {
           }
         }
       });
-      for (const channelName of activeChannels) {
+      for (const channelName of Object.keys(GROUPS_ROWS)) {
         for (const metric of Object.keys(sumPlans[channelName])) {
           sumPlans[channelName][metric] = Math.round(sumPlans[channelName][metric]);
         }
