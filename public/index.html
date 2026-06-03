@@ -502,7 +502,7 @@
     <header class="topbar">
       <div class="search-container">
         <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Поиск дашбордов и отчетов..." disabled>
+        <input type="text" class="search-input" id="dashboard-search" placeholder="Поиск дашбордов и отчетов...">
       </div>
       
       <div class="topbar-actions">
@@ -604,5 +604,29 @@
     </main>
   </div>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('dashboard-search');
+      const cards = document.querySelectorAll('.dashboard-card');
+
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          
+          cards.forEach(card => {
+            const title = card.querySelector('.card-title')?.innerText.toLowerCase() || '';
+            const desc = card.querySelector('.card-desc')?.innerText.toLowerCase() || '';
+            const badge = card.querySelector('.card-badge')?.innerText.toLowerCase() || '';
+            
+            if (title.includes(query) || desc.includes(query) || badge.includes(query)) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      }
+    });
+  </script>
 </body>
 </html>
