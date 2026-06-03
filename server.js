@@ -307,13 +307,13 @@ function writePlans(plans) {
 }
 
 // Parse excel file to extract daily plan and fact values
-function getExcelData(fromStr, toStr, customExcelPath) {
+function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true) {
   if (!XLSX) {
-    console.warn('⚠️ XLSX module is not loaded yet. Returning empty array.');
+    console.warn('⚡ XLSX module is not loaded yet. Returning empty array.');
     return [];
   }
-  const targetPath = customExcelPath || excelPath;
-  if (!fs.existsSync(targetPath)) {
+  const targetPath = customExcelPath || (allowFallback ? excelPath : null);
+  if (!targetPath || !fs.existsSync(targetPath)) {
     console.error('❌ Spreadsheet not found at:', targetPath);
     return [];
   }
@@ -1028,15 +1028,32 @@ async function handleApi(req, res, pathname, query) {
     }
 
     try {
-      // 1. Get base data from Excel (both Plan and Fact)
+      const proj = dbData.projects[projId];
+      let roistatProjectId = proj?.settings?.roistatId || '';
+      let roistatKey = proj?.settings?.roistatKey || '';
+      
       const customPath = (projId && dashId) ? path.join(UPLOADS_DIR, `${projId}_${dashId}.xlsx`) : null;
-      let mergedData = getExcelData(fromStr, toStr, (customPath && fs.existsSync(customPath)) ? customPath : null);
+      const hasCustomExcel = customPath && fs.existsSync(customPath);
+      
+      // Fallback for demo Kilowatt project or missing projId
+      const isDemo = (projId === 'proj_kilowatt' || !projId);
+      if (isDemo) {
+        roistatProjectId = roistatProjectId || '294460';
+        roistatKey = roistatKey || '87ed258c066c98668b595bafa0365e56';
+      }
+
+      // Check empty state
+      if (!roistatProjectId && !hasCustomExcel) {
+        res.statusCode = 200;
+        res.end(JSON.stringify({ status: 'empty_state', message: 'Источник данных не подключен. Пожалуйста, настройте интеграцию или загрузите шаблон.' }));
+        return;
+      }
+
+      // 1. Get base data from Excel (both Plan and Fact)
+      let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, isDemo);
 
       // 2. Fetch from Roistat using Project specific integrations
       let roistatSuccess = false;
-      const proj = dbData.projects[projId];
-      const roistatProjectId = proj?.settings?.roistatId || '294460';
-      const roistatKey = proj?.settings?.roistatKey || '87ed258c066c98668b595bafa0365e56';
 
       try {
         // Implement project roistat settings load

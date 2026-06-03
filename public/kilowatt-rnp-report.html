@@ -758,8 +758,23 @@
   </header>
 
   <main>
+    <!-- Empty State (Hidden by default) -->
+    <div id="empty-state-container" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 60vh; background: #ffffff; border-radius: var(--radius-lg); border: 1px dashed var(--border-color); margin-bottom: 24px;">
+      <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px;">
+        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+      </svg>
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Источник данных не подключен</h2>
+      <p style="color: var(--text-muted); font-size: 14px; max-width: 400px; text-align: center; margin-bottom: 24px;">
+        Для работы с Маркетинговым RNP дашбордом необходимо подключить интеграцию с Roistat или загрузить готовый Excel шаблон.
+      </p>
+      <button class="btn-primary" style="padding: 10px 24px; font-size: 15px;" onclick="openIntegrationModal()">Настроить интеграцию</button>
+    </div>
+
     <!-- RNP Daily and Weekly Grid -->
-    <div class="grid-panel">
+    <div id="dashboard-content" style="display: block;">
+      <div class="grid-panel">
       <div class="grid-panel-header">
         <div class="grid-panel-title">Сводный отчет RNP (План / Факт по дням и неделям)</div>
         <div style="font-size: 11px; color: var(--text-muted);" id="last-update-indicator">
@@ -805,6 +820,7 @@
           <canvas id="shareChart"></canvas>
         </div>
       </div>
+    </div>
     </div>
   </main>
 
@@ -923,6 +939,9 @@
         const result = await response.json();
         
         if (result.status === 'success') {
+          document.getElementById('empty-state-container').style.display = 'none';
+          document.getElementById('dashboard-content').style.display = 'block';
+          
           dashboardData = result.data;
           
           if (result.roistatConnected) {
@@ -938,14 +957,23 @@
           buildDataModel();
           renderGrid();
           renderCharts();
+        } else if (result.status === 'empty_state') {
+          document.getElementById('empty-state-container').style.display = 'flex';
+          document.getElementById('dashboard-content').style.display = 'none';
+          connStatus.className = 'live-status offline';
+          connText.innerText = 'Источник не настроен';
         } else {
           showError(result.message);
-          await loadLocalFallbackData();
+          if (projectId === 'proj_kilowatt' || !projectId) {
+            await loadLocalFallbackData();
+          }
         }
       } catch (err) {
-        showError('Режим офлайн / Демо-реверс');
+        showError('Ошибка связи с сервером');
         console.error(err);
-        await loadLocalFallbackData();
+        if (projectId === 'proj_kilowatt' || !projectId) {
+          await loadLocalFallbackData();
+        }
       }
     }
 
@@ -2105,6 +2133,82 @@
         <button class="btn-action" id="submit-month-btn" style="background: var(--primary); color: #ffffff; border-color: var(--primary);" onclick="submitAddMonth()">Добавить</button>
       </div>
     </div>
+  </div>
+
+  <!-- Integration Settings Modal -->
+  <div id="integration-modal" class="lens-modal-overlay">
+    <div class="lens-modal" style="max-width: 500px;">
+      <div class="lens-modal-header">
+        <span>⚙️ Подключение источника данных</span>
+      </div>
+      <div class="lens-modal-body">
+        
+        <h4 style="margin-bottom: 8px; font-size: 14px;">1. Подключение Roistat / Битрикс</h4>
+        <label for="roistat-id-input">ID Проекта (Roistat)</label>
+        <input type="text" id="roistat-id-input" placeholder="Например: 294460" style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 4px;">
+        
+        <label for="roistat-key-input">API Ключ (Roistat / Bitrix)</label>
+        <input type="password" id="roistat-key-input" placeholder="Ключ интеграции" style="width: 100%; padding: 8px; margin-bottom: 24px; border: 1px solid var(--border-color); border-radius: 4px;">
+
+        <h4 style="margin-bottom: 8px; font-size: 14px; border-top: 1px solid var(--border-color); padding-top: 16px;">2. ИЛИ Загрузка Excel шаблона</h4>
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Загрузите файл rnp_template.xlsx, если у вас нет API интеграции.</p>
+        <input type="file" id="excel-upload-input" accept=".xlsx" style="width: 100%; margin-bottom: 12px;">
+
+      </div>
+      <div class="lens-modal-footer">
+        <button class="btn-action" onclick="closeIntegrationModal()">Отмена</button>
+        <button class="btn-action" style="background: var(--primary); color: #ffffff; border-color: var(--primary);" onclick="submitIntegrationSettings()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openIntegrationModal() {
+      document.getElementById('integration-modal').style.display = 'flex';
+    }
+    function closeIntegrationModal() {
+      document.getElementById('integration-modal').style.display = 'none';
+    }
+    
+    async function submitIntegrationSettings() {
+      const roistatId = document.getElementById('roistat-id-input').value.trim();
+      const roistatKey = document.getElementById('roistat-key-input').value.trim();
+      const fileInput = document.getElementById('excel-upload-input');
+      
+      // Save settings via PUT
+      try {
+        if (roistatId || roistatKey) {
+          const settings = { roistatId, roistatKey };
+          const res = await fetch(`/api/projects/${projectId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings }) // We don't overwrite name, only append settings
+          });
+          if (!res.ok) throw new Error('Ошибка сохранения ключей');
+        }
+
+        // Upload Excel if present
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const uploadRes = await fetch(`/api/projects/${projectId}/dashboards/${dashboardId}/upload`, {
+            method: 'POST',
+            body: file,
+            headers: { 'Content-Type': file.type || 'application/octet-stream' }
+          });
+          if (!uploadRes.ok) throw new Error('Ошибка загрузки файла');
+        }
+
+        alert('Настройки успешно сохранены!');
+        closeIntegrationModal();
+        
+        // Reload dashboard
+        loadDashboard();
+      } catch (err) {
+        console.error(err);
+        alert(err.message);
+      }
+    }
+  </script>
   </div>
 </body>
 </html>
