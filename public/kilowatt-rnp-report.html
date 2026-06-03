@@ -81,6 +81,17 @@
       flex-direction: column;
     }
 
+    .dashboard-grid-container {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: calc(100vh - 220px);
+      margin-bottom: 24px;
+    }
+
     header {
       background: var(--bg-card);
       border-bottom: var(--border-lens);
@@ -343,7 +354,7 @@
     .rnp-grid th.monthly-header {
       background: #e2e8f0 !important; /* Light slate Yandex DataLens */
       color: #0f172a !important;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       border-right: 2px solid #cbd5e1 !important;
       border-bottom: 2px solid #cbd5e1 !important;
@@ -355,7 +366,7 @@
     .rnp-grid th.week-header {
       background: #f1f5f9 !important; /* Clean light grey for weeks */
       color: #1e293b !important;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       border-bottom: 2px solid #cbd5e1 !important;
     }
@@ -363,7 +374,7 @@
     .rnp-grid th.week-total-header {
       background: #e2e8f0 !important; /* Soft grey-blue accent for week totals */
       color: #1e293b !important;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       border-bottom: 2px solid #cbd5e1 !important;
     }
@@ -371,7 +382,7 @@
     .rnp-grid th.day-header {
       background: #f8fafc !important; /* Lightest grey for days */
       color: #334155 !important;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 500;
       border-bottom: 2px solid #e2e8f0 !important;
     }
@@ -382,7 +393,7 @@
       color: var(--text-main);
       font-weight: 600;
       text-align: center;
-      font-size: 11px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.02em;
     }
@@ -1803,7 +1814,7 @@
                   }
                   if (!otherDaysHavePlan) {
                     const pctVal = (dFact / monPlan) * 100;
-                    tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
+                    tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
                   }
                 }
               }
@@ -1896,7 +1907,7 @@
                 }
                 if (!otherDaysHavePlan) {
                   const pctVal = (dFact / monPlan) * 100;
-                  tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
+                  tdFact.innerHTML = `<div style="font-weight: 500;">${fmtVal(dFact, m.key)}</div><div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">(${pctVal.toFixed(0)}%)</div>`;
                 }
               }
             }
