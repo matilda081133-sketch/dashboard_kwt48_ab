@@ -16,7 +16,7 @@
   <style>
     :root {
       --bg-main: #f4f6fa;
-      --bg-sidebar: #1e2229;
+      --bg-sidebar: #ffffff;
       --bg-card: #ffffff;
       --border-color: #e2e5ec;
       --text-main: #1f2433;
@@ -66,11 +66,12 @@
     .sidebar {
       width: 260px;
       background-color: var(--bg-sidebar);
-      color: #ffffff;
+      color: var(--text-main);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
       z-index: 100;
+      border-right: 1px solid var(--border-color);
     }
 
     .sidebar-header {
@@ -78,7 +79,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      border-bottom: 1px solid #2d333f;
+      border-bottom: 1px solid var(--border-color);
     }
 
     .logo-mark {
@@ -142,18 +143,19 @@
       align-items: center;
       gap: 12px;
       padding: 10px 12px;
-      color: #b0b8c6;
+      border-radius: 6px;
+      color: var(--text-muted);
       text-decoration: none;
-      font-weight: 500;
-      font-size: 13.5px;
-      border-radius: var(--radius-sm);
-      transition: all 0.15s ease;
       cursor: pointer;
+      transition: background 0.2s, color 0.2s;
     }
-
-    .menu-item:hover, .menu-item.active {
-      background-color: #2a2f3a;
-      color: #ffffff;
+    .menu-item:hover {
+      background: var(--bg-main);
+      color: var(--text-main);
+    }
+    .menu-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
     }
 
     .menu-item svg {
@@ -166,9 +168,9 @@
 
     .sidebar-footer {
       padding: 20px 24px;
-      border-top: 1px solid #2d333f;
+      border-top: 1px solid var(--border-color);
       font-size: 11px;
-      color: #5d6778;
+      color: var(--text-muted);
     }
 
     /* Main Area */
@@ -181,7 +183,7 @@
 
     .topbar {
       height: 64px;
-      background-color: #ffffff;
+      background-color: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
