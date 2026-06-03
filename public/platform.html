@@ -32,6 +32,20 @@
       --radius-lg: 12px;
     }
 
+    [data-theme="dark"] {
+      --bg-main: #0f1115;
+      --bg-sidebar: #161a22;
+      --bg-card: #1c212b;
+      --border-color: #2d333f;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --primary: #5c85ff;
+      --primary-light: rgba(92, 133, 255, 0.15);
+      --accent: #34d399;
+      --accent-light: rgba(52, 211, 153, 0.15);
+      --danger: #f87171;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -587,6 +601,14 @@
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
           Дашборды
         </a>
+        <a class="menu-item" onclick="alert('Глобальное управление подключениями скоро появится!')">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          Подключения
+        </a>
+        <a class="menu-item" onclick="alert('Управление доступом пользователей скоро появится!')">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Пользователи
+        </a>
         <a class="menu-item" onclick="openProjectSettingsModal()">
           <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           Настройки проекта
@@ -615,6 +637,9 @@
         <button class="btn-secondary" style="padding: 6px 12px; font-size: 12.5px;" onclick="openCreateProjectModal()">➕ Создать новый проект</button>
       </div>
       <div class="topbar-actions">
+        <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="toggleTheme()">
+          🌓 Тема
+        </button>
         <div class="user-profile">
           <div class="avatar" id="user-avatar-char">У</div>
           <span class="user-name" id="user-display-name">...</span>
@@ -764,6 +789,23 @@
   </div>
 
   <script>
+    // Theme Management
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      if (current === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('app-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('app-theme', 'dark');
+      }
+    }
+
     let projects = [];
     let currentProjectId = null;
 

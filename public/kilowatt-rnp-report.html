@@ -43,6 +43,23 @@
       --shadow-lens: 0 1px 2px rgba(31, 36, 51, 0.04);
     }
 
+    [data-theme="dark"] {
+      --bg-main: #0f1115;
+      --bg-card: #1c212b;
+      --border-color: #2d333f;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      
+      --primary: #5c85ff;
+      --primary-light: rgba(92, 133, 255, 0.15);
+      --accent: #34d399;
+      --accent-light: rgba(52, 211, 153, 0.15);
+      
+      --danger: #f87171;
+      --danger-light: rgba(248, 113, 113, 0.15);
+      --warning: #fbbf24;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -715,6 +732,19 @@
     .pct-bar-fill.bad {
       background-color: var(--danger);
     }
+    /* Dark Mode Grid Overrides */
+    [data-theme="dark"] .rnp-grid td { background: var(--bg-card) !important; color: var(--text-main) !important; border-color: var(--border-color) !important; }
+    [data-theme="dark"] .rnp-grid th { background: var(--bg-sidebar) !important; color: var(--text-main) !important; border-color: var(--border-color) !important; }
+    [data-theme="dark"] .rnp-grid .sticky-left-1, [data-theme="dark"] .rnp-grid .sticky-left-2 { background: var(--bg-sidebar) !important; color: var(--text-main) !important; }
+    [data-theme="dark"] .rnp-grid tr.channel-header-row td { background: #262c38 !important; color: #ffffff !important; border-color: var(--border-color) !important; }
+    [data-theme="dark"] .rnp-grid td.week-divider, [data-theme="dark"] .rnp-grid th.week-divider { background: var(--bg-main) !important; border-color: var(--border-color) !important; }
+    [data-theme="dark"] .rnp-grid tr.calc-row td { background: #1c212b !important; color: #94a3b8 !important; }
+    [data-theme="dark"] .rnp-grid td.editable-cell { background: #142a20 !important; color: #34d399 !important; }
+    [data-theme="dark"] .rnp-grid tr:hover td { background: #262c38 !important; }
+    [data-theme="dark"] .lens-modal-content { background: var(--bg-card); color: var(--text-main); }
+    [data-theme="dark"] .lens-modal-header { border-color: var(--border-color); }
+    [data-theme="dark"] .lens-modal-footer { border-color: var(--border-color); background: var(--bg-sidebar); }
+    [data-theme="dark"] .rnp-grid .monthly-col, [data-theme="dark"] .rnp-grid th.monthly-header { background: #202735 !important; border-color: #3b4354 !important; color: #e2e8f0 !important; }
   </style>
 </head>
 <body>
@@ -838,6 +868,12 @@
     &copy; 2026 КИЛОВАТТ RNP Дашборд. Интерактивная веб-копия Excel-отчета с автоинтеграцией Roistat.
   </footer>
 
+  <script>
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const projectId = urlParams.get('projectId') || 'proj_kilowatt';
