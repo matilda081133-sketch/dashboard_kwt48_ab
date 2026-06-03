@@ -480,14 +480,10 @@
       </a>
 
       <span class="menu-section-title">Источники</span>
-      <div class="menu-item" style="cursor: default; opacity: 0.85;">
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#2ca579; margin-right:4px;"></span>
-        Яндекс.Метрика
-      </div>
-      <div class="menu-item" style="cursor: default; opacity: 0.85;">
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#2ca579; margin-right:4px;"></span>
-        Roistat API & Excel
-      </div>
+      <a href="#" class="menu-item" onclick="openIntegrationsModal(event)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Настройки интеграций
+      </a>
     </nav>
     
     <div class="sidebar-footer">
@@ -518,9 +514,12 @@
 
     <!-- Content Workspace -->
     <main class="workspace">
-      <div class="workspace-header">
-        <h1 class="workspace-title">Аналитический портал</h1>
-        <p class="workspace-desc">Добро пожаловать в единую систему сквозной аналитики проекта КИЛОВАТТ. Выберите интересующий отчет для анализа ключевых маркетинговых и конверсионных показателей.</p>
+      <div class="workspace-header" style="display: flex; align-items: flex-start; gap: 16px;">
+        <a href="platform.html" title="На главную платформы (список проектов)" style="margin-top: 4px; text-decoration: none; color: var(--text-muted); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 6px; font-size: 18px; flex-shrink: 0; transition: 0.2s;" onmouseover="this.style.background='#f0f1f4'; this.style.color='#1f2433'" onmouseout="this.style.background='#ffffff'; this.style.color='var(--text-muted)'">←</a>
+        <div>
+          <h1 class="workspace-title">Аналитический портал</h1>
+          <p class="workspace-desc">Добро пожаловать в единую систему сквозной аналитики проекта КИЛОВАТТ. Выберите интересующий отчет для анализа ключевых маркетинговых и конверсионных показателей.</p>
+        </div>
       </div>
 
       <div class="dashboards-grid">
@@ -604,7 +603,79 @@
     </main>
   </div>
 
+  <!-- Modal: Integration Catalog -->
+  <div class="modal-overlay" id="integrations-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(31, 36, 51, 0.4); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal" style="background: #ffffff; border-radius: var(--radius-lg, 12px); padding: 28px; max-width: 600px; width: 90%; box-shadow: 0 12px 36px rgba(31, 36, 51, 0.12); display: flex; flex-direction: column; gap: 20px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="modal-title" style="margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+          Каталог интеграций
+        </h3>
+        <button class="modal-close" style="background: transparent; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;" onclick="closeIntegrationsModal()">&times;</button>
+      </div>
+      
+      <div class="integrations-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 4px;">
+        
+        <!-- Yandex Metrika -->
+        <div class="integration-item" style="border: 1px solid var(--border-color, #e2e5ec); border-radius: var(--radius-md, 8px); padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; cursor: default;" onmouseover="this.style.borderColor='#cdd1de'" onmouseout="this.style.borderColor='var(--border-color)'">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: #fff0f0; display: flex; align-items: center; justify-content: center; color: #d94f5c; font-weight: 800; font-size: 16px;">Я</div>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Яндекс.Метрика</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Аналитика трафика и А/Б тесты</div>
+            </div>
+          </div>
+          <button style="background: #f5f6f9; color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e5ec'" onmouseout="this.style.background='#f5f6f9'" onclick="alert('Настройки интеграции Яндекс.Метрика временно перенесены в глобальные настройки проекта.')">Настроить</button>
+        </div>
+
+        <!-- Roistat -->
+        <div class="integration-item" style="border: 1px solid var(--border-color, #e2e5ec); border-radius: var(--radius-md, 8px); padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; cursor: default;" onmouseover="this.style.borderColor='#cdd1de'" onmouseout="this.style.borderColor='var(--border-color)'">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: #f0f4ff; display: flex; align-items: center; justify-content: center; color: var(--primary); font-weight: 800; font-size: 16px;">R</div>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Roistat API</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Сквозная аналитика и CRM</div>
+            </div>
+          </div>
+          <button style="background: #f5f6f9; color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e5ec'" onmouseout="this.style.background='#f5f6f9'" onclick="alert('Настройки интеграции Roistat временно перенесены в глобальные настройки проекта.')">Настроить</button>
+        </div>
+        
+        <!-- Google Sheets -->
+        <div class="integration-item" style="border: 1px solid var(--border-color, #e2e5ec); border-radius: var(--radius-md, 8px); padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; cursor: default;" onmouseover="this.style.borderColor='#cdd1de'" onmouseout="this.style.borderColor='var(--border-color)'">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: #eaf7f2; display: flex; align-items: center; justify-content: center; color: #2ca579; font-weight: 800; font-size: 16px;">G</div>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Google Sheets (Excel)</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Выгрузка планов и ручных данных</div>
+            </div>
+          </div>
+          <button style="background: var(--primary); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#365de0'" onmouseout="this.style.background='var(--primary)'" onclick="alert('Модуль Google Sheets временно отключен, используется локальный файл rnp_template.xlsx.')">Подключить</button>
+        </div>
+
+        <!-- AI Assistant -->
+        <div class="integration-item" style="border: 1px solid var(--border-color, #e2e5ec); border-radius: var(--radius-md, 8px); padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; cursor: default;" onmouseover="this.style.borderColor='#cdd1de'" onmouseout="this.style.borderColor='var(--border-color)'">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: #fdf3f4; display: flex; align-items: center; justify-content: center; font-size: 18px;">✨</div>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">ИИ-Парсер ошибок</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">OpenAI / Gemini для дебаггинга</div>
+            </div>
+          </div>
+          <button style="background: var(--primary); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#365de0'" onmouseout="this.style.background='var(--primary)'" onclick="alert('Настройки ИИ-ассистента перенесены в глобальные настройки проекта.')">Подключить</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
   <script>
+    function openIntegrationsModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('integrations-modal').style.display = 'flex';
+    }
+    function closeIntegrationsModal() {
+      document.getElementById('integrations-modal').style.display = 'none';
+    }
     document.addEventListener('DOMContentLoaded', () => {
       const searchInput = document.getElementById('dashboard-search');
       const cards = document.querySelectorAll('.dashboard-card');
