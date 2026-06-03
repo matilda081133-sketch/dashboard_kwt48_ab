@@ -734,8 +734,15 @@
         <span id="connection-text">Загрузка данных...</span>
       </div>
 
-      <!-- Month select dropdown and add month button in DataLens style -->
+      <!-- Filters -->
       <div style="display: flex; align-items: center; gap: 8px;">
+        <select id="source-filter" class="select-lens" onchange="switchSource(this.value)">
+          <option value="">Все источники</option>
+          <option value="яндекс">Яндекс.Директ</option>
+          <option value="vk">ВКонтакте</option>
+          <option value="seo">SEO</option>
+        </select>
+
         <select id="month-select" class="select-lens" onchange="switchMonth(this.value)">
           <!-- Options loaded dynamically -->
         </select>
@@ -932,7 +939,7 @@
       const bound = getMonthBoundaries(selectedMonth);
 
       try {
-        const response = await fetch(`/api/rnp-data?from=${bound.from}&to=${bound.to}&projectId=${projectId}&dashboardId=${dashboardId}`);
+        const response = await fetch(`/api/rnp-data?from=${bound.from}&to=${bound.to}&projectId=${projectId}&dashboardId=${dashboardId}&source=${selectedSource}`);
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
@@ -1176,6 +1183,12 @@
       if (select) {
         select.value = month;
       }
+      loadDashboard();
+    }
+
+    let selectedSource = '';
+    function switchSource(source) {
+      selectedSource = source;
       loadDashboard();
     }
 
@@ -2164,10 +2177,10 @@
 
   <script>
     function openIntegrationModal() {
-      document.getElementById('integration-modal').style.display = 'flex';
+      document.getElementById('integration-modal').classList.add('active');
     }
     function closeIntegrationModal() {
-      document.getElementById('integration-modal').style.display = 'none';
+      document.getElementById('integration-modal').classList.remove('active');
     }
     
     async function submitIntegrationSettings() {
@@ -2175,19 +2188,34 @@
       const roistatKey = document.getElementById('roistat-key-input').value.trim();
       const fileInput = document.getElementById('excel-upload-input');
       
-      // Save settings via PUT
       try {
+        let connectionId = null;
+        
+        // 1. Create connection if credentials provided
         if (roistatId || roistatKey) {
-          const settings = { roistatId, roistatKey };
-          const res = await fetch(`/api/projects/${projectId}`, {
+          const connRes = await fetch(`/api/projects/${projectId}/connections`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'roistat',
+              name: `Roistat ${roistatId || ''}`,
+              params: { projectId: roistatId, apiKey: roistatKey }
+            })
+          });
+          if (!connRes.ok) throw new Error('Ошибка создания подключения');
+          const connData = await connRes.json();
+          connectionId = connData.connection.id;
+          
+          // 2. Link connection to dashboard
+          const linkRes = await fetch(`/api/projects/${projectId}/dashboards/${dashboardId}/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ settings }) // We don't overwrite name, only append settings
+            body: JSON.stringify({ connectionId })
           });
-          if (!res.ok) throw new Error('Ошибка сохранения ключей');
+          if (!linkRes.ok) throw new Error('Ошибка привязки подключения к дашборду');
         }
 
-        // Upload Excel if present
+        // 3. Upload Excel if present
         if (fileInput.files.length > 0) {
           const file = fileInput.files[0];
           const uploadRes = await fetch(`/api/projects/${projectId}/dashboards/${dashboardId}/upload`, {

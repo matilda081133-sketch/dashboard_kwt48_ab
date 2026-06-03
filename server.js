@@ -6,9 +6,9 @@ const https = require('https');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
-const PLANS_FILE = process.env.PORT ? '/tmp/plans.json' : path.join(__dirname, 'plans.json');
-const DB_FILE = process.env.PORT ? '/tmp/database.json' : path.join(__dirname, 'database.json');
-const UPLOADS_DIR = process.env.PORT ? '/tmp/uploads' : path.join(__dirname, 'uploads');
+const PLANS_FILE = path.join(__dirname, 'plans.json');
+const DB_FILE = path.join(__dirname, 'database.json');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
 // Uploads directory is created lazily on demand
 
 
@@ -729,6 +729,7 @@ async function handleApi(req, res, pathname, query) {
           aiModel: '',
           aiProvider: ''
         },
+        connections: [],
         dashboards: []
       };
       saveDB();
@@ -778,6 +779,69 @@ async function handleApi(req, res, pathname, query) {
     } else {
       res.statusCode = 404;
       res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+    }
+    return;
+  }
+
+  // POST /api/projects/:id/connections
+  const connPostParams = getUrlParams('/api/projects/:id/connections', pathname);
+  if (connPostParams && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const projId = connPostParams.id;
+      const proj = dbData.projects[projId];
+      if (!proj || proj.owner !== currentUser) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+        return;
+      }
+      
+      const newConn = {
+        id: 'conn_' + Math.random().toString(36).substr(2, 9),
+        type: body.type || 'roistat',
+        name: body.name || 'Новое подключение',
+        params: body.params || {}
+      };
+      
+      if (!proj.connections) proj.connections = [];
+      proj.connections.push(newConn);
+      saveDB();
+      
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', connection: newConn }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    }
+    return;
+  }
+
+  // PUT /api/projects/:id/dashboards/:dashId/settings
+  const dashSettingsParams = getUrlParams('/api/projects/:id/dashboards/:dashId/settings', pathname);
+  if (dashSettingsParams && req.method === 'PUT') {
+    try {
+      const body = await parseBody(req);
+      const { id: projId, dashId } = dashSettingsParams;
+      const proj = dbData.projects[projId];
+      if (!proj || proj.owner !== currentUser) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
+        return;
+      }
+      const dashboard = proj.dashboards.find(d => d.id === dashId);
+      if (!dashboard) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ status: 'error', message: 'Дашборд не найден' }));
+        return;
+      }
+      
+      if (body.connectionId !== undefined) dashboard.connectionId = body.connectionId;
+      saveDB();
+      res.statusCode = 200;
+      res.end(JSON.stringify({ status: 'success', dashboard }));
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
     }
     return;
   }
@@ -1020,6 +1084,7 @@ async function handleApi(req, res, pathname, query) {
     const toStr = query.to;
     const projId = query.projectId;
     const dashId = query.dashboardId;
+    const sourceFilter = query.source || '';
 
     if (!fromStr || !toStr) {
       res.statusCode = 400;
@@ -1029,17 +1094,33 @@ async function handleApi(req, res, pathname, query) {
 
     try {
       const proj = dbData.projects[projId];
-      let roistatProjectId = proj?.settings?.roistatId || '';
-      let roistatKey = proj?.settings?.roistatKey || '';
+      const dashboard = proj?.dashboards?.find(d => d.id === dashId);
+      
+      let roistatProjectId = '';
+      let roistatKey = '';
+
+      if (dashboard && dashboard.connectionId && proj && proj.connections) {
+        const conn = proj.connections.find(c => c.id === dashboard.connectionId);
+        if (conn && conn.type === 'roistat') {
+          roistatProjectId = conn.params.projectId || '';
+          roistatKey = conn.params.apiKey || '';
+        }
+      }
+      
+      // Fallback
+      if (!roistatProjectId) {
+        roistatProjectId = proj?.settings?.roistatId || '';
+        roistatKey = proj?.settings?.roistatKey || '';
+      }
       
       const customPath = (projId && dashId) ? path.join(UPLOADS_DIR, `${projId}_${dashId}.xlsx`) : null;
       const hasCustomExcel = customPath && fs.existsSync(customPath);
       
       // Fallback for demo Kilowatt project or missing projId
       const isDemo = (projId === 'proj_kilowatt' || !projId);
-      if (isDemo) {
-        roistatProjectId = roistatProjectId || '294460';
-        roistatKey = roistatKey || '87ed258c066c98668b595bafa0365e56';
+      if (isDemo && !roistatProjectId) {
+        roistatProjectId = '294460';
+        roistatKey = '87ed258c066c98668b595bafa0365e56';
       }
 
       // Check empty state
@@ -1056,7 +1137,6 @@ async function handleApi(req, res, pathname, query) {
       let roistatSuccess = false;
 
       try {
-        // Implement project roistat settings load
         const roistatItems = [];
         let currentStart = new Date(fromStr);
         const endDate = new Date(toStr);
@@ -1129,8 +1209,12 @@ async function handleApi(req, res, pathname, query) {
             const d = item.dimensions || {};
             if (!d.date || !d.date.title) return;
             const dateStr = d.date.title.split('T')[0];
-            const title = [d.marker_level_1?.title || "", d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
-            const group = getGroup(title);
+            const titleRaw = [d.marker_level_1?.title || "", d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
+            const titleLower = titleRaw.toLowerCase();
+
+            if (sourceFilter && !titleLower.includes(sourceFilter.toLowerCase())) return;
+
+            const group = getGroup(titleRaw);
             if (!group) return;
 
             const m = {};
@@ -1138,7 +1222,7 @@ async function handleApi(req, res, pathname, query) {
 
             const cost = m.visitsCost || m.marketing_cost || 0;
             const visits = m.visitCount || m.visits || 0;
-            const leads = title.toLowerCase().includes("звонок") ? 0 : (m.leadCount || m.leads || 0);
+            const leads = titleRaw.toLowerCase().includes("звонок") ? 0 : (m.leadCount || m.leads || 0);
             const qual = m.custom_2 || 0;
             const kp = m.custom_5 || 0;
             const sales = m.paidLeadCount || m.sales || 0;
