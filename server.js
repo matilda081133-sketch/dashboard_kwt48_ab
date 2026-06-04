@@ -1140,6 +1140,7 @@ async function handleApi(req, res, pathname, query) {
         return;
       }
 
+      let activeChannels = isDemo ? [...KILOWATT_CHANNELS] : [...DEFAULT_CHANNELS];
       // 1. Get base data from Excel (both Plan and Fact)
       let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, isDemo, activeChannels);
 
@@ -1212,11 +1213,9 @@ async function handleApi(req, res, pathname, query) {
           currentStart.setDate(currentStart.getDate() + 1);
         }
 
-        
-        let activeChannels = isDemo ? [...KILOWATT_CHANNELS] : [...DEFAULT_CHANNELS];
+        roistatSuccess = true;
         
         if (roistatItems.length > 0) {
-          roistatSuccess = true;
           const roistatByDate = {}; // dateStr -> group -> source -> metrics
 
           roistatItems.forEach(item => {
