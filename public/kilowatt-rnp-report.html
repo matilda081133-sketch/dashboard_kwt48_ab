@@ -2120,6 +2120,28 @@
 
   <script>
     function openIntegrationModal() {
+      // Prefill if available in dashboardData or fallback
+      fetch(`/api/projects`).then(res => res.json()).then(data => {
+        if (data.status === 'success') {
+          const p = data.projects.find(x => x.id === projectId);
+          if (p) {
+             const dash = p.dashboards?.find(d => d.id === dashboardId);
+             let foundConn = false;
+             if (dash && dash.connectionId && p.connections) {
+               const conn = p.connections.find(c => c.id === dash.connectionId);
+               if (conn && conn.type === 'roistat') {
+                 document.getElementById('roistat-id-input').value = conn.params.projectId || '';
+                 document.getElementById('roistat-key-input').value = conn.params.apiKey || '';
+                 foundConn = true;
+               }
+             }
+             if (!foundConn && p.settings) {
+               document.getElementById('roistat-id-input').value = p.settings.roistatId || '';
+               document.getElementById('roistat-key-input').value = p.settings.roistatKey || '';
+             }
+          }
+        }
+      });
       document.getElementById('integration-modal').classList.add('active');
     }
     function closeIntegrationModal() {
@@ -2145,7 +2167,10 @@
               params: { projectId: roistatId, apiKey: roistatKey }
             })
           });
-          if (!connRes.ok) throw new Error('Ошибка создания подключения');
+          if (!connRes.ok) {
+            const errTxt = await connRes.text();
+            throw new Error(`Ошибка создания подключения: ${connRes.status} ${errTxt}`);
+          }
           const connData = await connRes.json();
           connectionId = connData.connection.id;
           
