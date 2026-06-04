@@ -310,7 +310,7 @@ function writePlans(plans) {
 }
 
 // Parse excel file to extract daily plan and fact values
-function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true) {
+function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true, baseChannels = null) {
   if (!XLSX) {
     console.warn('⚡ XLSX module is not loaded yet. Returning empty array.');
     return [];
@@ -362,7 +362,8 @@ function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true) {
       channels: {}
     };
 
-    for (const channelName of Object.keys(GROUPS_ROWS)) {
+    const chList = baseChannels || Object.keys(GROUPS_ROWS);
+    for (const channelName of chList) {
       dayItem.channels[channelName] = {
         plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
         fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
@@ -1140,7 +1141,7 @@ async function handleApi(req, res, pathname, query) {
       }
 
       // 1. Get base data from Excel (both Plan and Fact)
-      let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, isDemo);
+      let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, isDemo, activeChannels);
 
       // 2. Fetch from Roistat using Project specific integrations
       let roistatSuccess = false;
@@ -1336,6 +1337,7 @@ async function handleApi(req, res, pathname, query) {
 
       mergedData.forEach(dayItem => {
         for (const [channelName, ch] of Object.entries(dayItem.channels)) {
+          if (!summary[channelName]) continue;
           for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
             summary[channelName].plan[metric] += ch.plan[metric] || 0;
             summary[channelName].fact[metric] += ch.fact[metric] || 0;
@@ -1400,10 +1402,12 @@ async function handleApi(req, res, pathname, query) {
       const fromStr = `${year}-${String(month).padStart(2, '0')}-01`;
       const lastDay = new Date(year, month, 0).getDate();
       const toStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-      const excelData = getExcelData(fromStr, toStr);
+      const isDemo = (dashId === "dash_rnp_kwt");
+      const baseChannels = isDemo ? [...KILOWATT_CHANNELS] : [...DEFAULT_CHANNELS];
+      const excelData = getExcelData(fromStr, toStr, null, true, baseChannels);
 
       const sumPlans = {};
-      for (const channelName of Object.keys(GROUPS_ROWS)) {
+      for (const channelName of baseChannels) {
         sumPlans[channelName] = { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 };
       }
       excelData.forEach(dayItem => {
@@ -1413,7 +1417,7 @@ async function handleApi(req, res, pathname, query) {
           }
         }
       });
-      for (const channelName of Object.keys(GROUPS_ROWS)) {
+      for (const channelName of baseChannels) {
         for (const metric of Object.keys(sumPlans[channelName])) {
           sumPlans[channelName][metric] = Math.round(sumPlans[channelName][metric]);
         }
