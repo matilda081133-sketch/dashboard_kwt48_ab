@@ -613,6 +613,7 @@ const getUrlParams = (pathPattern, requestPath) => {
 };
 
 async function handleApi(req, res, pathname, query) {
+  loadDB(); // Ensure memory is synced with disk on every request in multi-process environments
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   // POST /api/auth/register
