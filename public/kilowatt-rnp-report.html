@@ -15,6 +15,10 @@
   
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- GridStack -->
+  <link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.0/dist/gridstack.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.0/dist/gridstack.all.js"></script>
 
   <style>
     :root {
@@ -1456,6 +1460,7 @@
         dataModel[ch] = { metrics: {}, sources: {} };
         METRIC_ROWS.forEach(m => {
           dataModel[ch].metrics[m.key] = {};
+          dataModel[ch][m.key] = dataModel[ch].metrics[m.key];
         });
       });
 
