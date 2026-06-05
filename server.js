@@ -612,6 +612,53 @@ const getUrlParams = (pathPattern, requestPath) => {
   return params;
 };
 
+function fetchProjectMetrics(projectId, apiKey) {
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'cloud.roistat.com',
+      port: 443,
+      path: `/api/v1/project/analytics/metrics?project=${projectId}`,
+      method: 'GET',
+      headers: {
+        'Api-key': apiKey
+      },
+      rejectUnauthorized: false
+    };
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { body += chunk; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          if (parsed.status === 'success' && Array.isArray(parsed.metrics)) {
+            resolve(parsed.metrics.map(m => ({ name: m.name, title: m.title })));
+          } else {
+            resolve([]);
+          }
+        } catch (e) {
+          resolve([]);
+        }
+      });
+    });
+    req.on('error', () => resolve([]));
+    req.end();
+  });
+}
+
+function getGroupForProject(titleRaw, sourceGroupTitle, isDemo) {
+  if (isDemo) {
+    return getGroup(titleRaw);
+  }
+  if (sourceGroupTitle && sourceGroupTitle !== "Остальное" && sourceGroupTitle !== "Другое" && sourceGroupTitle !== "Неизвестный канал") {
+    const g = sourceGroupTitle.trim();
+    if (g.toLowerCase() === "seo") return "Сайт, органика";
+    if (g.toLowerCase() === "контекст" || g.toLowerCase() === "контекстная реклама" || g.toLowerCase().includes("директ")) return "Контекстная реклама";
+    return g;
+  }
+  return getGroup(titleRaw) || "Другое";
+}
+
 async function handleApi(req, res, pathname, query) {
   loadDB(); // Ensure memory is synced with disk on every request in multi-process environments
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -1147,33 +1194,67 @@ async function handleApi(req, res, pathname, query) {
 
       // 2. Fetch from Roistat using Project specific integrations
       let roistatSuccess = false;
+      let customQualMetric = null;
+      let customKpMetric = null;
 
       try {
+        // Dynamic custom metrics discovery
+        try {
+          const projectMetricsList = await fetchProjectMetrics(roistatProjectId, roistatKey);
+          if (projectMetricsList && projectMetricsList.length > 0) {
+            for (const m of projectMetricsList) {
+              const title = (m.title || "").toLowerCase();
+              const name = m.name;
+              if (!customQualMetric && (title.includes("квал") || title.includes("qual"))) {
+                customQualMetric = name;
+              }
+              if (!customKpMetric && (title.includes("кп ") || title.includes(" кп") || title === "кп" || title.includes("коммерческ") || title.includes("kp"))) {
+                customKpMetric = name;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error discovering Roistat metrics:", e.message);
+        }
+
+        const metricsToRequest = [
+          { "metric": "visits", "attribution": "default" },
+          { "metric": "leads", "attribution": "default" },
+          { "metric": "leadCount", "attribution": "default" },
+          { "metric": "sales", "attribution": "default" },
+          { "metric": "paidLeadCount", "attribution": "default" },
+          { "metric": "revenue", "attribution": "default" },
+          { "metric": "paidLeadsPrice", "attribution": "default" },
+          { "metric": "marketing_cost", "attribution": "default" },
+          { "metric": "visitsCost", "attribution": "default" }
+        ];
+
+        if (customQualMetric) {
+          metricsToRequest.push({ "metric": customQualMetric, "attribution": "default" });
+        } else if (isDemo) {
+          metricsToRequest.push({ "metric": "custom_2", "attribution": "default" });
+        }
+
+        if (customKpMetric) {
+          metricsToRequest.push({ "metric": customKpMetric, "attribution": "default" });
+        } else if (isDemo) {
+          metricsToRequest.push({ "metric": "custom_5", "attribution": "default" });
+        }
+
         const roistatItems = [];
+        const promises = [];
         let currentStart = new Date(fromStr);
         const endDate = new Date(toStr);
         
         while (currentStart <= endDate) {
           const chunkFromStr = currentStart.toISOString().split('T')[0];
           
-          const itemsChunk = await new Promise((resolve, reject) => {
+          const promise = new Promise((resolve) => {
             const fromIso = `${chunkFromStr}T00:00:00+03:00`;
             const toIso = `${chunkFromStr}T23:59:59+03:00`;
             const payload = {
-              "dimensions": ["marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
-              "metrics": [
-                { "metric": "visits", "attribution": "default" },
-                { "metric": "leads", "attribution": "default" },
-                { "metric": "leadCount", "attribution": "default" },
-                { "metric": "sales", "attribution": "default" },
-                { "metric": "paidLeadCount", "attribution": "default" },
-                { "metric": "revenue", "attribution": "default" },
-                { "metric": "paidLeadsPrice", "attribution": "default" },
-                { "metric": "marketing_cost", "attribution": "default" },
-                { "metric": "visitsCost", "attribution": "default" },
-                { "metric": "custom_2", "attribution": "default" },
-                { "metric": "custom_5", "attribution": "default" }
-              ],
+              "dimensions": ["source_group", "marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
+              "metrics": metricsToRequest,
               "period": { "from": fromIso, "to": toIso }
             };
             const dataStr = JSON.stringify(payload);
@@ -1189,31 +1270,58 @@ async function handleApi(req, res, pathname, query) {
               },
               rejectUnauthorized: false
             };
-            const reqPost = https.request(options, (resPost) => {
-              let body = '';
-              resPost.setEncoding('utf8');
-              resPost.on('data', (chunk) => { body += chunk; });
-              resPost.on('end', () => {
-                try {
-                  const parsed = JSON.parse(body);
-                  if (parsed.status === 'error') reject(new Error(parsed.description));
-                  else {
-                    const items = (parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : [];
-                    items.forEach(i => i.dimensions.date = { title: chunkFromStr });
-                    resolve(items);
+            const makeRequest = (retryCount = 0) => {
+              const reqPost = https.request(options, (resPost) => {
+                let body = '';
+                resPost.setEncoding('utf8');
+                resPost.on('data', (chunk) => { body += chunk; });
+                resPost.on('end', () => {
+                  try {
+                    const parsed = JSON.parse(body);
+                    if (parsed.status === 'error') {
+                      if (parsed.description && (parsed.description.includes('лимит') || parsed.description.includes('limit') || parsed.description.includes('hang up')) && retryCount < 3) {
+                        const delay = 150 + Math.random() * 100 + retryCount * 100;
+                        setTimeout(() => makeRequest(retryCount + 1), delay);
+                      } else {
+                        console.warn(`Roistat error for ${chunkFromStr}:`, parsed.description);
+                        resolve([]);
+                      }
+                    } else {
+                      const items = (parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : [];
+                      items.forEach(i => i.dimensions.date = { title: chunkFromStr });
+                      resolve(items);
+                    }
+                  } catch (e) {
+                    console.warn(`Roistat parse error for ${chunkFromStr}:`, e.message);
+                    resolve([]);
                   }
-                } catch (e) { reject(e); }
+                });
               });
-            });
-            reqPost.on('error', (e) => reject(e));
-            reqPost.write(dataStr);
-            reqPost.end();
+              reqPost.on('error', (e) => {
+                if (retryCount < 3) {
+                  const delay = 150 + Math.random() * 100 + retryCount * 100;
+                  setTimeout(() => makeRequest(retryCount + 1), delay);
+                } else {
+                  console.warn(`Roistat network error for ${chunkFromStr}:`, e.message);
+                  resolve([]);
+                }
+              });
+              reqPost.write(dataStr);
+              reqPost.end();
+            };
+            
+            makeRequest();
           });
           
-          roistatItems.push(...itemsChunk);
+          promises.push(promise);
           currentStart.setDate(currentStart.getDate() + 1);
         }
 
+        const resultsChunks = await Promise.all(promises);
+        resultsChunks.forEach(chunk => {
+          roistatItems.push(...chunk);
+        });
+        
         roistatSuccess = true;
         
         if (roistatItems.length > 0) {
@@ -1229,7 +1337,8 @@ async function handleApi(req, res, pathname, query) {
 
             if (sourceFilter && !titleLower.includes(sourceFilter.toLowerCase())) return;
 
-            const group = getGroup(titleRaw, isDemo);
+            const sourceGroupTitle = d.source_group?.title || "";
+            const group = getGroupForProject(titleRaw, sourceGroupTitle, isDemo);
             if (!group) return;
             
             // Add group to active channels if not exists
@@ -1248,8 +1357,9 @@ async function handleApi(req, res, pathname, query) {
             const cost = m.visitsCost || m.marketing_cost || 0;
             const visits = m.visitCount || m.visits || 0;
             const leads = titleRaw.toLowerCase().includes("звонок") ? 0 : (m.leadCount || m.leads || 0);
-            const qual = m.custom_2 || 0;
-            const kp = m.custom_5 || 0;
+            
+            const qual = (customQualMetric && m[customQualMetric]) || m.custom_2 || 0;
+            const kp = (customKpMetric && m[customKpMetric]) || m.custom_5 || 0;
             const sales = m.paidLeadCount || m.sales || 0;
             const rev = m.paidLeadsPrice || m.revenue || 0;
 
@@ -1288,19 +1398,19 @@ async function handleApi(req, res, pathname, query) {
               const mockMap = {};
               mockData.forEach(d => { mockMap[d.date] = d.channels; });
               mergedData.forEach(dayItem => {
-              if (mockMap[dayItem.date]) {
-                roistatSuccess = true;
-                for (const channelName of activeChannels) {
-                  if (mockMap[dayItem.date][channelName]) {
-                    dayItem.channels[channelName].fact = mockMap[dayItem.date][channelName];
+                if (mockMap[dayItem.date]) {
+                  roistatSuccess = true;
+                  for (const channelName of activeChannels) {
+                    if (mockMap[dayItem.date][channelName]) {
+                      dayItem.channels[channelName].fact = mockMap[dayItem.date][channelName];
+                    }
                   }
                 }
-              }
-            });
-          } catch (e) {}
+              });
+            } catch (e) {}
+          }
         }
       }
-    }
 
       // 3. Apply custom daily plans overrides (from project database)
       const dashPlans = dbData.dashboardsData[dashId]?.plans || {};
