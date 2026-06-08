@@ -663,13 +663,14 @@ function getGroupForProject(titleRaw, sourceGroupTitle, isDemo) {
   if (isDemo) {
     return getGroup(titleRaw);
   }
-  if (sourceGroupTitle && sourceGroupTitle !== "Остальное" && sourceGroupTitle !== "Другое" && sourceGroupTitle !== "Неизвестный канал") {
+  if (sourceGroupTitle) {
     const g = sourceGroupTitle.trim();
-    if (g.toLowerCase() === "seo") return "Сайт, органика";
-    if (g.toLowerCase() === "контекст" || g.toLowerCase() === "контекстная реклама" || g.toLowerCase().includes("директ")) return "Контекстная реклама";
+    if (g === "Остальное" || g === "Другое" || g === "Неизвестный канал" || g === "") {
+      return getGroup(titleRaw) || "Остальное";
+    }
     return g;
   }
-  return getGroup(titleRaw) || "Другое";
+  return getGroup(titleRaw) || "Остальное";
 }
 
 async function handleApi(req, res, pathname, query) {
@@ -1258,7 +1259,10 @@ async function handleApi(req, res, pathname, query) {
         return;
       }
 
-      let activeChannels = [...KILOWATT_CHANNELS];
+      let activeChannels = [];
+      if (isDemo || hasCustomExcel) {
+        activeChannels = [...KILOWATT_CHANNELS];
+      }
       // 1. Get base data from Excel (both Plan and Fact)
       let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, false, activeChannels);
 
