@@ -755,6 +755,36 @@ async function handleApi(req, res, pathname, query) {
     return;
   }
 
+  // Ensure demo project exists for the current user to prevent 404 in preview mode
+  if (!dbData.projects['demo']) {
+    dbData.projects['demo'] = {
+      id: 'demo',
+      name: 'Демо Проект',
+      owner: currentUser,
+      settings: {
+        roistatId: '294460',
+        roistatKey: '87ed258c066c98668b595bafa0365e56',
+        metrikaCounterId: '',
+        metrikaToken: '',
+        aiApiKey: '',
+        aiEndpoint: 'https://api.openai.com/v1',
+        aiModel: 'gpt-4o-mini',
+        aiProvider: 'openai'
+      },
+      connections: [],
+      dashboards: [
+        { id: 'demo', name: 'RNP (Demo)', type: 'rnp', created_at: new Date().toISOString() },
+        { id: 'demo_landing', name: 'Эффективность лендингов (Demo)', type: 'landing', created_at: new Date().toISOString() }
+      ]
+    };
+    dbData.dashboardsData['demo'] = { plans: {}, changes: [], abTests: [] };
+    dbData.dashboardsData['demo_landing'] = { plans: {}, changes: [], abTests: [] };
+    saveDB();
+  } else if (dbData.projects['demo'].owner !== currentUser) {
+    dbData.projects['demo'].owner = currentUser;
+    saveDB();
+  }
+
   // GET /api/projects
   if (pathname === '/api/projects' && req.method === 'GET') {
     const userProjects = Object.values(dbData.projects).filter(p => p.owner === currentUser);
@@ -1176,7 +1206,7 @@ async function handleApi(req, res, pathname, query) {
       const hasCustomExcel = customPath && fs.existsSync(customPath);
       
       // Fallback for demo Kilowatt project or missing projId
-      const isDemo = (projId === 'proj_kilowatt' || !projId);
+      const isDemo = (projId === 'proj_kilowatt' || projId === 'demo' || !projId);
       if (isDemo && !roistatProjectId) {
         roistatProjectId = '294460';
         roistatKey = '87ed258c066c98668b595bafa0365e56';
