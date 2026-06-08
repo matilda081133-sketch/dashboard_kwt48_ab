@@ -749,7 +749,7 @@
   <header>
     <div class="brand-section">
       <a href="platform.html" title="На главную платформы (список проектов)" style="text-decoration: none; color: var(--text-muted); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #f2f3f7; border: 1px solid var(--border-color); border-radius: 6px; font-size: 18px; margin-right: 4px; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1f2433'" onmouseout="this.style.background='#f2f3f7'; this.style.color='var(--text-muted)'">←</a>
-      <a href="platform.html" style="text-decoration: none; color: inherit; cursor: pointer;"><h1 style="margin-left: 4px;">КИЛОВАТТ</h1></a>
+      <a href="platform.html" style="text-decoration: none; color: inherit; cursor: pointer;"><h1 id="brand-title" style="margin-left: 4px;">КИЛОВАТТ</h1></a>
       <div class="selector-group" style="margin-left: 12px; margin-right: 12px;">
         <a href="kilowatt-quality-report.html" class="selector-btn active" style="text-decoration: none; display: inline-block;">Эффективность лендингов</a>
         <a href="kilowatt-rnp-report.html" class="selector-btn" style="text-decoration: none; display: inline-block;">Маркетинговый RNP</a>
@@ -793,7 +793,7 @@
         <div class="avatar" style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer;">К</div>
         <div class="user-info" style="display: flex; flex-direction: column; line-height: 1.1; text-align: left;">
           <span class="user-name" style="font-weight: 600; font-size: 12px;">Администратор</span>
-          <span class="user-role" style="font-size: 9px; color: var(--text-muted);">Проект Киловатт</span>
+          <span id="project-role-subtitle" class="user-role" style="font-size: 9px; color: var(--text-muted);">Проект Киловатт</span>
         </div>
       </div>
     </div>
@@ -1162,18 +1162,59 @@
   </div>
 
   <footer>
-    <p>КИЛОВАТТ © 2026. Панель эффективности лендингов. Построено по стандартам Yandex DataLens.</p>
+    <p id="footer-copyright">КИЛОВАТТ © 2026. Панель эффективности лендингов. Построено по стандартам Yandex DataLens.</p>
   </footer>
 
   <script>
+    // Parse project variables
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId') || 'proj_kilowatt';
+    const dashboardId = urlParams.get('dashboardId') || 'dash_landing_kwt';
+
+    function updateBranding(projectName) {
+      if (!projectName) return;
+      const formattedProjectName = projectName.toUpperCase();
+      
+      // Update logo text
+      const logoText = document.getElementById('brand-title');
+      if (logoText) logoText.innerText = formattedProjectName;
+      
+      // Update page title
+      document.title = `${projectName} — Мониторинг Эффективности Лендингов`;
+      
+      // Update profile subtitle
+      const profileSubtitle = document.getElementById('project-role-subtitle');
+      if (profileSubtitle) profileSubtitle.innerText = `Проект ${projectName}`;
+      
+      // Update footer
+      const footer = document.getElementById('footer-copyright');
+      if (footer) {
+        footer.innerText = `${projectName} © 2026. Панель эффективности лендингов. Построено по стандартам Yandex DataLens.`;
+      }
+    }
+
     // Preserve URL query params on header links
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
       const q = window.location.search;
       if (q) {
         document.querySelectorAll('.selector-group a').forEach(a => {
           const base = a.getAttribute('href').split('?')[0];
           a.setAttribute('href', base + q);
         });
+      }
+      
+      // Load and update branding
+      try {
+        const res = await fetch('/api/projects');
+        const data = await res.json();
+        if (data.status === 'success') {
+          const p = data.projects.find(x => x.id === projectId);
+          if (p) {
+            updateBranding(p.name);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load branding from projects list:', e);
       }
     });
 

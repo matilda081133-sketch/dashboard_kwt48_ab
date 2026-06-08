@@ -1244,7 +1244,7 @@ async function handleApi(req, res, pathname, query) {
         return;
       }
 
-      let activeChannels = isDemo ? [...KILOWATT_CHANNELS] : [...DEFAULT_CHANNELS];
+      let activeChannels = [...KILOWATT_CHANNELS];
       // 1. Get base data from Excel (both Plan and Fact)
       let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, isDemo, activeChannels);
 
@@ -1522,6 +1522,8 @@ async function handleApi(req, res, pathname, query) {
       res.end(JSON.stringify({
         status: 'success',
         roistatConnected: roistatSuccess,
+        projectName: proj ? proj.name : 'Демо Проект',
+        dashboardName: dashboard ? dashboard.name : 'Маркетинговый RNP',
         data: { channels: activeChannels, daily: mergedData, summary, total, city: cityData }
       }));
     } catch (err) {
@@ -1555,7 +1557,7 @@ async function handleApi(req, res, pathname, query) {
       const lastDay = new Date(year, month, 0).getDate();
       const toStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
       const isDemo = (dashId === "dash_rnp_kwt");
-      const baseChannels = isDemo ? [...KILOWATT_CHANNELS] : [...DEFAULT_CHANNELS];
+      const baseChannels = [...KILOWATT_CHANNELS];
       const excelData = getExcelData(fromStr, toStr, null, true, baseChannels);
 
       const sumPlans = {};

@@ -771,7 +771,7 @@
   <header>
     <div class="brand-section">
       <a href="platform.html" title="На главную платформы (список проектов)" style="text-decoration: none; color: var(--text-muted); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #f2f3f7; border: 1px solid var(--border-color); border-radius: 6px; font-size: 18px; margin-right: 4px; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1f2433'" onmouseout="this.style.background='#f2f3f7'; this.style.color='var(--text-muted)'">←</a>
-      <a href="platform.html" style="text-decoration: none; color: inherit; cursor: pointer;"><h1 style="margin-left: 4px;">КИЛОВАТТ</h1></a>
+      <a href="platform.html" style="text-decoration: none; color: inherit; cursor: pointer;"><h1 id="brand-title" style="margin-left: 4px;">КИЛОВАТТ</h1></a>
       <div class="selector-group" style="margin-left: 12px; margin-right: 12px;">
         <a href="kilowatt-quality-report.html" class="selector-btn" style="text-decoration: none;">Эффективность лендингов</a>
         <a href="kilowatt-rnp-report.html" class="selector-btn active" style="text-decoration: none;">Маркетинговый RNP</a>
@@ -812,7 +812,7 @@
         <div class="avatar" style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 1px solid #cbd5e1; cursor: pointer;">К</div>
         <div class="user-info" style="display: flex; flex-direction: column; line-height: 1.1; text-align: left;">
           <span class="user-name" style="font-weight: 600; font-size: 12px;">Администратор</span>
-          <span class="user-role" style="font-size: 9px; color: var(--text-muted);">Проект Киловатт</span>
+          <span id="project-role-subtitle" class="user-role" style="font-size: 9px; color: var(--text-muted);">Проект Киловатт</span>
         </div>
       </div>
     </div>
@@ -894,7 +894,7 @@
   </main>
 
   <footer>
-    &copy; 2026 КИЛОВАТТ RNP Дашборд. Интерактивная веб-копия Excel-отчета с автоинтеграцией Roistat.
+    <span id="footer-copyright">&copy; 2026 КИЛОВАТТ RNP Дашборд. Интерактивная веб-копия Excel-отчета с автоинтеграцией Roistat.</span>
   </footer>
 
   <script>
@@ -958,6 +958,7 @@
       "Статьи в СМИ",
       "Специализированные выставки"
     ];
+    let activeChannels = [...CHANNELS];
 
     // Ordered marketing metrics rows inside each channel group
     const METRIC_ROWS = [
@@ -1019,7 +1020,43 @@
       return `${monthName} ${year}`;
     }
 
+    function updateBranding(projectName, dashboardName) {
+      if (!projectName) return;
+      const formattedProjectName = projectName.toUpperCase();
+      
+      // Update logo text
+      const logoText = document.getElementById('brand-title');
+      if (logoText) logoText.innerText = formattedProjectName;
+      
+      // Update page title
+      document.title = `${projectName} — Маркетинговый RNP Дашборд`;
+      
+      // Update profile subtitle
+      const profileSubtitle = document.getElementById('project-role-subtitle');
+      if (profileSubtitle) profileSubtitle.innerText = `Проект ${projectName}`;
+      
+      // Update footer
+      const footer = document.getElementById('footer-copyright');
+      if (footer) {
+        footer.innerHTML = `&copy; 2026 ${projectName} RNP Дашборд. Интерактивная веб-копия Excel-отчета с автоинтеграцией Roistat.`;
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
+      // Fetch and initialize branding first
+      try {
+        const res = await fetch('/api/projects');
+        const data = await res.json();
+        if (data.status === 'success') {
+          const p = data.projects.find(x => x.id === projectId);
+          if (p) {
+            updateBranding(p.name);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load branding from projects list:', e);
+      }
+
       await initMonthsDropdown();
       await loadDashboard();
       initGridEvents();
@@ -1047,8 +1084,12 @@
           document.getElementById('empty-state-container').style.display = 'none';
           document.getElementById('dashboard-content').style.display = 'block';
           
+          if (result.projectName) {
+            updateBranding(result.projectName, result.dashboardName);
+          }
+          
           dashboardData = result.data;
-      activeChannels = dashboardData.channels || ["Контекстная реклама", "SEO", "SMM", "Другое"];
+          activeChannels = (dashboardData.channels && dashboardData.channels.length > 0) ? dashboardData.channels : [...CHANNELS];
           
           if (result.roistatConnected) {
             connStatus.className = 'live-status';
@@ -1112,7 +1153,7 @@
       // Try to fetch active plans and mock facts from static files if available
       let staticPlans = {};
       try {
-        const plansRes = await fetch('../plans.json');
+        const plansRes = await fetch('./plans.json');
         if (plansRes.ok) {
           staticPlans = await plansRes.json();
         }
@@ -1123,7 +1164,7 @@
       let staticAprilMock = null;
       if (selectedMonth === '2026-04') {
         try {
-          const mockRes = await fetch('../roistat_april_mock.json');
+          const mockRes = await fetch('./roistat_april_mock.json');
           if (mockRes.ok) {
             staticAprilMock = await mockRes.json();
           }
