@@ -23,8 +23,8 @@ let dbData = {
       "name": "Проект Киловатт",
       "owner": "admin",
       "settings": {
-        "roistatId": "294460",
-        "roistatKey": "87ed258c066c98668b595bafa0365e56",
+        "roistatId": "298115",
+        "roistatKey": "9d791b751c1b7c51d847914ec3c2b47e",
         "metrikaCounterId": "",
         "metrikaToken": "",
         "aiApiKey": "",
@@ -420,8 +420,8 @@ function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true, bas
 // Fetch live metrics from Roistat
 function fetchRoistat(fromStr, toStr) {
   return new Promise((resolve, reject) => {
-    const PID = '294460';
-    const KEY = '87ed258c066c98668b595bafa0365e56';
+    const PID = '298115';
+    const KEY = '9d791b751c1b7c51d847914ec3c2b47e';
 
     const fromIso = `${fromStr}T00:00:00+03:00`;
     const toIso = `${toStr}T23:59:59+03:00`;
@@ -762,8 +762,8 @@ async function handleApi(req, res, pathname, query) {
       name: 'Демо Проект',
       owner: currentUser,
       settings: {
-        roistatId: '294460',
-        roistatKey: '87ed258c066c98668b595bafa0365e56',
+        roistatId: '298115',
+        roistatKey: '9d791b751c1b7c51d847914ec3c2b47e',
         metrikaCounterId: '',
         metrikaToken: '',
         aiApiKey: '',
@@ -1208,8 +1208,8 @@ async function handleApi(req, res, pathname, query) {
       // Fallback for demo Kilowatt project or missing projId
       const isDemo = (projId === 'proj_kilowatt' || projId === 'demo' || !projId);
       if (isDemo && !roistatProjectId) {
-        roistatProjectId = '294460';
-        roistatKey = '87ed258c066c98668b595bafa0365e56';
+        roistatProjectId = '298115';
+        roistatKey = '9d791b751c1b7c51d847914ec3c2b47e';
       }
 
       // Check empty state
