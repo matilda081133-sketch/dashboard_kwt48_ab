@@ -1273,89 +1273,70 @@ async function handleApi(req, res, pathname, query) {
         }
 
         const roistatItems = [];
-        const dateStrings = [];
-        let currentStart = new Date(fromStr);
-        const endDate = new Date(toStr);
-        while (currentStart <= endDate) {
-          dateStrings.push(currentStart.toISOString().split('T')[0]);
-          currentStart.setDate(currentStart.getDate() + 1);
-        }
+        const fromIso = `${fromStr}T00:00:00+03:00`;
+        const toIso = `${toStr}T23:59:59+03:00`;
+        const payload = {
+          "dimensions": ["daily", "source_group", "marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
+          "metrics": metricsToRequest,
+          "period": { "from": fromIso, "to": toIso }
+        };
+        const dataStr = JSON.stringify(payload);
+        const options = {
+          hostname: 'cloud.roistat.com',
+          port: 443,
+          path: `/api/v1/project/analytics/data?project=${roistatProjectId}`,
+          method: 'POST',
+          headers: {
+            'Api-key': roistatKey,
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(dataStr)
+          },
+          rejectUnauthorized: false
+        };
 
-        const chunkSize = 5;
-        for (let i = 0; i < dateStrings.length; i += chunkSize) {
-          const chunk = dateStrings.slice(i, i + chunkSize);
-          const chunkPromises = chunk.map(chunkFromStr => {
-            return new Promise((resolve) => {
-              const fromIso = `${chunkFromStr}T00:00:00+03:00`;
-              const toIso = `${chunkFromStr}T23:59:59+03:00`;
-              const payload = {
-                "dimensions": ["source_group", "marker_level_1", "marker_level_2", "marker_level_3", "marker_level_4"],
-                "metrics": metricsToRequest,
-                "period": { "from": fromIso, "to": toIso }
-              };
-              const dataStr = JSON.stringify(payload);
-              const options = {
-                hostname: 'cloud.roistat.com',
-                port: 443,
-                path: `/api/v1/project/analytics/data?project=${roistatProjectId}`,
-                method: 'POST',
-                headers: {
-                  'Api-key': roistatKey,
-                  'Content-Type': 'application/json',
-                  'Content-Length': Buffer.byteLength(dataStr)
-                },
-                rejectUnauthorized: false
-              };
-              const makeRequest = (retryCount = 0) => {
-                const reqPost = https.request(options, (resPost) => {
-                  let body = '';
-                  resPost.setEncoding('utf8');
-                  resPost.on('data', (chunk) => { body += chunk; });
-                  resPost.on('end', () => {
-                    try {
-                      const parsed = JSON.parse(body);
-                      if (parsed.status === 'error') {
-                        if (parsed.description && (parsed.description.includes('лимит') || parsed.description.includes('limit') || parsed.description.includes('hang up')) && retryCount < 3) {
-                          const delay = 150 + Math.random() * 100 + retryCount * 100;
-                          setTimeout(() => makeRequest(retryCount + 1), delay);
-                        } else {
-                          console.warn(`Roistat error for ${chunkFromStr}:`, parsed.description);
-                          resolve([]);
-                        }
+        const fetchAllData = () => {
+          return new Promise((resolve, reject) => {
+            const makeRequest = (retryCount = 0) => {
+              const reqPost = https.request(options, (resPost) => {
+                let body = '';
+                resPost.setEncoding('utf8');
+                resPost.on('data', (chunk) => { body += chunk; });
+                resPost.on('end', () => {
+                  try {
+                    const parsed = JSON.parse(body);
+                    if (parsed.status === 'error') {
+                      if (parsed.description && (parsed.description.includes('лимит') || parsed.description.includes('limit') || parsed.description.includes('hang up')) && retryCount < 3) {
+                        const delay = 150 + Math.random() * 100 + retryCount * 100;
+                        setTimeout(() => makeRequest(retryCount + 1), delay);
                       } else {
-                        const items = (parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : [];
-                        items.forEach(i => i.dimensions.date = { title: chunkFromStr });
-                        resolve(items);
+                        reject(new Error(parsed.description || 'Unknown Roistat error'));
                       }
-                    } catch (e) {
-                      console.warn(`Roistat parse error for ${chunkFromStr}:`, e.message);
-                      resolve([]);
+                    } else {
+                      const items = (parsed.data && parsed.data[0] && parsed.data[0].items) ? parsed.data[0].items : [];
+                      resolve(items);
                     }
-                  });
-                });
-                reqPost.on('error', (e) => {
-                  if (retryCount < 3) {
-                    const delay = 150 + Math.random() * 100 + retryCount * 100;
-                    setTimeout(() => makeRequest(retryCount + 1), delay);
-                  } else {
-                    console.warn(`Roistat network error for ${chunkFromStr}:`, e.message);
-                    resolve([]);
+                  } catch (e) {
+                    reject(new Error(`Parse error: ${e.message}`));
                   }
                 });
-                reqPost.write(dataStr);
-                reqPost.end();
-              };
-              
-              makeRequest();
-            });
+              });
+              reqPost.on('error', (e) => {
+                if (retryCount < 3) {
+                  const delay = 150 + Math.random() * 100 + retryCount * 100;
+                  setTimeout(() => makeRequest(retryCount + 1), delay);
+                } else {
+                  reject(e);
+                }
+              });
+              reqPost.write(dataStr);
+              reqPost.end();
+            };
+            makeRequest();
           });
+        };
 
-          const results = await Promise.all(chunkPromises);
-          results.forEach(chunkItems => {
-            roistatItems.push(...chunkItems);
-          });
-        }
-        
+        const items = await fetchAllData();
+        roistatItems.push(...items);
         roistatSuccess = true;
         
         if (roistatItems.length > 0) {
@@ -1363,8 +1344,10 @@ async function handleApi(req, res, pathname, query) {
 
           roistatItems.forEach(item => {
             const d = item.dimensions || {};
-            if (!d.date || !d.date.title) return;
-            const dateStr = d.date.title.split('T')[0];
+            const rawDate = d.daily?.title || d.date?.title;
+            if (!rawDate) return;
+            const dateStr = rawDate.split(' ')[0].split('T')[0];
+            
             const marker1 = d.marker_level_1?.title || "";
             const titleRaw = [marker1, d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
             const titleLower = titleRaw.toLowerCase();
