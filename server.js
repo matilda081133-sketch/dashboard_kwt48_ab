@@ -787,7 +787,7 @@ async function handleApi(req, res, pathname, query) {
 
   // GET /api/projects
   if (pathname === '/api/projects' && req.method === 'GET') {
-    const userProjects = Object.values(dbData.projects).filter(p => p.owner === currentUser);
+    const userProjects = Object.values(dbData.projects).filter(p => p.owner === currentUser || p.id === 'proj_kilowatt');
     res.statusCode = 200;
     res.end(JSON.stringify({ status: 'success', projects: userProjects }));
     return;
@@ -838,7 +838,8 @@ async function handleApi(req, res, pathname, query) {
       const body = await parseBody(req);
       const projId = projectPutParams.id;
       const proj = dbData.projects[projId];
-      if (!proj || proj.owner !== currentUser) {
+      const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+      if (!proj || (proj.owner !== currentUser && !isSystemProj)) {
         res.statusCode = 404;
         res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
         return;
@@ -860,7 +861,8 @@ async function handleApi(req, res, pathname, query) {
   if (projectDelParams && req.method === 'DELETE') {
     const projId = projectDelParams.id;
     const proj = dbData.projects[projId];
-    if (proj && proj.owner === currentUser) {
+    const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+    if (proj && (proj.owner === currentUser || isSystemProj)) {
       delete dbData.projects[projId];
       saveDB();
       res.statusCode = 200;
@@ -879,7 +881,8 @@ async function handleApi(req, res, pathname, query) {
       const body = await parseBody(req);
       const projId = connPostParams.id;
       const proj = dbData.projects[projId];
-      if (!proj || proj.owner !== currentUser) {
+      const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+      if (!proj || (proj.owner !== currentUser && !isSystemProj)) {
         res.statusCode = 404;
         res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
         return;
@@ -912,7 +915,8 @@ async function handleApi(req, res, pathname, query) {
       const body = await parseBody(req);
       const { id: projId, dashId } = dashSettingsParams;
       const proj = dbData.projects[projId];
-      if (!proj || proj.owner !== currentUser) {
+      const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+      if (!proj || (proj.owner !== currentUser && !isSystemProj)) {
         res.statusCode = 404;
         res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
         return;
@@ -940,7 +944,8 @@ async function handleApi(req, res, pathname, query) {
   if (dashListParams && req.method === 'GET') {
     const projId = dashListParams.id;
     const proj = dbData.projects[projId];
-    if (proj && proj.owner === currentUser) {
+    const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+    if (proj && (proj.owner === currentUser || isSystemProj)) {
       res.statusCode = 200;
       res.end(JSON.stringify({ status: 'success', dashboards: proj.dashboards }));
     } else {
@@ -956,7 +961,8 @@ async function handleApi(req, res, pathname, query) {
       const body = await parseBody(req);
       const projId = dashListParams.id;
       const proj = dbData.projects[projId];
-      if (!proj || proj.owner !== currentUser) {
+      const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+      if (!proj || (proj.owner !== currentUser && !isSystemProj)) {
         res.statusCode = 404;
         res.end(JSON.stringify({ status: 'error', message: 'Проект не найден' }));
         return;
@@ -990,7 +996,8 @@ async function handleApi(req, res, pathname, query) {
   if (dashDelParams && req.method === 'DELETE') {
     const { id: projId, dashId } = dashDelParams;
     const proj = dbData.projects[projId];
-    if (proj && proj.owner === currentUser) {
+    const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+    if (proj && (proj.owner === currentUser || isSystemProj)) {
       proj.dashboards = proj.dashboards.filter(d => d.id !== dashId);
       delete dbData.dashboardsData[dashId];
       saveDB();
@@ -1008,7 +1015,8 @@ async function handleApi(req, res, pathname, query) {
   if (dashUploadParams && req.method === 'POST') {
     const { id: projId, dashId } = dashUploadParams;
     const proj = dbData.projects[projId];
-    if (proj && proj.owner === currentUser) {
+    const isSystemProj = projId === 'proj_kilowatt' || projId === 'demo';
+    if (proj && (proj.owner === currentUser || isSystemProj)) {
       const filePath = path.join(UPLOADS_DIR, `${projId}_${dashId}.xlsx`);
       try {
         if (!fs.existsSync(UPLOADS_DIR)) {
