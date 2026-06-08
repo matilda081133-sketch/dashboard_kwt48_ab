@@ -1336,7 +1336,7 @@
     async function initMonthsDropdown(forceSelectMonth = null) {
       let months = [];
       try {
-        const response = await fetch('/api/rnp-months');
+        const response = await fetch(`/api/rnp-months?projectId=${projectId}&dashboardId=${dashboardId}`);
         if (response.ok) {
           const result = await response.json();
           if (result.status === 'success') {
@@ -1968,7 +1968,7 @@
         const input = document.createElement('input');
         input.type = 'number';
         input.className = 'cell-input';
-        input.value = currentVal;
+        input.value = (currentVal === null || currentVal === undefined) ? '' : currentVal;
         
         cell.innerHTML = '';
         cell.appendChild(input);

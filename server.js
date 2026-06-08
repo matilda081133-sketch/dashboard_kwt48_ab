@@ -23,8 +23,8 @@ let dbData = {
       "name": "Проект Киловатт",
       "owner": "admin",
       "settings": {
-        "roistatId": "298115",
-        "roistatKey": "9d791b751c1b7c51d847914ec3c2b47e",
+        "roistatId": "",
+        "roistatKey": "",
         "metrikaCounterId": "",
         "metrikaToken": "",
         "aiApiKey": "",
@@ -365,8 +365,8 @@ function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true, bas
     const chList = baseChannels || Object.keys(GROUPS_ROWS);
     for (const channelName of chList) {
       dayItem.channels[channelName] = {
-        plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
-        fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
+        plan: { cost: null, visits: null, leads: null, qual: null, kp: null, sales: null, rev: null },
+        fact: { cost: null, visits: null, leads: null, qual: null, kp: null, sales: null, rev: null }
       };
     }
 
@@ -375,13 +375,13 @@ function getExcelData(fromStr, toStr, customExcelPath, allowFallback = true, bas
       const c = dateInfo.colIdx;
 
       const getCellVal = (r, col) => {
-        if (r === null) return 0;
+        if (r === null) return null;
         const cell = sheet[XLSX.utils.encode_cell({ r: r - 1, c: col })];
-        if (!cell) return 0;
-        if (cell.t === 'n') return cell.v || 0;
-        if (cell.t === 'f') return typeof cell.v === 'number' ? cell.v : 0;
+        if (!cell) return null;
+        if (cell.t === 'n') return cell.v !== undefined ? cell.v : null;
+        if (cell.t === 'f') return typeof cell.v === 'number' ? cell.v : null;
         const val = parseFloat(String(cell.v).replace(/\s/g, '').replace(',', '.'));
-        return isNaN(val) ? 0 : val;
+        return isNaN(val) ? null : val;
       };
 
       for (const [channelName, mapping] of Object.entries(GROUPS_ROWS)) {
@@ -530,13 +530,25 @@ function getMockCityData(leadsCount, salesCount) {
 }
 
 // Scan Excel sheets, plans.json keys, and custom_months.json to get all active months
-function getAvailableMonths() {
+function getAvailableMonths(projectId = null, dashboardId = null) {
   const months = new Set();
   
+  // Default months available by default
+  const defaultMonths = ['2026-04', '2026-05', '2026-06'];
+  defaultMonths.forEach(m => months.add(m));
+
+  let targetPath = null;
+  if (projectId && dashboardId) {
+    const customPath = path.join(UPLOADS_DIR, `${projectId}_${dashboardId}.xlsx`);
+    if (fs.existsSync(customPath)) {
+      targetPath = customPath;
+    }
+  }
+
   // 1. Get from Excel sheet names
-  if (XLSX && fs.existsSync(excelPath)) {
+  if (XLSX && targetPath) {
     try {
-      const fileBuffer = fs.readFileSync(excelPath);
+      const fileBuffer = fs.readFileSync(targetPath);
       const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
       const monthIndexMap = {
         'январь': '01', 'февраль': '02', 'март': '03', 'апрель': '04', 'май': '05', 'мая': '05',
@@ -547,7 +559,7 @@ function getAvailableMonths() {
         const lower = sheetName.toLowerCase().trim();
         for (const [name, index] of Object.entries(monthIndexMap)) {
           if (lower.indexOf(name) !== -1) {
-            months.add(`2026-${index}`); // Default to 2026 as per project structure
+            months.add(`2026-${index}`);
           }
         }
       });
@@ -771,8 +783,8 @@ async function handleApi(req, res, pathname, query) {
       name: 'Демо Проект',
       owner: currentUser,
       settings: {
-        roistatId: '298115',
-        roistatKey: '9d791b751c1b7c51d847914ec3c2b47e',
+        roistatId: '',
+        roistatKey: '',
         metrikaCounterId: '',
         metrikaToken: '',
         aiApiKey: '',
@@ -1182,7 +1194,9 @@ async function handleApi(req, res, pathname, query) {
   // GET /api/rnp-months
   if (pathname === '/api/rnp-months' && req.method === 'GET') {
     try {
-      const months = getAvailableMonths();
+      const projectId = query.projectId;
+      const dashboardId = query.dashboardId;
+      const months = getAvailableMonths(projectId, dashboardId);
       res.statusCode = 200;
       res.end(JSON.stringify({ status: 'success', months }));
     } catch (err) {
@@ -1233,8 +1247,8 @@ async function handleApi(req, res, pathname, query) {
       // Fallback for demo Kilowatt project or missing projId
       const isDemo = (projId === 'proj_kilowatt' || projId === 'demo' || !projId);
       if (isDemo && !roistatProjectId) {
-        roistatProjectId = '298115';
-        roistatKey = '9d791b751c1b7c51d847914ec3c2b47e';
+        roistatProjectId = '';
+        roistatKey = '';
       }
 
       // Check empty state
@@ -1246,7 +1260,7 @@ async function handleApi(req, res, pathname, query) {
 
       let activeChannels = [...KILOWATT_CHANNELS];
       // 1. Get base data from Excel (both Plan and Fact)
-      let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, isDemo, activeChannels);
+      let mergedData = getExcelData(fromStr, toStr, hasCustomExcel ? customPath : null, false, activeChannels);
 
       // 2. Fetch from Roistat using Project specific integrations
       let roistatSuccess = false;
@@ -1476,14 +1490,14 @@ async function handleApi(req, res, pathname, query) {
       // 4. Compute summaries
       const summary = {};
       const total = {
-        plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
-        fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
+        plan: { cost: null, visits: null, leads: null, qual: null, kp: null, sales: null, rev: null },
+        fact: { cost: null, visits: null, leads: null, qual: null, kp: null, sales: null, rev: null }
       };
 
       for (const channelName of activeChannels) {
         summary[channelName] = {
-          plan: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 },
-          fact: { cost: 0, visits: 0, leads: 0, qual: 0, kp: 0, sales: 0, rev: 0 }
+          plan: { cost: null, visits: null, leads: null, qual: null, kp: null, sales: null, rev: null },
+          fact: { cost: null, visits: null, leads: null, qual: null, kp: null, sales: null, rev: null }
         };
       }
 
@@ -1491,10 +1505,18 @@ async function handleApi(req, res, pathname, query) {
         for (const [channelName, ch] of Object.entries(dayItem.channels)) {
           if (!summary[channelName]) continue;
           for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
-            summary[channelName].plan[metric] += ch.plan[metric] || 0;
-            summary[channelName].fact[metric] += ch.fact[metric] || 0;
-            total.plan[metric] += ch.plan[metric] || 0;
-            total.fact[metric] += ch.fact[metric] || 0;
+            if (ch.plan[metric] !== null) {
+              if (summary[channelName].plan[metric] === null) summary[channelName].plan[metric] = 0;
+              summary[channelName].plan[metric] += ch.plan[metric];
+              if (total.plan[metric] === null) total.plan[metric] = 0;
+              total.plan[metric] += ch.plan[metric];
+            }
+            if (ch.fact[metric] !== null) {
+              if (summary[channelName].fact[metric] === null) summary[channelName].fact[metric] = 0;
+              summary[channelName].fact[metric] += ch.fact[metric];
+              if (total.fact[metric] === null) total.fact[metric] = 0;
+              total.fact[metric] += ch.fact[metric];
+            }
           }
         }
       });
@@ -1502,16 +1524,16 @@ async function handleApi(req, res, pathname, query) {
       for (const channelName of activeChannels) {
         const ch = summary[channelName];
         for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
-          ch.plan[metric] = Math.round(ch.plan[metric] * 100) / 100;
-          ch.fact[metric] = Math.round(ch.fact[metric] * 100) / 100;
+          if (ch.plan[metric] !== null) ch.plan[metric] = Math.round(ch.plan[metric] * 100) / 100;
+          if (ch.fact[metric] !== null) ch.fact[metric] = Math.round(ch.fact[metric] * 100) / 100;
         }
         ch.plan.calculated = computeFormulas(ch.plan);
         ch.fact.calculated = computeFormulas(ch.fact);
       }
 
       for (const metric of ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev']) {
-        total.plan[metric] = Math.round(total.plan[metric] * 100) / 100;
-        total.fact[metric] = Math.round(total.fact[metric] * 100) / 100;
+        if (total.plan[metric] !== null) total.plan[metric] = Math.round(total.plan[metric] * 100) / 100;
+        if (total.fact[metric] !== null) total.fact[metric] = Math.round(total.fact[metric] * 100) / 100;
       }
       total.plan.calculated = computeFormulas(total.plan);
       total.fact.calculated = computeFormulas(total.fact);
