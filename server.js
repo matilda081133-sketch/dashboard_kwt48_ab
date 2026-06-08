@@ -6,9 +6,9 @@ const https = require('https');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
-const PLANS_FILE = path.join(__dirname, 'plans.json');
-const DB_FILE = path.join(__dirname, 'database.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const PLANS_FILE = process.env.PORT ? '/tmp/plans.json' : path.join(__dirname, 'plans.json');
+const DB_FILE = process.env.PORT ? '/tmp/database.json' : path.join(__dirname, 'database.json');
+const UPLOADS_DIR = process.env.PORT ? '/tmp/uploads' : path.join(__dirname, 'uploads');
 // Uploads directory is created lazily on demand
 
 
@@ -66,11 +66,26 @@ function loadDB() {
   if (fs.existsSync(DB_FILE)) {
     try {
       dbData = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+      console.log('✅ Loaded database from:', DB_FILE);
     } catch (e) {
       console.error('Error loading database.json:', e);
     }
   } else {
-    saveDB();
+    // DB_FILE does not exist. If we are using /tmp, seed it from app directory template.
+    const templatePath = path.join(__dirname, 'database.json');
+    if (fs.existsSync(templatePath)) {
+      try {
+        dbData = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+        console.log('✅ Initialized database from template:', templatePath);
+        saveDB();
+      } catch (e) {
+        console.error('Error loading database.json template:', e);
+        saveDB();
+      }
+    } else {
+      console.log('⚠️ Database template not found, using default in-memory dbData.');
+      saveDB();
+    }
   }
 }
 
@@ -295,6 +310,21 @@ function readPlans() {
     } catch (e) {
       console.error('Error reading plans:', e);
       return {};
+    }
+  } else {
+    // PLANS_FILE does not exist. If we are using /tmp, seed it from app directory template.
+    const templatePath = path.join(__dirname, 'plans.json');
+    if (fs.existsSync(templatePath)) {
+      try {
+        const plans = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+        // Copy to PLANS_FILE
+        fs.writeFileSync(PLANS_FILE, JSON.stringify(plans, null, 2), 'utf8');
+        console.log('✅ Initialized plans from template:', templatePath);
+        return plans;
+      } catch (e) {
+        console.error('Error reading plans template:', e);
+        return {};
+      }
     }
   }
   return {};
