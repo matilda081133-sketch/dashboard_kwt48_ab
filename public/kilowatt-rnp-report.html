@@ -18,7 +18,7 @@
   
   <!-- GridStack -->
   <link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.0/dist/gridstack.min.css" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.0/dist/gridstack.all.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.0/dist/gridstack-all.js"></script>
 
   <style>
     :root {
@@ -1886,6 +1886,68 @@
         });
         tbody.appendChild(tr);
       });
+    }
+
+    // Helper: Create standard grid cell
+    function createCell(val, metric) {
+      const td = document.createElement('td');
+      td.innerText = fmtVal(val, metric);
+      return td;
+    }
+
+    // Helper: Create percentage plan completion cell with color coding
+    function createPctCell(plan, fact, metric, addBorder = false) {
+      const td = document.createElement('td');
+      td.className = 'week-sum-pct';
+      if (addBorder) td.className += ' monthly-col-border';
+
+      if (['drr', 'cpl', 'cpql', 'cps', 'romi', 'crLeads', 'crQual', 'crKp', 'crSale'].includes(metric)) {
+        // Calculated conversion rates or cost averages do not show standard sums % completion
+        td.innerText = '—';
+        return td;
+      }
+
+      let pct = 0;
+      let pctStr = '0%';
+      let statusClass = 'warn';
+
+      if (plan === 0) {
+        if (fact > 0) {
+          pct = 1;
+          pctStr = '▲ 100%';
+          statusClass = 'good';
+        } else {
+          pct = 0;
+          pctStr = '0%';
+          statusClass = 'warn';
+        }
+      } else {
+        pct = fact / plan;
+        pctStr = (pct * 100).toFixed(0) + '%';
+        
+        if (metric === 'cost') {
+          // Budget spent: lower or close to 100% is better
+          statusClass = pct <= 1.05 ? 'good' : (pct <= 1.2 ? 'warn' : 'bad');
+        } else {
+          // Conversions, leads, sales: higher is better
+          statusClass = pct >= 0.95 ? 'good' : (pct >= 0.75 ? 'warn' : 'bad');
+        }
+      }
+
+      if (statusClass === 'good') {
+        td.style.backgroundColor = '#c6efce';
+        td.style.color = '#006100';
+      } else if (statusClass === 'warn') {
+        td.style.backgroundColor = '#ffeb9c';
+        td.style.color = '#9c6500';
+      } else if (statusClass === 'bad') {
+        td.style.backgroundColor = '#ffc7ce';
+        td.style.color = '#9c0006';
+      }
+      td.style.fontWeight = '600';
+      td.style.textAlign = 'center';
+      td.innerText = pctStr;
+      return td;
     }
 
     function initGridEvents() {
