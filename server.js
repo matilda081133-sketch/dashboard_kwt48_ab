@@ -6,9 +6,9 @@ const https = require('https');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
-const PLANS_FILE = process.env.PORT ? '/tmp/plans.json' : path.join(__dirname, 'plans.json');
-const DB_FILE = process.env.PORT ? '/tmp/database.json' : path.join(__dirname, 'database.json');
-const UPLOADS_DIR = process.env.PORT ? '/tmp/uploads' : path.join(__dirname, 'uploads');
+const PLANS_FILE = path.join(__dirname, 'plans.json');
+const DB_FILE = path.join(__dirname, 'database.json');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
 // Uploads directory is created lazily on demand
 
 
@@ -681,8 +681,11 @@ async function handleApi(req, res, pathname, query) {
       }
       dbData.users[username] = password;
       
-      // Auto-create a default project for the new user
+      // Auto-create a default project for the new user with pre-created RNP and Landing dashboards
       const projId = 'proj_' + Math.floor(Math.random() * 1000000);
+      const dashRnpId = 'dash_' + Math.floor(Math.random() * 1000000);
+      const dashLandingId = 'dash_' + Math.floor(Math.random() * 1000000);
+
       dbData.projects[projId] = {
         id: projId,
         name: 'Мой первый проект',
@@ -697,8 +700,14 @@ async function handleApi(req, res, pathname, query) {
           aiModel: '',
           aiProvider: ''
         },
-        dashboards: []
+        connections: [],
+        dashboards: [
+          { id: dashRnpId, name: 'Маркетинговый RNP', type: 'rnp', created_at: new Date().toISOString() },
+          { id: dashLandingId, name: 'Эффективность лендингов', type: 'landing', created_at: new Date().toISOString() }
+        ]
       };
+      dbData.dashboardsData[dashRnpId] = { plans: {}, changes: [], abTests: [] };
+      dbData.dashboardsData[dashLandingId] = { plans: {}, changes: [], abTests: [] };
       
       saveDB();
       res.setHeader('Set-Cookie', `session_user=${encodeURIComponent(username)}; Path=/; HttpOnly`);
@@ -804,6 +813,9 @@ async function handleApi(req, res, pathname, query) {
         return;
       }
       const projId = 'proj_' + Math.floor(Math.random() * 1000000);
+      const dashRnpId = 'dash_' + Math.floor(Math.random() * 1000000);
+      const dashLandingId = 'dash_' + Math.floor(Math.random() * 1000000);
+
       dbData.projects[projId] = {
         id: projId,
         name,
@@ -819,8 +831,13 @@ async function handleApi(req, res, pathname, query) {
           aiProvider: ''
         },
         connections: [],
-        dashboards: []
+        dashboards: [
+          { id: dashRnpId, name: 'Маркетинговый RNP', type: 'rnp', created_at: new Date().toISOString() },
+          { id: dashLandingId, name: 'Эффективность лендингов', type: 'landing', created_at: new Date().toISOString() }
+        ]
       };
+      dbData.dashboardsData[dashRnpId] = { plans: {}, changes: [], abTests: [] };
+      dbData.dashboardsData[dashLandingId] = { plans: {}, changes: [], abTests: [] };
       saveDB();
       res.statusCode = 200;
       res.end(JSON.stringify({ status: 'success', project: dbData.projects[projId] }));
