@@ -63,25 +63,75 @@ let dbData = {
 };
 
 function loadDB() {
+  const templatePath = path.join(__dirname, 'database.json');
+  let templateData = null;
+  if (fs.existsSync(templatePath)) {
+    try {
+      templateData = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+    } catch (e) {
+      console.error('Error parsing database.json template:', e);
+    }
+  }
+
   if (fs.existsSync(DB_FILE)) {
     try {
       dbData = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
       console.log('✅ Loaded database from:', DB_FILE);
+      
+      if (templateData) {
+        let modified = false;
+        
+        if (!dbData.users) {
+          dbData.users = { ...templateData.users };
+          modified = true;
+        } else {
+          for (const [user, pwd] of Object.entries(templateData.users || {})) {
+            if (!dbData.users[user]) {
+              dbData.users[user] = pwd;
+              modified = true;
+            }
+          }
+        }
+        
+        if (!dbData.projects) {
+          dbData.projects = { ...templateData.projects };
+          modified = true;
+        } else {
+          for (const [projId, proj] of Object.entries(templateData.projects || {})) {
+            if (!dbData.projects[projId]) {
+              dbData.projects[projId] = proj;
+              console.log(`Self-healing: restored missing project ${projId} (${proj.name})`);
+              modified = true;
+            }
+          }
+        }
+        
+        if (!dbData.dashboardsData) {
+          dbData.dashboardsData = { ...templateData.dashboardsData };
+          modified = true;
+        } else {
+          for (const [dashId, dash] of Object.entries(templateData.dashboardsData || {})) {
+            if (!dbData.dashboardsData[dashId]) {
+              dbData.dashboardsData[dashId] = dash;
+              console.log(`Self-healing: restored missing dashboardsData entry ${dashId}`);
+              modified = true;
+            }
+          }
+        }
+        
+        if (modified) {
+          console.log('✅ Merged missing template entries into active database.');
+          saveDB();
+        }
+      }
     } catch (e) {
-      console.error('Error loading database.json:', e);
+      console.error('Error loading/merging database.json:', e);
     }
   } else {
-    // DB_FILE does not exist. If we are using /tmp, seed it from app directory template.
-    const templatePath = path.join(__dirname, 'database.json');
-    if (fs.existsSync(templatePath)) {
-      try {
-        dbData = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
-        console.log('✅ Initialized database from template:', templatePath);
-        saveDB();
-      } catch (e) {
-        console.error('Error loading database.json template:', e);
-        saveDB();
-      }
+    if (templateData) {
+      dbData = templateData;
+      console.log('✅ Initialized database from template:', templatePath);
+      saveDB();
     } else {
       console.log('⚠️ Database template not found, using default in-memory dbData.');
       saveDB();
