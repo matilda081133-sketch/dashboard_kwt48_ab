@@ -1500,11 +1500,12 @@
       dashboardData.daily.forEach(d => { datesList.push(d.date); });
       datesList.sort();
 
+      const allCoreMetrics = ['drr', 'cost', 'visits', 'leads', 'cpl', 'crLeads', 'qual', 'crQual', 'cpql', 'kp', 'crKp', 'sales', 'rev', 'crSale', 'cps', 'romi'];
       activeChannels.forEach(ch => {
         dataModel[ch] = { metrics: {}, sources: {} };
-        METRIC_ROWS.forEach(m => {
-          dataModel[ch].metrics[m.key] = {};
-          dataModel[ch][m.key] = dataModel[ch].metrics[m.key];
+        allCoreMetrics.forEach(mKey => {
+          dataModel[ch].metrics[mKey] = {};
+          dataModel[ch][mKey] = dataModel[ch].metrics[mKey];
         });
       });
 
@@ -1524,7 +1525,7 @@
               Object.keys(chData.sources).forEach(src => {
                 if (!dataModel[ch].sources[src]) {
                   dataModel[ch].sources[src] = {};
-                  METRIC_ROWS.forEach(m => { dataModel[ch].sources[src][m.key] = {}; });
+                  allCoreMetrics.forEach(mKey => { dataModel[ch].sources[src][mKey] = {}; });
                 }
                 ['cost', 'visits', 'leads', 'qual', 'kp', 'sales', 'rev'].forEach(m => {
                   dataModel[ch].sources[src][m][dateStr] = { plan: 0, fact: chData.sources[src][m] || 0 };
