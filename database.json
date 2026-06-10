@@ -1,0 +1,171 @@
+{
+  "users": {
+    "admin": "kilowatt2026"
+  },
+  "projects": {
+    "proj_kilowatt": {
+      "id": "proj_kilowatt",
+      "name": "Проект Киловатт",
+      "owner": "admin",
+      "settings": {
+        "roistatId": "",
+        "roistatKey": "",
+        "metrikaCounterId": "",
+        "metrikaToken": "",
+        "aiApiKey": "",
+        "aiEndpoint": "https://api.openai.com/v1",
+        "aiModel": "gpt-4o-mini",
+        "aiProvider": "openai"
+      },
+      "dashboards": [
+        {
+          "id": "dash_rnp_kwt",
+          "name": "Маркетинговый RNP (Киловатт)",
+          "type": "rnp",
+          "created_at": "2026-06-01T00:00:00.000Z"
+        },
+        {
+          "id": "dash_landing_kwt",
+          "name": "Эффективность лендингов (Киловатт)",
+          "type": "landing",
+          "created_at": "2026-06-01T00:00:00.000Z"
+        }
+      ],
+      "connections": [
+        {
+          "id": "conn_eblicubft",
+          "type": "roistat",
+          "name": "Test connection",
+          "params": {
+            "projectId": "298115",
+            "apiKey": "9d791b751c1b7c51d847914ec3c2b47e"
+          }
+        }
+      ]
+    },
+    "proj_595463": {
+      "id": "proj_595463",
+      "name": "Новая школа",
+      "owner": "admin",
+      "settings": {
+        "roistatId": "",
+        "roistatKey": "",
+        "metrikaCounterId": "",
+        "metrikaToken": "",
+        "aiApiKey": "",
+        "aiEndpoint": "",
+        "aiModel": "",
+        "aiProvider": ""
+      },
+      "connections": [
+        {
+          "id": "conn_m6nm41o15",
+          "type": "roistat",
+          "name": "Подключение Roistat",
+          "params": {
+            "projectId": "298115",
+            "apiKey": "9d791b751c1b7c51d847914ec3c2b47e"
+          }
+        }
+      ],
+      "dashboards": [
+        {
+          "id": "dash_391964",
+          "name": "Маркетинговый RNP",
+          "type": "rnp",
+          "created_at": "2026-06-10T06:30:21.060Z",
+          "connectionId": "conn_m6nm41o15"
+        },
+        {
+          "id": "dash_504583",
+          "name": "Эффективность лендингов",
+          "type": "landing",
+          "created_at": "2026-06-10T06:30:21.060Z",
+          "connectionId": "conn_m6nm41o15"
+        }
+      ]
+    }
+  },
+  "dashboardsData": {
+    "dash_391964": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_504583": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_rnp_kwt": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_landing_kwt": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_287938": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_15081": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_925465": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_570713": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_743488": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_681368": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_254085": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_524734": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "demo": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "demo_landing": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_611049": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_405479": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    }
+  }
+}
