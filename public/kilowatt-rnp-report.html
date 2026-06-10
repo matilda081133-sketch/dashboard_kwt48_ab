@@ -961,7 +961,7 @@
     let activeChannels = [...CHANNELS];
 
     // Ordered marketing metrics rows inside each channel group
-    const METRIC_ROWS = [
+    let METRIC_ROWS = [
       { key: 'drr', label: 'ДРР', type: 'percent', isCalc: true },
       { key: 'cost', label: 'Затраты (Расход)', type: 'price', isCalc: false },
       { key: 'visits', label: 'Трафик (Визиты)', type: 'integer', isCalc: false },
@@ -1051,6 +1051,9 @@
           const p = data.projects.find(x => x.id === projectId);
           if (p) {
             updateBranding(p.name);
+            if (p.name.includes("Новая школа")) {
+              METRIC_ROWS = METRIC_ROWS.filter(r => r.key !== 'kp' && r.key !== 'crKp');
+            }
           }
         }
       } catch (e) {

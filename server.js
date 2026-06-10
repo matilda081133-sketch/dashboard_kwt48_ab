@@ -1325,6 +1325,7 @@ async function handleApi(req, res, pathname, query) {
           { "metric": "visits", "attribution": "default" },
           { "metric": "leads", "attribution": "default" },
           { "metric": "leadCount", "attribution": "default" },
+          { "metric": "canceledLeadCount", "attribution": "default" },
           { "metric": "sales", "attribution": "default" },
           { "metric": "paidLeadCount", "attribution": "default" },
           { "metric": "revenue", "attribution": "default" },
@@ -1448,8 +1449,18 @@ async function handleApi(req, res, pathname, query) {
             const visits = m.visitCount || m.visits || 0;
             const leads = titleRaw.toLowerCase().includes("звонок") ? 0 : (m.leadCount || m.leads || 0);
             
-            const qual = (customQualMetric && m[customQualMetric]) || m.custom_2 || 0;
-            const kp = (customKpMetric && m[customKpMetric]) || m.custom_5 || 0;
+            const leadCount = m.leadCount || m.leads || 0;
+            const canceledLeadCount = m.canceledLeadCount || 0;
+            let qual = (customQualMetric && m[customQualMetric]) || 0;
+            if (!customQualMetric) {
+              if (isDemo) {
+                qual = m.custom_2 || 0;
+              } else {
+                qual = Math.max(0, leadCount - canceledLeadCount);
+              }
+            }
+            
+            const kp = (customKpMetric && m[customKpMetric]) || (isDemo ? (m.custom_5 || 0) : 0);
             const sales = m.paidLeadCount || m.sales || 0;
             const rev = m.paidLeadsPrice || m.revenue || 0;
 
