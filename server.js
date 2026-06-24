@@ -1601,6 +1601,8 @@ async function handleApi(req, res, pathname, query) {
             const titleRaw = [marker1, d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
             const titleLower = titleRaw.toLowerCase();
 
+            if (titleLower.includes("лучики") || titleLower.includes("luchiki")) return;
+
             if (sourceFilter && !titleLower.includes(sourceFilter.toLowerCase())) return;
 
             const sourceGroupTitle = d.source_group?.title || "";
