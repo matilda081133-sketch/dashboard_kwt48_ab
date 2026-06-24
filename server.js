@@ -1558,13 +1558,15 @@ async function handleApi(req, res, pathname, query) {
         
         roistatSuccess = true;
 
-        // Fetch Luchiki orders and subtract them
+        // Apply split logic between Luchiki and New School
         try {
+          const isLuchikiProject = project.name.toLowerCase().includes("лучик");
           const luchikiCounts = await fetchLuchikiOrders(roistatProjectId, roistatKey, fromStr, toStr);
-          roistatItems.forEach(it => {
-            const d = it.dimensions || {};
+          
+          roistatItems = roistatItems.filter(item => {
+            const d = item.dimensions || {};
             const rawDate = (d.daily && d.daily.title) || (d.date && d.date.title);
-            if (!rawDate) return;
+            if (!rawDate) return false;
             const dateStr = rawDate.split('T')[0];
             const v1 = d.marker_level_1 ? (d.marker_level_1.value || "") : "";
             const v2 = d.marker_level_2 ? (d.marker_level_2.value || "") : "";
@@ -1572,15 +1574,46 @@ async function handleApi(req, res, pathname, query) {
             const v4 = d.marker_level_4 ? (d.marker_level_4.value || "") : "";
             const markerStr = [v1, v2, v3, v4].join(" ").trim();
             const key = dateStr + "|||" + markerStr;
+            
+            const titleRaw = [d.marker_level_1?.title || "", d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
+            const titleLower = titleRaw.toLowerCase();
+            const isLuchikiCampaign = titleLower.includes("лучики") || titleLower.includes("luchiki");
 
-            if (luchikiCounts[key]) {
-              const toSub = luchikiCounts[key];
-              it.metrics.forEach(x => {
-                if (x.metric === "leads" || x.metric === "leadCount") x.value = Math.max(0, x.value - toSub.leads);
-                if (x.metric === "sales" || x.metric === "paidLeadCount") x.value = Math.max(0, x.value - toSub.sales);
-                if (x.metric === "revenue" || x.metric === "paidLeadsPrice") x.value = Math.max(0, x.value - toSub.rev);
-                if (x.metric === "custom_2") x.value = Math.max(0, x.value - toSub.qual);
-              });
+            if (isLuchikiProject) {
+              if (isLuchikiCampaign) {
+                return true;
+              } else {
+                if (luchikiCounts[key]) {
+                  const lData = luchikiCounts[key];
+                  item.metrics.forEach(x => {
+                    const mName = x.metric_name || x.metric;
+                    if (mName === 'marketing_cost' || mName === 'visitsCost') x.value = 0;
+                    if (mName === 'visits' || mName === 'visitCount') x.value = 0;
+                    if (mName === "leads" || mName === "leadCount") x.value = lData.leads;
+                    if (mName === "sales" || mName === "paidLeadCount") x.value = lData.sales;
+                    if (mName === "revenue" || mName === "paidLeadsPrice") x.value = lData.rev;
+                    if (mName === "custom_2") x.value = lData.qual;
+                  });
+                  return true;
+                }
+                return false;
+              }
+            } else {
+              if (isLuchikiCampaign) {
+                return false;
+              } else {
+                if (luchikiCounts[key]) {
+                  const toSub = luchikiCounts[key];
+                  item.metrics.forEach(x => {
+                    const mName = x.metric_name || x.metric;
+                    if (mName === "leads" || mName === "leadCount") x.value = Math.max(0, x.value - toSub.leads);
+                    if (mName === "sales" || mName === "paidLeadCount") x.value = Math.max(0, x.value - toSub.sales);
+                    if (mName === "revenue" || mName === "paidLeadsPrice") x.value = Math.max(0, x.value - toSub.rev);
+                    if (mName === "custom_2") x.value = Math.max(0, x.value - toSub.qual);
+                  });
+                }
+                return true;
+              }
             }
           });
         } catch (e) {
@@ -1600,8 +1633,6 @@ async function handleApi(req, res, pathname, query) {
             const marker1 = d.marker_level_1?.title || "";
             const titleRaw = [marker1, d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
             const titleLower = titleRaw.toLowerCase();
-
-            if (titleLower.includes("лучики") || titleLower.includes("luchiki")) return;
 
             if (sourceFilter && !titleLower.includes(sourceFilter.toLowerCase())) return;
 
