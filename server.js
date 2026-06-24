@@ -1381,6 +1381,13 @@ async function handleApi(req, res, pathname, query) {
     return;
   }
 
+  // GET /api/debug
+  if (pathname === '/api/debug' && req.method === 'GET') {
+    res.statusCode = 200;
+    res.end(JSON.stringify({ projects: dbData.projects }));
+    return;
+  }
+
   // GET /api/rnp-data
   if (pathname === '/api/rnp-data' && req.method === 'GET') {
     const fromStr = query.from;
