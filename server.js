@@ -746,11 +746,11 @@ function getGroupForProject(titleRaw, sourceGroupTitle, isDemo) {
   if (sourceGroupTitle) {
     const g = sourceGroupTitle.trim();
     if (g === "Остальное" || g === "Другое" || g === "Неизвестный канал" || g === "") {
-      return getGroup(titleRaw) || "Остальное";
+      return getGroup(titleRaw) || titleRaw || "Остальное";
     }
     return g;
   }
-  return getGroup(titleRaw) || "Остальное";
+  return getGroup(titleRaw) || titleRaw || "Остальное";
 }
 
 
