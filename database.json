@@ -84,6 +84,41 @@
           "connectionId": "conn_m6nm41o15"
         }
       ]
+    },
+    "proj_luchiki": {
+      "id": "proj_luchiki",
+      "name": "Лучики",
+      "owner": "admin",
+      "settings": {
+        "roistatId": "",
+        "roistatKey": "",
+        "metrikaCounterId": "",
+        "metrikaToken": "",
+        "aiApiKey": "",
+        "aiEndpoint": "",
+        "aiModel": "",
+        "aiProvider": ""
+      },
+      "connections": [
+        {
+          "id": "conn_luchiki",
+          "type": "roistat",
+          "name": "Подключение Roistat",
+          "params": {
+            "projectId": "298115",
+            "apiKey": "9d791b751c1b7c51d847914ec3c2b47e"
+          }
+        }
+      ],
+      "dashboards": [
+        {
+          "id": "dash_luchiki_rnp",
+          "name": "Маркетинговый RNP (Лучики)",
+          "type": "rnp",
+          "created_at": "2026-06-24T14:15:23.337Z",
+          "connectionId": "conn_luchiki"
+        }
+      ]
     }
   },
   "dashboardsData": {
@@ -163,6 +198,11 @@
       "abTests": []
     },
     "dash_405479": {
+      "plans": {},
+      "changes": [],
+      "abTests": []
+    },
+    "dash_luchiki_rnp": {
       "plans": {},
       "changes": [],
       "abTests": []
