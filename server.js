@@ -1574,11 +1574,12 @@ async function handleApi(req, res, pathname, query) {
 
         // Apply split logic between Luchiki and New School
         try {
-          const projName = (project.name || "").toLowerCase();
+          const projName = (proj.name || "").toLowerCase();
           const dashName = dashboard ? (dashboard.name || "").toLowerCase() : "";
           const isLuchikiProject = projName.includes("лучик") || projName.includes("luchiki") || dashName.includes("лучик") || dashName.includes("luchiki");
           const luchikiCounts = await fetchLuchikiOrders(roistatProjectId, roistatKey, fromStr, toStr);
           
+          global.luchikiDebugArr = [];
           roistatItems = roistatItems.filter(item => {
             const d = item.dimensions || {};
             const rawDate = (d.daily && d.daily.title) || (d.date && d.date.title);
@@ -1596,7 +1597,8 @@ async function handleApi(req, res, pathname, query) {
             const isLuchikiCampaign = titleLower.includes("лучики") || titleLower.includes("luchiki");
 
             if (getGroup(titleRaw) === "Контекстная реклама") {
-              console.log("Direct item for Luchiki:", { dateStr, titleRaw, isLuchikiCampaign, luchikiCount: !!luchikiCounts[key] });
+              global.luchikiDebugArr = global.luchikiDebugArr || [];
+              global.luchikiDebugArr.push({ dateStr, titleRaw, isLuchikiCampaign, luchikiCount: !!luchikiCounts[key] });
             }
 
             if (isLuchikiProject) {
