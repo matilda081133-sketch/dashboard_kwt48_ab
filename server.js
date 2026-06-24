@@ -1579,29 +1579,34 @@ async function handleApi(req, res, pathname, query) {
           const isLuchikiProject = projName.includes("лучик") || projName.includes("luchiki") || dashName.includes("лучик") || dashName.includes("luchiki");
           const luchikiCounts = await fetchLuchikiOrders(roistatProjectId, roistatKey, fromStr, toStr);
           
-          global.luchikiDebugArr = [];
           roistatItems = roistatItems.filter(item => {
             const d = item.dimensions || {};
             const rawDate = (d.daily && d.daily.title) || (d.date && d.date.title);
-            if (!rawDate) return false;
+            if (!rawDate) return true;
             const dateStr = rawDate.split('T')[0];
-            const v1 = d.marker_level_1 ? (d.marker_level_1.value || "") : "";
-            const v2 = d.marker_level_2 ? (d.marker_level_2.value || "") : "";
-            const v3 = d.marker_level_3 ? (d.marker_level_3.value || "") : "";
-            const v4 = d.marker_level_4 ? (d.marker_level_4.value || "") : "";
-            const markerStr = [v1, v2, v3, v4].join(" ").trim();
-            const key = dateStr + "|||" + markerStr;
+
+            let titleRaw = "";
+            if (d.marker_level_1 && d.marker_level_1.title) {
+              const v1 = d.marker_level_1.title || "";
+              const v2 = d.marker_level_2 ? (d.marker_level_2.title || "") : "";
+              const v3 = d.marker_level_3 ? (d.marker_level_3.title || "") : "";
+              const v4 = d.marker_level_4 ? (d.marker_level_4.title || "") : "";
+              titleRaw = [v1, v2, v3, v4].join(" ").trim();
+            } else {
+              const v1 = d.marker_level_1 ? (d.marker_level_1.value || "") : "";
+              const v2 = d.marker_level_2 ? (d.marker_level_2.value || "") : "";
+              const v3 = d.marker_level_3 ? (d.marker_level_3.value || "") : "";
+              const v4 = d.marker_level_4 ? (d.marker_level_4.value || "") : "";
+              titleRaw = [v1, v2, v3, v4].join(" ").trim();
+            }
             
-            const titleRaw = [d.marker_level_1?.title || "", d.marker_level_2?.title || "", d.marker_level_3?.title || "", d.marker_level_4?.title || ""].join(" ").trim();
             const titleLower = titleRaw.toLowerCase();
             const isLuchikiCampaign = titleLower.includes("лучики") || titleLower.includes("luchiki");
 
-            if (getGroup(titleRaw) === "Контекстная реклама") {
-              global.luchikiDebugArr = global.luchikiDebugArr || [];
-              global.luchikiDebugArr.push({ dateStr, titleRaw, isLuchikiCampaign, luchikiCount: !!luchikiCounts[key] });
-            }
+            const key = dateStr + "|||" + titleRaw;
 
             if (isLuchikiProject) {
+              // For Luchiki project, ONLY keep Luchiki campaigns. If it's a shared/other campaign, keep only if AmoCRM has a lead for it, but ZERO the cost.
               if (isLuchikiCampaign) {
                 return true;
               } else {
