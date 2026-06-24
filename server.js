@@ -753,6 +753,100 @@ function getGroupForProject(titleRaw, sourceGroupTitle, isDemo) {
   return getGroup(titleRaw) || "Остальное";
 }
 
+
+async function fetchLuchikiOrders(projectId, apiKey, fromStr, toStr) {
+  const fromIso = `${fromStr}T00:00:00+03:00`;
+  const toIso = `${toStr}T23:59:59+03:00`;
+  let limit = 500;
+  let offset = 0;
+  let luchikiCounts = {};
+
+  while (true) {
+    const payload = {
+      "filters": {
+        "and": [
+          ["creation_date", ">=", fromIso],
+          ["creation_date", "<=", toIso]
+        ]
+      },
+      "limit": limit,
+      "offset": offset,
+      "extend": ["visit"]
+    };
+    const dataStr = JSON.stringify(payload);
+    
+    const items = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'cloud.roistat.com',
+        port: 443,
+        path: `/api/v1/project/integration/order/list?project=${projectId}`,
+        method: 'POST',
+        headers: {
+          'Api-key': apiKey,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(dataStr)
+        },
+        rejectUnauthorized: false
+      };
+      const reqPost = require('https').request(options, (resPost) => {
+        let body = '';
+        resPost.setEncoding('utf8');
+        resPost.on('data', (chunk) => { body += chunk; });
+        resPost.on('end', () => {
+          try {
+            const parsed = JSON.parse(body);
+            if (parsed.status === 'error') resolve([]);
+            else resolve(parsed.data || []);
+          } catch (e) { resolve([]); }
+        });
+      });
+      reqPost.on('error', (e) => resolve([]));
+      reqPost.write(dataStr);
+      reqPost.end();
+    });
+
+    if (items.length === 0) break;
+
+    items.forEach(order => {
+      let isLuchiki = false;
+      if (order.custom_fields) {
+        const dealDir = (order.custom_fields["Идентификатор направления сделки"] || order.custom_fields["Направление сделки"] || "").toLowerCase();
+        const name = (order.name || "").toLowerCase();
+        if (dealDir.includes("лучики") || name.includes("лучики")) isLuchiki = true;
+      }
+
+      if (isLuchiki) {
+        let m1 = order.visit ? (order.visit.marker_level_1 || "") : (order.roistat || "offline");
+        let m2 = order.visit ? (order.visit.marker_level_2 || "") : "";
+        let m3 = order.visit ? (order.visit.marker_level_3 || "") : "";
+        let m4 = order.visit ? (order.visit.marker_level_4 || "") : "";
+        let markerStr = [m1, m2, m3, m4].join(" ").trim();
+        
+        const orderDateStr = (order.creation_date || fromIso).split('T')[0];
+        const key = orderDateStr + "|||" + markerStr;
+
+        if (!luchikiCounts[key]) luchikiCounts[key] = { leads: 0, sales: 0, rev: 0, qual: 0 };
+        
+        luchikiCounts[key].leads += 1;
+        const revenue = parseFloat(order.revenue || 0);
+        if (revenue > 0) {
+          luchikiCounts[key].sales += 1;
+          luchikiCounts[key].rev += revenue;
+        }
+        
+        const st = order.status ? (order.status.name || "").toLowerCase() : "";
+        if (!st.includes("отказ") && !st.includes("спам") && !st.includes("отмен") && !st.includes("дубль") && st !== "") {
+          luchikiCounts[key].qual += 1;
+        }
+      }
+    });
+
+    if (items.length < limit) break;
+    offset += limit;
+  }
+  return luchikiCounts;
+}
+
 async function handleApi(req, res, pathname, query) {
   loadDB(); // Ensure memory is synced with disk on every request in multi-process environments
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -1461,7 +1555,38 @@ async function handleApi(req, res, pathname, query) {
 
         const items = await fetchAllData();
         roistatItems.push(...items);
+        
         roistatSuccess = true;
+
+        // Fetch Luchiki orders and subtract them
+        try {
+          const luchikiCounts = await fetchLuchikiOrders(roistatProjectId, roistatKey, fromStr, toStr);
+          roistatItems.forEach(it => {
+            const d = it.dimensions || {};
+            const rawDate = (d.daily && d.daily.title) || (d.date && d.date.title);
+            if (!rawDate) return;
+            const dateStr = rawDate.split('T')[0];
+            const v1 = d.marker_level_1 ? (d.marker_level_1.value || "") : "";
+            const v2 = d.marker_level_2 ? (d.marker_level_2.value || "") : "";
+            const v3 = d.marker_level_3 ? (d.marker_level_3.value || "") : "";
+            const v4 = d.marker_level_4 ? (d.marker_level_4.value || "") : "";
+            const markerStr = [v1, v2, v3, v4].join(" ").trim();
+            const key = dateStr + "|||" + markerStr;
+
+            if (luchikiCounts[key]) {
+              const toSub = luchikiCounts[key];
+              it.metrics.forEach(x => {
+                if (x.metric === "leads" || x.metric === "leadCount") x.value = Math.max(0, x.value - toSub.leads);
+                if (x.metric === "sales" || x.metric === "paidLeadCount") x.value = Math.max(0, x.value - toSub.sales);
+                if (x.metric === "revenue" || x.metric === "paidLeadsPrice") x.value = Math.max(0, x.value - toSub.rev);
+                if (x.metric === "custom_2") x.value = Math.max(0, x.value - toSub.qual);
+              });
+            }
+          });
+        } catch (e) {
+          console.error("Luchiki filter error:", e);
+        }
+
         
         if (roistatItems.length > 0) {
           const roistatByDate = {}; // dateStr -> group -> source -> metrics
