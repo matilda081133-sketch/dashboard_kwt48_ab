@@ -943,6 +943,13 @@ async function handleApi(req, res, pathname, query) {
     return;
   }
 
+  // GET /api/debug
+  if (pathname === '/api/debug' && req.method === 'GET') {
+    res.statusCode = 200;
+    res.end(JSON.stringify({ projects: dbData.projects }));
+    return;
+  }
+
   // Auth Guard
   const currentUser = getSessionUser(req);
   if (!currentUser) {
