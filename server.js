@@ -1595,6 +1595,10 @@ async function handleApi(req, res, pathname, query) {
             const titleLower = titleRaw.toLowerCase();
             const isLuchikiCampaign = titleLower.includes("лучики") || titleLower.includes("luchiki");
 
+            if (getGroup(titleRaw) === "Контекстная реклама") {
+              console.log("Direct item for Luchiki:", { dateStr, titleRaw, isLuchikiCampaign, luchikiCount: !!luchikiCounts[key] });
+            }
+
             if (isLuchikiProject) {
               if (isLuchikiCampaign) {
                 return true;
@@ -1633,6 +1637,7 @@ async function handleApi(req, res, pathname, query) {
             }
           });
         } catch (e) {
+          global.luchikiDebugError = e.message + " " + e.stack;
           console.error("Luchiki filter error:", e);
         }
 
