@@ -1574,7 +1574,7 @@ async function handleApi(req, res, pathname, query) {
 
         // Apply split logic between Luchiki and New School
         try {
-          const projName = (proj.name || "").toLowerCase();
+          const projName = (project.name || "").toLowerCase();
           const dashName = dashboard ? (dashboard.name || "").toLowerCase() : "";
           const isLuchikiProject = projName.includes("лучик") || projName.includes("luchiki") || dashName.includes("лучик") || dashName.includes("luchiki");
           const luchikiCounts = await fetchLuchikiOrders(roistatProjectId, roistatKey, fromStr, toStr);
@@ -1825,7 +1825,7 @@ async function handleApi(req, res, pathname, query) {
       res.end(JSON.stringify({
         status: 'success',
         roistatConnected: roistatSuccess,
-        projectName: proj ? proj.name : 'Демо Проект',
+        projectName: project ? project.name : 'Демо Проект',
         dashboardName: dashboard ? dashboard.name : 'Маркетинговый RNP',
         data: { channels: activeChannels, daily: mergedData, summary, total, city: cityData }
       }));
