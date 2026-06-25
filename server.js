@@ -1494,13 +1494,13 @@ async function handleApi(req, res, pathname, query) {
 
         if (customQualMetric) {
           metricsToRequest.push({ "metric": customQualMetric, "attribution": "default" });
-        } else if (isDemo) {
+        } else {
           metricsToRequest.push({ "metric": "custom_2", "attribution": "default" });
         }
 
         if (customKpMetric) {
           metricsToRequest.push({ "metric": customKpMetric, "attribution": "default" });
-        } else if (isDemo) {
+        } else {
           metricsToRequest.push({ "metric": "custom_5", "attribution": "default" });
         }
 
@@ -1601,6 +1601,12 @@ async function handleApi(req, res, pathname, query) {
             }
             
             const titleLower = titleRaw.toLowerCase();
+            
+            // Remove garbage SEO
+            if (titleLower.includes('luchiki48.ru') || titleLower.includes('luchiki48.com')) {
+              return false;
+            }
+            
             const isLuchikiCampaign = titleLower.includes("лучики") || titleLower.includes("luchiki");
 
             const key = dateStr + "|||" + titleRaw;
@@ -1689,14 +1695,10 @@ async function handleApi(req, res, pathname, query) {
             const canceledLeadCount = m.canceledLeadCount || 0;
             let qual = (customQualMetric && m[customQualMetric]) || 0;
             if (!customQualMetric) {
-              if (isDemo) {
                 qual = m.custom_2 || 0;
-              } else {
-                qual = Math.max(0, leadCount - canceledLeadCount);
-              }
             }
             
-            const kp = (customKpMetric && m[customKpMetric]) || (isDemo ? (m.custom_5 || 0) : 0);
+            const kp = (customKpMetric && m[customKpMetric]) || m.custom_5 || 0;
             const sales = m.paidLeadCount || m.sales || 0;
             const rev = m.paidLeadsPrice || m.revenue || 0;
 
