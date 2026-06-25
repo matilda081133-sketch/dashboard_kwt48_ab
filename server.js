@@ -1504,7 +1504,7 @@ async function handleApi(req, res, pathname, query) {
           metricsToRequest.push({ "metric": "custom_5", "attribution": "default" });
         }
 
-        const roistatItems = [];
+        let roistatItems = [];
         const fromIso = `${fromStr}T00:00:00+03:00`;
         const toIso = `${toStr}T23:59:59+03:00`;
         const payload = {
