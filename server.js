@@ -1500,7 +1500,7 @@ async function handleApi(req, res, pathname, query) {
 
         if (customKpMetric) {
           metricsToRequest.push({ "metric": customKpMetric, "attribution": "default" });
-        } else {
+        } else if (isDemo) {
           metricsToRequest.push({ "metric": "custom_5", "attribution": "default" });
         }
 
